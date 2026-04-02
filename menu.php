@@ -32,8 +32,13 @@
     <ul>
         <li><a href="index.php">Início</a></li>
             <li><a href="expedicao_vasp.php">Expedições VASP</a></li>
-            <li><a href="reposicao.php">Reposição de itens</a></li>
+            
                 <?php
+                    if(isset($_SESSION['user_id'])){
+                        echo '<li><a href="reposicao.php">Material a pedir</a></li>';
+
+                    }
+
                     if (isset($_SESSION['e_administrador']) && $_SESSION['e_administrador'] === 1) {
                         echo '<li>
                             <span class="opener">Painel de Controlo</span>

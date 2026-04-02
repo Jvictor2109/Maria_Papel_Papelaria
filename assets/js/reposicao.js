@@ -1,60 +1,57 @@
 // Variável que vai guardar todos os itens da tabela
 dados = {};
+// Carrega a tabela assim que a pagina abre
+carregartabela();
 
-document.addEventListener('DOMContentLoaded', function () {
+// === Modal de adicionar pedidos ===
+const btnAddPedido = document.getElementById('btn-add-pedido');
+const modalReposicao = document.getElementById('modal-reposicao');
+const closeModal = document.getElementById('close-modal');
 
-    // Carrega a tabela assim que a pagina abre
-    carregartabela();
+// Modal de Informações
+const modalInfo = document.getElementById('modal-info');
+const closeModalInfo = document.getElementById('close-modal-info');
 
-
-    const btnAddPedido = document.getElementById('btn-add-pedido');
-    const modalReposicao = document.getElementById('modal-reposicao');
-    const closeModal = document.getElementById('close-modal');
-    
-    // Modal de Informações
-    const modalInfo = document.getElementById('modal-info');
-    const closeModalInfo = document.getElementById('close-modal-info');
-
-    // Abre o modal ao clicar no botão
-    if (btnAddPedido) {
-        btnAddPedido.addEventListener('click', function (e) {
-            e.preventDefault();
-            modalReposicao.style.display = 'flex';
-        });
-    }
-
-    // Fecha o modal ao clicar no X
-    if (closeModal) {
-        closeModal.addEventListener('click', function () {
-            modalReposicao.style.display = 'none';
-        });
-    }
-    
-    // Fecha o modal Info ao clicar no X
-    if (closeModalInfo) {
-        closeModalInfo.addEventListener('click', function () {
-            modalInfo.style.display = 'none';
-        });
-    }
-
-    // Fecha o modal ao clicar fora da caixa do modal
-    window.addEventListener('click', function (e) {
-        if (e.target === modalReposicao) {
-            modalReposicao.style.display = 'none';
-        }
-        if (e.target === modalInfo) {
-            modalInfo.style.display = 'none';
-        }
+// Abre o modal ao clicar no botão
+if (btnAddPedido) {
+    btnAddPedido.addEventListener('click', function (e) {
+        e.preventDefault();
+        modalReposicao.style.display = 'flex';
     });
+}
+
+// Fecha o modal ao clicar no X
+if (closeModal) {
+    closeModal.addEventListener('click', function () {
+        modalReposicao.style.display = 'none';
+    });
+}
+
+// Fecha o modal Info ao clicar no X
+if (closeModalInfo) {
+    closeModalInfo.addEventListener('click', function () {
+        modalInfo.style.display = 'none';
+    });
+}
+
+// Fecha o modal ao clicar fora da caixa do modal
+window.addEventListener('click', function (e) {
+    if (e.target === modalReposicao) {
+        modalReposicao.style.display = 'none';
+    }
+    if (e.target === modalInfo) {
+        modalInfo.style.display = 'none';
+    }
 });
 
 
+// Filtragem de dados
 let btnFiltrar = document.getElementById('btnFiltrar');
 btnFiltrar.addEventListener('click', function (){
     // Pega os valores de cada filtro
     let urgencia = document.getElementById('filtroUrgencia').value;
     let tipo = document.getElementById('filtroTipo').value;
-    let data = document.getElementById('filtroData').value;
+    // let data = document.getElementById('filtroData').value;
 
     // Filtra os dados
     dadosFiltrados = dados.filter(item =>{
@@ -62,8 +59,8 @@ btnFiltrar.addEventListener('click', function (){
             return false;
         if(tipo != "" && item.tipo != tipo)
             return false;
-        if(data != "" && item.data_criacao != data)
-            return false;
+        // if(data != "" && item.data_criacao != data)
+        //     return false;
 
         return true
     });
@@ -71,6 +68,7 @@ btnFiltrar.addEventListener('click', function (){
     renderTabela(dadosFiltrados);
     
 });
+
 
 
 // Adicionar pedido
@@ -126,6 +124,13 @@ function addPedido() {
                 msg.innerText = data['msg'];
             }
         });
+
+
+    // Limpa o modal ao concluir
+    artigo.value = "";
+    referencia.value = "";
+    cliente.value = "";
+    telemovel.value = "";
 }
 
 

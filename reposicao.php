@@ -45,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
 // Funções
 function mostrarDados($conn)
 {
-	$sql = "SELECT * FROM reposicao ORDER BY item_id DESC";
+	$sql = "SELECT * FROM reposicao WHERE concluido = 0 ORDER BY item_id DESC";
 	$resultado = mysqli_query($conn, $sql);
 	$dados = mysqli_fetch_all($resultado, MYSQLI_ASSOC);
 
@@ -154,7 +154,7 @@ function attItem($conn, $request)
 <html>
 
 <head>
-	<title>MPP - Reposição</title>
+	<title>MPP - Material a pedir</title>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 	<link rel="stylesheet" href="assets/css/main.css" />
@@ -205,7 +205,7 @@ function attItem($conn, $request)
 										<input type="text" id="cliente">
 
 										<label for="telemovel">Telemóvel</label>
-										<input type="text" id="telemovel">
+										<input type="text" id="telemovel" maxlength="9">
 
 										<label for="urgencia">Urgência:</label>
 										<select name="urgencia" id="urgencia">
@@ -238,40 +238,42 @@ function attItem($conn, $request)
 							</div>
 						</div>
 
+						<h2>Material a pedir</h3>
+
 						<div style="display: flex; align-items: center; gap: 20px; margin-bottom: 2em;">
-							<a href="#" id="btn-add-pedido" class="button primary" style="margin-bottom: 0;">Adicionar item em falta</a>
+							<a href="#" id="btn-add-pedido" class="button primary" style="margin-bottom: 0;">Adicionar artigo em falta</a>
 							<h5 id="msg" style="margin: 0; line-height: 1;"></h5>
 						</div>
 
+						<h3>Filtrar por: </h3>
 						<!-- Barra de seleção de filtros -->
 						<div class="divFiltros">
-							<h3>Filtrar por: </h3>
 
 							<div class="filtros">
-					<div class="filtro-grupo">
-						<label for="filtroUrgencia">Urgência:</label>
-						<select id="filtroUrgencia">
-							<option value="">Todas</option>
-							<option value="muito urgente">Muito urgente</option>
-							<option value="urgente">Urgente</option>
-							<option value="nao urgente">Não Urgente</option>
-						</select>
-					</div>
+								<div class="filtro-grupo">
+									<label for="filtroUrgencia">Urgência:</label>
+									<select id="filtroUrgencia">
+										<option value="">Todas</option>
+										<option value="muito urgente">Muito urgente</option>
+										<option value="urgente">Urgente</option>
+										<option value="nao urgente">Não Urgente</option>
+									</select>
+								</div>
 
-					<div class="filtro-grupo">
-						<label for="filtroTipo">Tipo:</label>
-						<select id="filtroTipo">
-							<option value="">Todos</option>
-							<option value="papelaria">Papelaria</option>
-							<option value="tinteiros">Tinteiros/Tonners</option>
-							<option value="livros">Livros</option>
-						</select>
-					</div>
+							<div class="filtro-grupo">
+								<label for="filtroTipo">Tipo:</label>
+								<select id="filtroTipo">
+									<option value="">Todos</option>
+									<option value="papelaria">Papelaria</option>
+									<option value="tinteiros">Tinteiros/Tonners</option>
+									<option value="livros">Livros</option>
+								</select>
+							</div>
 
-					<div class="filtro-grupo">
-						<label for="filtroData">Data:</label>
-						<input type="date" id="filtroData">
-					</div>
+							<!-- <div class="filtro-grupo">                   DEVE ESTAR SOMENTE NO HISTÓRICO
+								<label for="filtroData">Data:</label>
+								<input type="date" id="filtroData">
+							</div> -->
 
 					<button type="submit" id="btnFiltrar">Filtrar</button>
 				</div>
