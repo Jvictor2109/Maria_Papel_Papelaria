@@ -1,5 +1,7 @@
 // Variável que vai guardar todos os itens da tabela
-dados = {};
+let dados = {};
+// Flag de qual tabela esta ativa
+let tabelaAtiva = "pedidos";
 // Carrega a tabela assim que a pagina abre
 carregartabela();
 
@@ -12,10 +14,24 @@ const closeModal = document.getElementById('close-modal');
 const modalInfo = document.getElementById('modal-info');
 const closeModalInfo = document.getElementById('close-modal-info');
 
+// Modal de Editar
+const modalEditar = document.getElementById('modal-editar');
+const closeModalEditar = document.getElementById('close-modal-editar');
+
 // Abre o modal ao clicar no botão
 if (btnAddPedido) {
     btnAddPedido.addEventListener('click', function (e) {
         e.preventDefault();
+
+        // Limpa todos os inputs
+        const inputs = document.querySelectorAll('input');
+        inputs.forEach(element => {
+            if(element.id == "quantidade")
+                return;
+
+            element.value = "";
+        });
+
         modalReposicao.style.display = 'flex';
     });
 }
@@ -34,6 +50,13 @@ if (closeModalInfo) {
     });
 }
 
+// Fecha o modal Editar ao clicar no X
+if (closeModalEditar) {
+    closeModalEditar.addEventListener('click', function () {
+        modalEditar.style.display = 'none';
+    });
+}
+
 // Fecha o modal ao clicar fora da caixa do modal
 window.addEventListener('click', function (e) {
     if (e.target === modalReposicao) {
@@ -42,16 +65,56 @@ window.addEventListener('click', function (e) {
     if (e.target === modalInfo) {
         modalInfo.style.display = 'none';
     }
+    if (e.target === modalEditar) {
+        modalEditar.style.display = 'none';
+    }
+});
+
+
+// Ouve os botões de seleção do tipo de tabela
+const botoes_tab = document.querySelectorAll('.btnTab');
+botoes_tab.forEach(botao =>{
+    botao.addEventListener('click', function (){
+        const datas = document.querySelectorAll('.filtro_data');
+        const estado = document.querySelector('.filtro_estado');
+
+        if(botao.id == "tab_ativo"){
+            // Esconde datas e mostra estado
+            datas.forEach(filtro =>{
+                filtro.style.display = "none";
+            })
+    
+            estado.style.display = "flex";
+
+            // Altera a informação de qual tabela está sendo mostrada
+            tabelaAtiva = "pedidos";
+        }    
+        else{            
+            // Mostra os filtros de data e esconde o filtro de estado
+            datas.forEach(filtro =>{
+                filtro.style.display = "flex";
+            })
+
+            estado.style.display = "none";
+            
+            // Altera a informação de qual tabela está sendo mostrada
+            tabelaAtiva = "pedidos";
+            
+        }
+
+    });
 });
 
 
 // Filtragem de dados
-let btnFiltrar = document.getElementById('btnFiltrar');
+const btnFiltrar = document.getElementById('btnFiltrar');
 btnFiltrar.addEventListener('click', function (){
     // Pega os valores de cada filtro
-    let urgencia = document.getElementById('filtroUrgencia').value;
-    let tipo = document.getElementById('filtroTipo').value;
-    // let data = document.getElementById('filtroData').value;
+    const urgencia = document.getElementById('filtroUrgencia').value;
+    const tipo = document.getElementById('filtroTipo').value;
+    const estado = document.getElementById('filtroEstado').value;
+    const data_inicio = document.getElementById('filtro_data_inicio').value;
+    const data_fim = document.getElementById('filtro_data_fim').value;
 
     // Filtra os dados
     dadosFiltrados = dados.filter(item =>{
@@ -59,8 +122,25 @@ btnFiltrar.addEventListener('click', function (){
             return false;
         if(tipo != "" && item.tipo != tipo)
             return false;
-        // if(data != "" && item.data_criacao != data)
-        //     return false;
+
+        if(estado != ""){
+            if(estado == "por_pedir" && item.pedido == 1)
+                return false;
+            else if (estado == "pedido" && item.pedido == 0)
+                return false;
+        }
+
+        if(data_inicio != "" && data_fim != ""){
+            if(item.data_criacao < data_inicio || item.data_criacao > data_fim)
+                return false
+        }
+        else if(data_inicio != ""){
+            if(item.data_criacao < data_inicio)
+                return false
+        }
+        else if(item.data_criacao > data_fim)
+            return false
+
 
         return true
     });
@@ -70,23 +150,23 @@ btnFiltrar.addEventListener('click', function (){
 });
 
 
-
 // Adicionar pedido
 function addPedido() {
-    let modalReposicao = document.getElementById('modal-reposicao');
+    const modalReposicao = document.getElementById('modal-reposicao');
     // Pega os dados do formulário
-    let artigo = document.getElementById('artigo').value;
-    let referencia = document.getElementById('referencia').value;
-    let tipo = document.getElementById('tipo').value;
-    let cliente = document.getElementById('cliente').value;
-    let telemovel = document.getElementById('telemovel').value;
-    let urgencia = document.getElementById('urgencia').value;
+    const artigo = document.getElementById('artigo').value;
+    const referencia = document.getElementById('referencia').value;
+    const tipo = document.getElementById('tipo').value;
+    const cliente = document.getElementById('cliente').value;
+    const telemovel = document.getElementById('telemovel').value;
+    const urgencia = document.getElementById('urgencia').value;
+    const quantidade = document.getElementById('quantidade').value;
+    const observacoes = document.getElementById('obs').value;
 
     // Valida o artigo
     if (artigo === '') {
         modalReposicao.style.display = "none";
-        msg.style.color = "red";
-        msg.innerText = "Introduza um artigo";
+        mostrarMsg("red", "Introduza um artigo");
         return;
     }
 
@@ -98,7 +178,9 @@ function addPedido() {
         "tipo": tipo,
         "cliente": cliente,
         "telemovel": telemovel,
-        "urgencia": urgencia
+        "urgencia": urgencia,
+        "quantidade" : quantidade,
+        "observacoes" : observacoes
     }
 
     // Envia os dados pro servidor
@@ -113,17 +195,14 @@ function addPedido() {
                 //tratar sucesso -> Recarregar tabela
                 carregartabela();
                 modalReposicao.style.display = "none";
-                msg.style.color = "Green";
-                msg.innerText = data['msg'];
-
+                mostrarMsg("green", data['msg']);
             }
             else {
                 //Mensagem de erro vinda do servidor
                 modalReposicao.style.display = "none";
-                msg.style.color = "red";
-                msg.innerText = data['msg'];
+                mostrarMsg("red", data['msg'])
             }
-        });
+        })
 
 
     // Limpa o modal ao concluir
@@ -161,6 +240,10 @@ function renderTabela(dados){
     tbody.innerHTML = '';
 
     dados.forEach(element => {
+
+        if(element.concluido == 1)
+            return;
+
         let linha = document.createElement('tr');
 
         // Cria cada célula da linha
@@ -201,44 +284,61 @@ function renderTabela(dados){
         }
         linha.appendChild(urgencia);
 
+        let obs = document.createElement('td');
+        obs.innerText = element.observacoes;
+        linha.appendChild(obs);
+        
+        let qntd = document.createElement('td');
+        qntd.innerText = element.quantidade;
+        linha.appendChild(qntd);
+        
+        let data_criacao = document.createElement('td');
+        data_criacao.innerText = element.data_criacao;
+        linha.appendChild(data_criacao);
+
         // Botões de ação: Mostra o botão correspondente ao estado atual do pedido
         // Se o item já tiver estado de concluído, mostra somente um texto
         let acoes = document.createElement('td');
-        acoes.style.textAlign = 'center';
+        acoes.classList.add('td-acoes');
 
-        if(element.concluido == 1){
-            // Mensagem de pedido concluído
-            let badge = document.createElement('span');
-            badge.innerHTML = "&#10004; Pedido Concluído";
-            badge.className = "badge-concluido";
-            acoes.appendChild(badge);
-        }
-        else if (element.pedido == 1){
+        if (element.pedido == 1){
             // Botão "Marcar como concluído"
-            let botao = document.createElement('button');
+            const botao = document.createElement('button');
             botao.innerText = "Marcar como Concluído";
             botao.classList.add('button', 'small', 'btn-concluido');
-            botao.addEventListener('click', () => attConcluido(element.item_id));
+            botao.addEventListener('click', () => attEstadoConcluido(element.item_id));
             acoes.appendChild(botao);   
         }
         else{
             // Botão "Marcar como pedido"
-            let botao = document.createElement('button');
+            const botao = document.createElement('button');
             botao.innerText = "Marcar como pedido";
             botao.classList.add('button', 'small', 'btn-pedido');
-            botao.addEventListener('click', () => attPedido(element.item_id));
+            botao.addEventListener('click', () => attEstadoPedido(element.item_id));
             acoes.appendChild(botao);   
         }
+
+        // Botão de editar
+        const btnEditar = document.createElement('button');
+        btnEditar.innerText = "Editar"
+        btnEditar.classList.add('button', 'secondary', 'small');
+        btnEditar.addEventListener('click', ()=> {
+            modalEditar.style.display = "flex";
+        });
+        acoes.appendChild(btnEditar);
+
+
+
         
         // Botão de mais informações
-        let btnInfo = document.createElement('a');
+        const btnInfo = document.createElement('a');
         btnInfo.href = "#";
         btnInfo.innerText = "Mais info.";
-        btnInfo.style.marginLeft = "15px";
+
         btnInfo.addEventListener('click', function(e) {
             e.preventDefault();
 
-            let infoModal = document.getElementById('info-content');
+            const infoModal = document.getElementById('info-content');
 
             infoModal.innerHTML = `  
                 <span><strong>CLiente: </strong> ${element.nome_cliente || '-'}</span>
@@ -263,7 +363,7 @@ function renderTabela(dados){
 }
 
 
-function attPedido(id){
+function attEstadoPedido(id){
     fetch('reposicao.php', {
         method:"post",
         headers:{"Content-Type":"application/json"},
@@ -277,20 +377,17 @@ function attPedido(id){
             if (data['resultado'] == "sucesso") {
                 //tratar sucesso -> Recarregar tabela
                 carregartabela();
-                msg.style.color = "Green";
-                msg.innerText = data['msg'];
-
+                mostrarMsg("green", data['msg']);
             }
             else {
                 //Mensagem de erro vinda do servidor
-                msg.style.color = "red";
-                msg.innerText = data['msg'];
+                mostrarMsg("red", data['msg']);
             }
     })
 }
 
 
-function attConcluido(id){
+function attEstadoConcluido(id){
     fetch('reposicao.php', {
         method:"post",
         headers:{"Content-Type":"application/json"},
@@ -304,14 +401,39 @@ function attConcluido(id){
             if (data['resultado'] == "sucesso") {
                 //tratar sucesso -> Recarregar tabela
                 carregartabela();
-                msg.style.color = "Green";
-                msg.innerText = data['msg'];
-
+                mostrarMsg("green", data['msg']);
             }
             else {
                 //Mensagem de erro vinda do servidor
-                msg.style.color = "red";
-                msg.innerText = data['msg'];
+                mostrarMsg("red", data['msg']);
             }
-    })
+    });
+}
+
+
+function editarPedido(item_id){
+    const item = dados.find(d => d.item_id == item_id);
+    if (!item) return;
+
+    document.getElementById('edit-artigo').value       = item.artigo        || '';
+    document.getElementById('edit-referencia').value   = item.referencia    || '';
+    document.getElementById('edit-tipo').value         = item.tipo          || 'papelaria';
+    document.getElementById('edit-quantidade').value   = item.quantidade    || 1;
+    document.getElementById('edit-cliente').value      = item.nome_cliente  || '';
+    document.getElementById('edit-telemovel').value    = item.telefone_cliente || '';
+    document.getElementById('edit-urgencia').value     = item.urgencia      || 'nao urgente';
+    document.getElementById('edit-obs').value          = item.observacoes   || '';
+
+    modalEditar.dataset.itemId = item_id;
+    modalEditar.style.display = 'flex';
+}
+
+
+function mostrarMsg(cor, conteudo){
+    msg.style.color = cor;
+    msg.innerText = conteudo;
+
+    setTimeout(()=>{
+        msg.innerText = "";
+    },2000)
 }

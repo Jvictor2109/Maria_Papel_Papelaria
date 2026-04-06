@@ -45,7 +45,15 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
 // Funções
 function mostrarDados($conn)
 {
-	$sql = "SELECT * FROM reposicao WHERE concluido = 0 ORDER BY item_id DESC";
+	$sql = "SELECT r.*, 
+				   u1.nome_utilizador AS criado_por, 
+				   u2.nome_utilizador AS pedido_por, 
+				   u3.nome_utilizador AS concluido_por		     
+			FROM reposicao r
+			LEFT JOIN utilizador u1 ON u1.id_utilizador = r.id_criado_por
+			LEFT JOIN utilizador u2 ON u2.id_utilizador = r.id_pedido_por
+			LEFT JOIN utilizador u3 ON u3.id_utilizador = r.id_concluido_por
+			ORDER BY r.urgencia ASC, r.data_criacao DESC";
 	$resultado = mysqli_query($conn, $sql);
 	$dados = mysqli_fetch_all($resultado, MYSQLI_ASSOC);
 
@@ -67,72 +75,56 @@ function addItem($conn, $request)
 	$tipo = $request['tipo'];
 	$cliente = $request['cliente'];
 	$telemovel = $request['telemovel'];
-	$tipo = $request['tipo'];
 	$urgencia = $request['urgencia'];
+	$quantidade = intval($request['quantidade']);
+	$observacoes = $request['observacoes'];
 
 	// Informações de data e utilizador
-	$user_id = $_SESSION['user_id'];
-	$nome_criador = "";
+	$user_id = intval($_SESSION['user_id']);
 	$data_criado = date("Y-m-d");
-
-	$sql = "SELECT nome_utilizador FROM utilizador WHERE id_utilizador = ?";
-	$stmt = $conn->prepare($sql);
-	$stmt->bind_param("i", $user_id);
-	$stmt->execute();
-	$stmt->bind_result($nome_criador);
-	$stmt->fetch();
-	$stmt->close();
 
 
 	// Adiciona na base de dados
-	$sql = "INSERT INTO reposicao (artigo, referencia, tipo, urgencia, nome_cliente, telefone_cliente, data_criacao, criado_por)
-			VALUES (?,?,?,?,?,?,?,?)";
+	$sql = "INSERT INTO reposicao (artigo, referencia, tipo, urgencia, nome_cliente, telefone_cliente, data_criacao, observacoes, quantidade, id_criado_por)
+			VALUES (?,?,?,?,?,?,?,?,?,?)";
 
 	$stmt = $conn->prepare($sql);
-	$stmt->bind_param("ssssssss", $artigo, $referencia, $tipo, $urgencia, $cliente, $telemovel, $data_criado, $nome_criador);
+	$stmt->bind_param("ssssssssii", $artigo, $referencia, $tipo, $urgencia, $cliente, $telemovel, $data_criado, $observacoes, $quantidade, $user_id);
 
 	if ($stmt->execute()) {
 		return True;
 	} else {
+		echo json_encode(['resultado' => 'erro', 'msg' => $stmt->error]);
 		return False;
 	}
 }
+
 
 function attItem($conn, $request)
 {
 	$estado = $request['estado'];
 	$item_id = intval($request['id']);
 	$data = date("y-m-d");
-	$user_id = $_SESSION['user_id'];
-	$utilizador = "";
-
-	$sql = "SELECT nome_utilizador FROM utilizador WHERE id_utilizador = ?";
-	$stmt = $conn->prepare($sql);
-	$stmt->bind_param("i", $user_id);
-	$stmt->execute();
-	$stmt->bind_result($utilizador);
-	$stmt->fetch();
-	$stmt->close();
-
+	$user_id = intval($_SESSION['user_id']);
 
 
 	if ($estado == "pedido") {
 
 		$pedido = 1;
 		$sql = "UPDATE reposicao
-				SET pedido = ?, data_pedido = ?, pedido_por = ?
+				SET pedido = ?, data_pedido = ?, id_pedido_por = ?
 				WHERE item_id = ?";
 
 		$stmt = $conn->prepare($sql);
-		$stmt->bind_param("issi", $pedido, $data, $utilizador, $item_id);
+		$stmt->bind_param("issi", $pedido, $data, $user_id, $item_id);
 	} else if ($estado == "concluido") {
 		$concluido = 1;
 		$sql = "UPDATE reposicao
-				SET concluido = ?, data_conclusao = ?, concluido_por = ?
+				SET concluido = ?, data_conclusao = ?, id_concluido_por = ?
 				WHERE item_id = ?";
 
 		$stmt = $conn->prepare($sql);
-		$stmt->bind_param("issi", $concluido, $data, $utilizador, $item_id);
+		$stmt->bind_param("issi", $concluido, $data, $user_id, $item_id);
 	}
 
 	if ($stmt->execute()) {
@@ -197,7 +189,8 @@ function attItem($conn, $request)
 											<option value="livros">Livros</option>
 										</select>
 
-
+										<label for="quantidade">Quantidade</label>
+										<input type="number" minlength="1" value="1" id="quantidade">
 									</div>
 
 									<div class="col-6 col-12xsmall">
@@ -213,14 +206,15 @@ function attItem($conn, $request)
 											<option value="urgente">Urgente</option>
 											<option value="nao urgente">Não Urgente</option>
 										</select>
+
+										<label for="obs">Observações</label>
+										<textarea name="obs" id="obs"></textarea>
 									</div>
 								</div>
 
 								<div class="row gtr-uniform" style="margin-top: 1.5em;">
 									<div class="col-12">
-										<ul class="actions">
-											<li><input type="submit" value="Adicionar" class="primary" onclick="addPedido()" /></li>
-										</ul>
+										<button type="submit" class="primary" onclick="addPedido()">Adicionar artigo</button>
 									</div>
 								</div>
 
@@ -238,11 +232,70 @@ function attItem($conn, $request)
 							</div>
 						</div>
 
+						<!-- Modal de Editar Pedido -->
+						<div id="modal-editar" class="modal-overlay" style="display: none;">
+							<div class="box modal-content">
+								<span id="close-modal-editar" class="modal-close">&times;</span>
+								<h3>Editar Pedido</h3>
+
+								<div class="row gtr-uniform">
+									<div class="col-6 col-12xsmall">
+										<label for="edit-artigo">Artigo:</label>
+										<input type="text" id="edit-artigo" required>
+
+										<label for="edit-referencia">Referência:</label>
+										<input type="text" id="edit-referencia">
+
+										<label for="edit-tipo">Tipo:</label>
+										<select name="edit-tipo" id="edit-tipo">
+											<option value="papelaria">Papelaria</option>
+											<option value="tinteiros">Tinteiros</option>
+											<option value="livros">Livros</option>
+										</select>
+
+										<label for="edit-quantidade">Quantidade</label>
+										<input type="number" minlength="1" value="1" id="edit-quantidade">
+									</div>
+
+									<div class="col-6 col-12xsmall">
+										<label for="edit-cliente">Cliente:</label>
+										<input type="text" id="edit-cliente">
+
+										<label for="edit-telemovel">Telemóvel</label>
+										<input type="text" id="edit-telemovel" maxlength="9">
+
+										<label for="edit-urgencia">Urgência:</label>
+										<select name="edit-urgencia" id="edit-urgencia">
+											<option value="muito urgente">Muito Urgente</option>
+											<option value="urgente">Urgente</option>
+											<option value="nao urgente">Não Urgente</option>
+										</select>
+
+										<label for="edit-obs">Observações</label>
+										<textarea name="edit-obs" id="edit-obs"></textarea>
+									</div>
+								</div>
+
+								<div class="row gtr-uniform" style="margin-top: 1.5em;">
+									<div class="col-12">
+										<button type="submit" class="primary" onclick="guardarEdicao()">Guardar alterações</button>
+									</div>
+								</div>
+
+							</div>
+						</div>
+
 						<h2>Material a pedir</h3>
 
 						<div style="display: flex; align-items: center; gap: 20px; margin-bottom: 2em;">
 							<a href="#" id="btn-add-pedido" class="button primary" style="margin-bottom: 0;">Adicionar artigo em falta</a>
 							<h5 id="msg" style="margin: 0; line-height: 1;"></h5>
+						</div>
+
+
+						<div style="display: flex; align-items: center; gap: 20px; margin-bottom: 2em;">
+							<button class="secundary btnTab" id="tab_ativo">Artigos a pedir</button>
+							<button class="secundary btnTab" id="tab_historico">Histórico de concluídos</button>
 						</div>
 
 						<h3>Filtrar por: </h3>
@@ -260,23 +313,37 @@ function attItem($conn, $request)
 									</select>
 								</div>
 
-							<div class="filtro-grupo">
-								<label for="filtroTipo">Tipo:</label>
-								<select id="filtroTipo">
-									<option value="">Todos</option>
-									<option value="papelaria">Papelaria</option>
-									<option value="tinteiros">Tinteiros/Tonners</option>
-									<option value="livros">Livros</option>
-								</select>
+								<div class="filtro-grupo">
+									<label for="filtroTipo">Tipo:</label>
+									<select id="filtroTipo">
+										<option value="">Todos</option>
+										<option value="papelaria">Papelaria</option>
+										<option value="tinteiros">Tinteiros/Tonners</option>
+										<option value="livros">Livros</option>
+									</select>
+								</div>
+								
+								<div class="filtro-grupo filtro_estado">
+									<label for="filtroEstado">Estado:</label>
+									<select id="filtroEstado">
+										<option value="">Todos</option>
+										<option value="por_pedir">Por pedir</option>
+										<option value="pedido">Pedido</option>
+									</select>
+								</div>
+
+								<div class="filtro-grupo filtro_data">                
+									<label for="filtro_data_inicio">Data Início:</label>
+									<input type="date" id="filtro_data_inicio">
+								</div>
+								
+								<div class="filtro-grupo filtro_data">                
+									<label for="filtro_data_fim">Data Fim:</label>
+									<input type="date" id="filtro_data_fim">
+								</div>
+
+								<button type="submit" id="btnFiltrar">Filtrar</button>
 							</div>
-
-							<!-- <div class="filtro-grupo">                   DEVE ESTAR SOMENTE NO HISTÓRICO
-								<label for="filtroData">Data:</label>
-								<input type="date" id="filtroData">
-							</div> -->
-
-					<button type="submit" id="btnFiltrar">Filtrar</button>
-				</div>
 						</div>
 
 						<!-- Tabela que mostra os itens -->
@@ -288,6 +355,9 @@ function attItem($conn, $request)
 										<th>Referência</th>
 										<th>Tipo</th>
 										<th>Urgência</th>
+										<th>Obs</th>
+										<th>Qntd</th>
+										<th>Data criação</th>
 										<th style="min-width: 14em; text-align: center;">Ações</th>
 									</tr>
 								</thead>
