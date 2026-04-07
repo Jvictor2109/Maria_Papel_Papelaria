@@ -39,6 +39,15 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
 				echo json_encode(['resultado' => 'erro', 'msg' => 'Erro ao atualizar pedido']);
 				exit();
 			}
+		
+		case "editar":
+			if(editarItem($conn, $request)){
+				echo json_encode(['resultado' => 'sucesso', 'msg' => 'Item editado com sucesso!']);
+				exit();
+			} else{
+				echo json_encode(['resultado' => 'erro', 'msg' => 'Erro ao editar pedido']);
+				exit();
+			}
 	}
 }
 
@@ -90,6 +99,35 @@ function addItem($conn, $request)
 
 	$stmt = $conn->prepare($sql);
 	$stmt->bind_param("ssssssssii", $artigo, $referencia, $tipo, $urgencia, $cliente, $telemovel, $data_criado, $observacoes, $quantidade, $user_id);
+
+	if ($stmt->execute()) {
+		return True;
+	} else {
+		echo json_encode(['resultado' => 'erro', 'msg' => $stmt->error]);
+		return False;
+	}
+}
+
+
+function editarItem($conn, $request){
+	$item_id = intval($request['item_id']);
+	$artigo = $request['artigo'];
+	$referencia = $request['referencia'];
+	$tipo = $request['tipo'];
+	$cliente = $request['cliente'];
+	$telemovel = $request['telemovel'];
+	$quantidade = intval($request['quantidade']);
+	$urgencia = $request['urgencia'];
+	$observacoes = $request['observacoes'];
+
+	$sql = "UPDATE reposicao
+			SET artigo = ?, referencia = ?, tipo = ?, urgencia = ?,
+				nome_cliente = ?, telefone_cliente = ?, observacoes = ?, quantidade = ?
+			WHERE item_id =?";
+	
+	$stmt = $conn->prepare($sql);
+	$stmt->bind_param("sssssssii", $artigo, $referencia, $tipo, $urgencia, $cliente,
+									$telemovel, $observacoes, $quantidade, $item_id);
 
 	if ($stmt->execute()) {
 		return True;
@@ -240,6 +278,8 @@ function attItem($conn, $request)
 
 								<div class="row gtr-uniform">
 									<div class="col-6 col-12xsmall">
+										<input type="hidden" id="edit_id" value="">
+
 										<label for="edit-artigo">Artigo:</label>
 										<input type="text" id="edit-artigo" required>
 
@@ -278,7 +318,7 @@ function attItem($conn, $request)
 
 								<div class="row gtr-uniform" style="margin-top: 1.5em;">
 									<div class="col-12">
-										<button type="submit" class="primary" onclick="guardarEdicao()">Guardar alterações</button>
+										<button type="submit" class="primary" onclick="editarPedido()">Guardar alterações</button>
 									</div>
 								</div>
 

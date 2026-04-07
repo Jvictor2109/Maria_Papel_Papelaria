@@ -14,6 +14,7 @@ const closeModal = document.getElementById('close-modal');
 const modalInfo = document.getElementById('modal-info');
 const closeModalInfo = document.getElementById('close-modal-info');
 
+
 // Modal de Editar
 const modalEditar = document.getElementById('modal-editar');
 const closeModalEditar = document.getElementById('close-modal-editar');
@@ -26,7 +27,7 @@ if (btnAddPedido) {
         // Limpa todos os inputs
         const inputs = document.querySelectorAll('input');
         inputs.forEach(element => {
-            if(element.id == "quantidade")
+            if (element.id == "quantidade")
                 return;
 
             element.value = "";
@@ -73,42 +74,42 @@ window.addEventListener('click', function (e) {
 
 // Ouve os botões de seleção do tipo de tabela
 const botoes_tab = document.querySelectorAll('.btnTab');
-botoes_tab.forEach(botao =>{
-    botao.addEventListener('click', function (){
+botoes_tab.forEach(botao => {
+    botao.addEventListener('click', function () {
         const datas = document.querySelectorAll('.filtro_data');
         const estado = document.querySelector('.filtro_estado');
 
-        if(botao.id == "tab_ativo"){
+        if (botao.id == "tab_ativo") {
             // Esconde datas e mostra estado
-            datas.forEach(filtro =>{
+            datas.forEach(filtro => {
                 filtro.style.display = "none";
             })
-    
+
             estado.style.display = "flex";
 
             // Altera a informação de qual tabela está sendo mostrada
             tabelaAtiva = "pedidos";
-        }    
-        else{            
+        }
+        else {
             // Mostra os filtros de data e esconde o filtro de estado
-            datas.forEach(filtro =>{
+            datas.forEach(filtro => {
                 filtro.style.display = "flex";
             })
 
             estado.style.display = "none";
-            
+
             // Altera a informação de qual tabela está sendo mostrada
-            tabelaAtiva = "pedidos";
-            
+            tabelaAtiva = "historico";
         }
 
+        renderTabela(dados);
     });
 });
 
 
 // Filtragem de dados
 const btnFiltrar = document.getElementById('btnFiltrar');
-btnFiltrar.addEventListener('click', function (){
+btnFiltrar.addEventListener('click', function () {
     // Pega os valores de cada filtro
     const urgencia = document.getElementById('filtroUrgencia').value;
     const tipo = document.getElementById('filtroTipo').value;
@@ -117,42 +118,43 @@ btnFiltrar.addEventListener('click', function (){
     const data_fim = document.getElementById('filtro_data_fim').value;
 
     // Filtra os dados
-    dadosFiltrados = dados.filter(item =>{
-        if(urgencia != "" && item.urgencia != urgencia)
+    dadosFiltrados = dados.filter(item => {
+        if (urgencia != "" && item.urgencia != urgencia)
             return false;
-        if(tipo != "" && item.tipo != tipo)
+        if (tipo != "" && item.tipo != tipo)
             return false;
 
-        if(estado != ""){
-            if(estado == "por_pedir" && item.pedido == 1)
+        if (estado != "") {
+            if (estado == "por_pedir" && item.pedido == 1)
                 return false;
             else if (estado == "pedido" && item.pedido == 0)
                 return false;
         }
 
-        if(data_inicio != "" && data_fim != ""){
-            if(item.data_criacao < data_inicio || item.data_criacao > data_fim)
+        if (data_inicio != "" && data_fim != "") {
+            if (item.data_criacao < data_inicio || item.data_criacao > data_fim)
                 return false
         }
-        else if(data_inicio != ""){
-            if(item.data_criacao < data_inicio)
+        else if (data_inicio != "") {
+            if (item.data_criacao < data_inicio)
                 return false
         }
-        else if(item.data_criacao > data_fim)
-            return false
+        else if (data_fim != "") {
+            if (item.data_criacao > data_fim)
+                return false
+        }
 
 
         return true
     });
 
     renderTabela(dadosFiltrados);
-    
+
 });
 
 
 // Adicionar pedido
 function addPedido() {
-    const modalReposicao = document.getElementById('modal-reposicao');
     // Pega os dados do formulário
     const artigo = document.getElementById('artigo').value;
     const referencia = document.getElementById('referencia').value;
@@ -179,8 +181,8 @@ function addPedido() {
         "cliente": cliente,
         "telemovel": telemovel,
         "urgencia": urgencia,
-        "quantidade" : quantidade,
-        "observacoes" : observacoes
+        "quantidade": quantidade,
+        "observacoes": observacoes
     }
 
     // Envia os dados pro servidor
@@ -213,58 +215,124 @@ function addPedido() {
 }
 
 
-function carregartabela(){
-    // Busca os dados no servidor
-    fetch('reposicao.php',{
-        method:"post",
-        headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({
-            "acao":"listar"
-        })
+function editarPedido(){
+    const item_id = document.getElementById('edit_id').value;
+    const artigo = document.getElementById('edit-artigo').value;
+    const referencia = document.getElementById('edit-referencia').value;
+    const tipo = document.getElementById('edit-tipo').value;
+    const quantidade = document.getElementById('edit-quantidade').value;
+    const cliente = document.getElementById('edit-cliente').value;
+    const telemovel = document.getElementById('edit-telemovel').value;
+    const urgencia = document.getElementById('edit-urgencia').value;
+    const obs = document.getElementById('edit-obs').value;
+
+    // Constrói a variável dos dados
+    let dados = {
+        "acao": "editar",
+        "item_id" : item_id,
+        "artigo": artigo,
+        "referencia": referencia,
+        "tipo": tipo,
+        "cliente": cliente,
+        "telemovel": telemovel,
+        "urgencia": urgencia,
+        "quantidade": quantidade,
+        "observacoes": obs
+    }
+
+        // Envia os dados pro servidor
+    fetch('reposicao.php', {
+        method: "post",
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dados)
     }).then(response => response.json())
-    .then(data => {
-        // Salva os dados recebidos do servidor numa variável global
-        dados = data;
+        .then(data => {
 
-        renderTabela(dados);
+            if (data['resultado'] == "sucesso") {
+                //tratar sucesso -> Recarregar tabela
+                carregartabela();
+                modalEditar.style.display = "none";
+                mostrarMsg("green", data['msg']);
+            }
+            else {
+                //Mensagem de erro vinda do servidor
+                modalEditar.style.display = "none";
+                mostrarMsg("red", data['msg'])
+            }
+        })
 
-    })
+
 }
 
 
-function renderTabela(dados){
+function carregartabela() {
+    // Busca os dados no servidor
+    fetch('reposicao.php', {
+        method: "post",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            "acao": "listar"
+        })
+    }).then(response => response.json())
+        .then(data => {
+            // Salva os dados recebidos do servidor numa variável global
+            dados = data;
+
+            renderTabela(dados);
+
+        })
+}
+
+
+function renderTabela(dados) {
     // Gera cada linha da tabela dinamicamente
     let tbody = document.querySelector('tbody');
 
     // Limpa o tbody antes de reescrever
     tbody.innerHTML = '';
 
+    // Seleciona os dados com base no tipo de tabela
+    if (tabelaAtiva == "historico") {
+        dados = dados.filter(element => {
+            if (element.concluido == 0) {
+                return false;
+            }
+
+            return true;
+        })
+    }
+    else if (tabelaAtiva == "pedidos") {
+        dados = dados.filter(element => {
+            if (element.concluido == 1) {
+                return false;
+            }
+
+            return true;
+        })
+    }
+
     dados.forEach(element => {
-
-        if(element.concluido == 1)
-            return;
-
         let linha = document.createElement('tr');
 
         // Cria cada célula da linha
         let artigo = document.createElement('td');
-        artigo.innerText = element.artigo;           
+        artigo.innerText = element.artigo;
         linha.appendChild(artigo);
-        
+
         let referencia = document.createElement('td');
-        referencia.innerText = element.referencia;           
+        referencia.innerText = element.referencia;
         linha.appendChild(referencia);
-        
+
         let tipo = document.createElement('td');
-        tipo.innerText = element.tipo;           
+        tipo.innerText = element.tipo;
         linha.appendChild(tipo);
-        
-        let urgencia = document.createElement('td');        
+
+        let urgencia = document.createElement('td');
         // Dicionario para fazer correspondencia do tipo de urgência com o texto a ser apresentado (somente estética)
         urgencias = {
-            "nao urgente" : "Não Urgente",
-            "urgente" : "Urgente",
-            "muito urgente" : "Muito Urgente"
+            "nao urgente": "Não Urgente",
+            "urgente": "Urgente",
+            "muito urgente": "Muito Urgente"
         }
         urgencia.innerText = urgencias[element.urgencia];
 
@@ -273,11 +341,11 @@ function renderTabela(dados){
             case "muito urgente":
                 urgencia.classList.add('muito-urgente');
                 break;
-                
+
             case "urgente":
                 urgencia.classList.add('urgente');
                 break;
-                
+
             case "nao urgente":
                 urgencia.classList.add('nao-urgente');
                 break;
@@ -287,11 +355,11 @@ function renderTabela(dados){
         let obs = document.createElement('td');
         obs.innerText = element.observacoes;
         linha.appendChild(obs);
-        
+
         let qntd = document.createElement('td');
         qntd.innerText = element.quantidade;
         linha.appendChild(qntd);
-        
+
         let data_criacao = document.createElement('td');
         data_criacao.innerText = element.data_criacao;
         linha.appendChild(data_criacao);
@@ -301,46 +369,57 @@ function renderTabela(dados){
         let acoes = document.createElement('td');
         acoes.classList.add('td-acoes');
 
-        if (element.pedido == 1){
+        if (element.pedido == 1 && element.concluido == 0) {
             // Botão "Marcar como concluído"
             const botao = document.createElement('button');
             botao.innerText = "Marcar como Concluído";
             botao.classList.add('button', 'small', 'btn-concluido');
             botao.addEventListener('click', () => attEstadoConcluido(element.item_id));
-            acoes.appendChild(botao);   
+            acoes.appendChild(botao);
         }
-        else{
+        else if (element.pedido == 0) {
             // Botão "Marcar como pedido"
             const botao = document.createElement('button');
             botao.innerText = "Marcar como pedido";
             botao.classList.add('button', 'small', 'btn-pedido');
             botao.addEventListener('click', () => attEstadoPedido(element.item_id));
-            acoes.appendChild(botao);   
+            acoes.appendChild(botao);
         }
 
         // Botão de editar
-        const btnEditar = document.createElement('button');
-        btnEditar.innerText = "Editar"
-        btnEditar.classList.add('button', 'secondary', 'small');
-        btnEditar.addEventListener('click', ()=> {
-            modalEditar.style.display = "flex";
-        });
-        acoes.appendChild(btnEditar);
+        if (element.concluido == 0) {
+            const btnEditar = document.createElement('button');
+            btnEditar.innerText = "Editar"
+            btnEditar.classList.add('button', 'secondary', 'small');
+
+            // Preenche o modal de editar com os dados
+            btnEditar.addEventListener('click', () => {
+                document.getElementById('edit_id').value = element.item_id;
+                document.getElementById('edit-artigo').value = element.artigo || "";
+                document.getElementById('edit-referencia').value = element.referencia || "";
+                document.getElementById('edit-tipo').value = element.tipo || "papelaria";
+                document.getElementById('edit-quantidade').value = element.quantidade || 1;
+                document.getElementById('edit-cliente').value = element.nome_cliente || "";
+                document.getElementById('edit-telemovel').value =element.telefone_cliente || "";
+                document.getElementById('edit-urgencia').value= element.urgencia ||"muito urgente";
+                document.getElementById('edit-obs').value = element.observacoes || "";
+
+                modalEditar.style.display = "flex";
+
+            });
+            acoes.appendChild(btnEditar);
+        }
 
 
 
-        
+
         // Botão de mais informações
         const btnInfo = document.createElement('a');
         btnInfo.href = "#";
         btnInfo.innerText = "Mais info.";
 
-        btnInfo.addEventListener('click', function(e) {
-            e.preventDefault();
-
-            const infoModal = document.getElementById('info-content');
-
-            infoModal.innerHTML = `  
+        btnInfo.addEventListener('click', function (e) {
+            document.getElementById('info-content').innerHTML = `  
                 <span><strong>CLiente: </strong> ${element.nome_cliente || '-'}</span>
                 <p><strong>Nº Telemóvel: </strong> ${element.telefone_cliente || '-'}</p>
                 <span><strong>Data da criação do artigo: </strong> ${element.data_criacao}</span>
@@ -363,17 +442,17 @@ function renderTabela(dados){
 }
 
 
-function attEstadoPedido(id){
+function attEstadoPedido(id) {
     fetch('reposicao.php', {
-        method:"post",
-        headers:{"Content-Type":"application/json"},
+        method: "post",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
             "acao": "atualizar",
-            "estado":"pedido",
-            "id":id
+            "estado": "pedido",
+            "id": id
         })
-    }).then(response=>response.json())
-    .then(data=>{
+    }).then(response => response.json())
+        .then(data => {
             if (data['resultado'] == "sucesso") {
                 //tratar sucesso -> Recarregar tabela
                 carregartabela();
@@ -383,21 +462,21 @@ function attEstadoPedido(id){
                 //Mensagem de erro vinda do servidor
                 mostrarMsg("red", data['msg']);
             }
-    })
+        })
 }
 
 
-function attEstadoConcluido(id){
+function attEstadoConcluido(id) {
     fetch('reposicao.php', {
-        method:"post",
-        headers:{"Content-Type":"application/json"},
+        method: "post",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
             "acao": "atualizar",
-            "estado":"concluido",
-            "id":id
+            "estado": "concluido",
+            "id": id
         })
-    }).then(response=>response.json())
-    .then(data=>{
+    }).then(response => response.json())
+        .then(data => {
             if (data['resultado'] == "sucesso") {
                 //tratar sucesso -> Recarregar tabela
                 carregartabela();
@@ -407,33 +486,16 @@ function attEstadoConcluido(id){
                 //Mensagem de erro vinda do servidor
                 mostrarMsg("red", data['msg']);
             }
-    });
+        });
 }
 
 
-function editarPedido(item_id){
-    const item = dados.find(d => d.item_id == item_id);
-    if (!item) return;
 
-    document.getElementById('edit-artigo').value       = item.artigo        || '';
-    document.getElementById('edit-referencia').value   = item.referencia    || '';
-    document.getElementById('edit-tipo').value         = item.tipo          || 'papelaria';
-    document.getElementById('edit-quantidade').value   = item.quantidade    || 1;
-    document.getElementById('edit-cliente').value      = item.nome_cliente  || '';
-    document.getElementById('edit-telemovel').value    = item.telefone_cliente || '';
-    document.getElementById('edit-urgencia').value     = item.urgencia      || 'nao urgente';
-    document.getElementById('edit-obs').value          = item.observacoes   || '';
-
-    modalEditar.dataset.itemId = item_id;
-    modalEditar.style.display = 'flex';
-}
-
-
-function mostrarMsg(cor, conteudo){
+function mostrarMsg(cor, conteudo) {
     msg.style.color = cor;
     msg.innerText = conteudo;
 
-    setTimeout(()=>{
+    setTimeout(() => {
         msg.innerText = "";
-    },2000)
+    }, 2000)
 }
