@@ -334,8 +334,8 @@ function attItem($conn, $request)
 
 
 						<div style="display: flex; align-items: center; gap: 20px; margin-bottom: 2em;">
-							<button class="secundary btnTab" id="tab_ativo">Artigos a pedir</button>
-							<button class="secundary btnTab" id="tab_historico">Histórico de concluídos</button>
+							<button class="secundary btnTab" id="tab_ativo">Pedidos a concluir</button>
+							<button class="secundary btnTab" id="tab_historico">Pedidos concluídos</button>
 						</div>
 
 						<h3>Filtrar por: </h3>
@@ -425,9 +425,7 @@ function attItem($conn, $request)
 		?>
 
 
-		</div>
-	</div>
-
+</div>
 	<!-- Sidebar -->
 	<div id="sidebar">
 		<div class="inner">
@@ -440,6 +438,8 @@ function attItem($conn, $request)
 
 		</div>
 	</div>
+	</div>
+
 
 	</div>
 

@@ -5,7 +5,7 @@ let tabelaAtiva = "pedidos";
 // Carrega a tabela assim que a pagina abre
 carregartabela();
 
-// === Modal de adicionar pedidos ===
+// Modal de adicionar pedidos
 const btnAddPedido = document.getElementById('btn-add-pedido');
 const modalReposicao = document.getElementById('modal-reposicao');
 const closeModal = document.getElementById('close-modal');
@@ -26,12 +26,19 @@ if (btnAddPedido) {
 
         // Limpa todos os inputs
         const inputs = document.querySelectorAll('input');
+        const select_urgencia = document.getElementById('urgencia');
+        const select_tipo = document.getElementById('tipo');
         inputs.forEach(element => {
-            if (element.id == "quantidade")
+            
+            if (element.id == "quantidade"){
+                element.value = 1;
                 return;
-
+            }
             element.value = "";
         });
+
+        select_urgencia.value = "muito urgente";
+        select_tipo.value = "papelaria";
 
         modalReposicao.style.display = 'flex';
     });
@@ -260,8 +267,6 @@ function editarPedido(){
                 mostrarMsg("red", data['msg'])
             }
         })
-
-
 }
 
 
@@ -488,7 +493,6 @@ function attEstadoConcluido(id) {
             }
         });
 }
-
 
 
 function mostrarMsg(cor, conteudo) {

@@ -3907,8 +3907,8 @@ tr:hover {
 .modal-content {
   background-color: #fff;
   padding: 2.5em;
-  width: 90%;
-  max-width: 600px;
+  width: 100%;
+  max-width: 900px;
   position: relative;
   max-height: 90vh;
   overflow-y: auto;
