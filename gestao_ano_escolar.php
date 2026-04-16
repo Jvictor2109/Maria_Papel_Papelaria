@@ -1,4 +1,4 @@
-	<?php
+<?php
 	// Verificação de sessão em todas as páginas protegidas
 	session_start();
 	include('db_connect.php');
@@ -6,11 +6,12 @@
 	if($_SERVER['REQUEST_METHOD'] == "POST"){
 		// Verifica se o formulário de adição foi submetido
 		if(isset($_POST['adicionar'])){
-			$nome_disciplina = $_POST['nome_disciplina'];
+			$nome_ano_escolar = $_POST['nome_ano_escolar'];
+            $encomendas_ano = intval($_POST['encomendas_ano']);
 
-			$sql = "INSERT INTO disciplina (nome_disciplina) VALUES (?)";
+			$sql = "INSERT INTO ano_escolar (nome_ano_escolar, encomendas_ano, encomendas_inicial) VALUES (?, ?, ?)";
 			$stmt = $conn->prepare($sql);
-			$stmt->bind_param("s", $nome_disciplina);
+			$stmt->bind_param("sii", $nome_ano_escolar, $encomendas_ano, $encomendas_ano);
 			$resultado = $stmt->execute();
 
 			if($resultado == false){
@@ -23,14 +24,18 @@
 
 		}
 		else if(isset($_POST['editar'])){
-			$id_disciplina = intval($_POST['edit_id_disciplina']);
-			$nome_disciplina = $_POST['edit_nome_disciplina'];
+			$id_ano_escolar = intval($_POST['edit_id_ano_escolar']);
+			$nome_ano_escolar = $_POST['edit_nome_ano_escolar'];
+            $encomendas_ano = intval($_POST['edit_encomendas_ano']);
+            $encomendas_inicial = intval($_POST['edit_encomendas_inicial']);
 
-			$sql = "UPDATE disciplina
-					SET nome_disciplina = ?
-					WHERE id_disciplina = ?";
+			$sql = "UPDATE ano_escolar
+					SET nome_ano_escolar = ?,
+                        encomendas_ano = ?,
+                        encomendas_inicial = ?
+					WHERE id_ano_escolar = ?";
 			$stmt = $conn->prepare($sql);
-			$stmt->bind_param("si", $nome_disciplina, $id_disciplina);
+			$stmt->bind_param("siii", $nome_ano_escolar, $encomendas_ano, $encomendas_inicial, $id_ano_escolar);
 			$resultado = $stmt->execute();
 
 			if($resultado == false){
@@ -75,37 +80,61 @@
 											<?php
 											// Verificar se já está autenticado
 											if (isset($_SESSION['user_id'])) {?>
-												<h2 >Disciplinas</h2>
+												<h2 >Ano Escolar</h2>
 
 												<!-- Modal com formulário pra editar -->
 												<div id="modal-gestao" class="modal-overlay" style="display: none;">
 													<div class="box modal-content">
 														<span id="close-modal" class="modal-close">&times;</span>
-														<h3>Editar Disciplina</h3>
+														<h3>Editar Ano Escolar</h3>
 
 														<form action="<?php $_SERVER['PHP_SELF'] ?>" method="post">
-															<input type="hidden" name="edit_id_disciplina" value=""  id="edit_id_disciplina">
+															<input type="hidden" name="edit_id_ano_escolar" value=""  id="edit_id_ano_escolar">
 															<div class="row">
 																<div class="col-8">
-																	<input type="text" name="edit_nome_disciplina" id="edit_nome_disciplina">
-																</div>
-																<div class="col-4">
-																	<input type="submit" name="editar" value="editar">
+                                                                    <label for="edit_nome_ano_escolar">Ano escolar: </label>
+																	<input type="text" name="edit_nome_ano_escolar" id="edit_nome_ano_escolar">
 																</div>
 															</div>
+
+															<div class="row">
+																<div class="col-8">
+                                                                    <label for="edit_encomendas_ano">Encomendas Ano: </label>
+																	<input type="text" name="edit_encomendas_ano" id="edit_encomendas_ano">
+																</div>
+															</div>
+
+															<div class="row">
+																<div class="col-8">
+                                                                    <label for="edit_encomendas_inicial">Encomendas Inicial: </label>
+																	<input type="text" name="edit_encomendas_inicial" id="edit_encomendas_inicial">
+																</div>
+															</div>
+
+                                                            <div class="row" style="margin-top: 10px;">
+                                                                <div class="col-6">
+                                                                    <input type="submit" name="editar" value="editar">
+                                                                </div>
+                                                            </div>
 														</form>
 													</div>
 												</div>
 
 
 												<!-- Formulário para inserir linha na tabela -->
-												<label for="form-disciplina">Adicionar disciplina:</label>
-												<form action="<?php $_SERVER['PHP_SELF'] ?>" method="post" id="form_disciplina">
-													<div class="row">
-														<div class="col-3 col-12xsmall">
-															<input type="text" name="nome_disciplina" required>
+												<form action="<?php $_SERVER['PHP_SELF'] ?>" method="post" id="form_ano_escolar">
+                                                    <div class="row">
+                                                        <div class="col-3 col-12xsmall">
+                                                            <label for="nome_ano_escolar">Adicionar Ano Escolar:</label>
+															<input type="text" name="nome_ano_escolar" required id="nome_ano_escolar">
 														</div>
+
 														<div class="col-3 col-12xsmall">
+                                                            <label for="encomendas_ano">Nº encomenda inicial:</label>
+															<input type="text" name="encomendas_ano" required id="encomendas_ano">
+														</div>
+
+														<div class="col-3 col-12xsmall" style="align-self: flex-end;">
 															<input type="submit" name="adicionar" value="adicionar">
 														</div>
 													</div>
@@ -116,8 +145,10 @@
 													<table class="alt">
 														<thead>
 															<tr>
-																<th>Id Disciplina</th>
-																<th>Nome Disciplina</th>
+																<th>Id Ano Escolar</th>
+																<th>Nome Ano Escolar</th>
+                                                                <th>Encomendas Ano</th>
+                                                                <th>Encomendas Inicial</th>
 																<th>Ações</th>
 															</tr>
 														</thead>
@@ -125,7 +156,7 @@
 														<tbody>
 															<?php 
 																// Busca os dados à base de dados e constrói a tabela
-																$sql = "SELECT * FROM disciplina";
+																$sql = "SELECT * FROM ano_escolar ORDER BY encomendas_inicial";
 																$stmt = $conn->prepare($sql);
 																$stmt->execute();
 																$resultado = $stmt->get_result();
@@ -136,18 +167,19 @@
 																}
 																
 																if($resultado->num_rows == 0){?>
-																	<td colspan="3">Sem itens na tabela</td>
-																<?php
-
+																	<td colspan="5">Sem itens na tabela</td>
+																<?php 
 																}
 
 																$linhas = $resultado->fetch_all(MYSQLI_ASSOC);
 
 																foreach($linhas as $linha){?>
 																	<tr>
-																		<td id="id_disciplina"><?= $linha['id_disciplina'] ?></td>
-																		<td id="nome_disciplina_<?= $linha['id_disciplina'] ?>"><?= $linha['nome_disciplina'] ?></td>
-																		<td><button class="primary small" onclick="editar(<?= $linha['id_disciplina'] ?>)">Editar</button></td>
+																		<td id="id_ano_escolar"><?= $linha['id_ano_escolar'] ?></td>
+																		<td id="nome_ano_escolar_<?= $linha['id_ano_escolar'] ?>"><?= $linha['nome_ano_escolar'] ?></td>
+                                                                        <td id="encomendas_ano_<?= $linha['id_ano_escolar'] ?>"><?= $linha['encomendas_ano'] ?></td>
+                                                                        <td id="encomendas_inicial_<?= $linha['id_ano_escolar'] ?>"><?= $linha['encomendas_inicial'] ?></td>
+																		<td><button class="primary small" onclick="editar(<?= $linha['id_ano_escolar'] ?>)">Editar</button></td>
 																	</tr>
 																<?php }
 
@@ -201,10 +233,14 @@
 			<script>
 				function editar(id){
 					// Popula o modal
-					const nome_disciplina = document.getElementById(`nome_disciplina_${id}`).innerText;
+					const nome_ano_escolar = document.getElementById(`nome_ano_escolar_${id}`).innerText;
+					const encomendas_ano = document.getElementById(`encomendas_ano_${id}`).innerText;
+					const encomendas_inicial = document.getElementById(`encomendas_inicial_${id}`).innerText;
 
-					document.getElementById('edit_id_disciplina').value = id;
-					document.getElementById('edit_nome_disciplina').value = nome_disciplina;
+					document.getElementById('edit_id_ano_escolar').value = id;
+					document.getElementById('edit_nome_ano_escolar').value = nome_ano_escolar;
+                    document.getElementById('edit_encomendas_ano').value = encomendas_ano;
+                    document.getElementById('edit_encomendas_inicial').value = encomendas_inicial;
 
 					const modal = document.getElementById('modal-gestao');
 					modal.style.display = 'flex';

@@ -106,7 +106,7 @@
 															<input type="text" name="nome_agrupamento" required>
 														</div>
 														<div class="col-6 col-12xsmall">
-															<input type="submit" name="adicionar" value="adicionar" required>
+															<input type="submit" name="adicionar" value="adicionar">
 														</div>
 													</div>
 												</form>
@@ -138,7 +138,7 @@
 																if($resultado->num_rows == 0){?>
 																	<td colspan="3">Sem itens na tabela</td>
 																<?php
-																	exit(); 
+													 
 																}
 
 																$linhas = $resultado->fetch_all(MYSQLI_ASSOC);

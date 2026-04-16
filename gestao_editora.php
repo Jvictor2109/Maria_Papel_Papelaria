@@ -102,11 +102,11 @@
 												<label for="form-editora">Adicionar Editora:</label>
 												<form action="<?php $_SERVER['PHP_SELF'] ?>" method="post" id="form_editora">
 													<div class="row">
-														<div class="col6 col-12xsmall">
+														<div class="col-3 col-12xsmall">
 															<input type="text" name="nome_editora" required>
 														</div>
-														<div class="col6 col-12xsmall">
-															<input type="submit" name="adicionar" value="adicionar" required>
+														<div class="col-3 col-12xsmall">
+															<input type="submit" name="adicionar" value="adicionar">
 														</div>
 													</div>
 												</form>
@@ -138,7 +138,7 @@
 																if($resultado->num_rows == 0){?>
 																	<td colspan="3">Sem itens na tabela</td>
 																<?php
-																	exit(); 
+																	
 																}
 
 																$linhas = $resultado->fetch_all(MYSQLI_ASSOC);
