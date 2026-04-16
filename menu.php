@@ -40,6 +40,16 @@
                     }
 
                     if (isset($_SESSION['e_administrador']) && $_SESSION['e_administrador'] === 1) {
+
+                        echo '
+                            <li>
+                                <span class="opener">Gestão Manuais escolares</span>
+                                <ul>
+                                    <li><a href="gestao_disciplinas.php">Disciplinas</a></li>
+                                </ul>
+                            </li>
+                        ';
+
                         echo '<li>
                             <span class="opener">Painel de Controlo</span>
                             <ul>
@@ -49,6 +59,7 @@
                                 <li><a href="#">Feugiat Veroeros</a></li>
                             </ul>
                         </li>';
+
                     }
                 ?>
     </ul>
