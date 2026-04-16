@@ -45,7 +45,9 @@
                             <li>
                                 <span class="opener">Gestão Manuais escolares</span>
                                 <ul>
-                                    <li><a href="gestao_disciplinas.php">Disciplinas</a></li>
+                                    <li><a href="gestao_disciplina.php">Disciplina</a></li>
+                                    <li><a href="gestao_editora.php">Editora</a></li>
+                                    <li><a href="gestao_agrupamento.php">Agrupamento</a></li>
                                 </ul>
                             </li>
                         ';
