@@ -4066,3 +4066,12 @@ button.btn-concluido:active,
 #modal-gestao .modal-content{
   max-width: 600px !important;
 }
+
+
+.form-add-manual{
+  display: none;
+}
+
+.form-add-manual input, select, .checkbox-group{
+    margin-bottom: 10px;
+}

@@ -7,11 +7,11 @@
 		// Verifica se o formulário de adição foi submetido
 		if(isset($_POST['adicionar'])){
 			$nome_ano_escolar = $_POST['nome_ano_escolar'];
-            $encomendas_ano = intval($_POST['encomendas_ano']);
+            $encomendas_inicial = intval($_POST['encomendas_inicial']);
 
-			$sql = "INSERT INTO ano_escolar (nome_ano_escolar, encomendas_ano, encomendas_inicial) VALUES (?, ?, ?)";
+			$sql = "INSERT INTO ano_escolar (nome_ano_escolar, encomendas_inicial) VALUES (?, ?)";
 			$stmt = $conn->prepare($sql);
-			$stmt->bind_param("sii", $nome_ano_escolar, $encomendas_ano, $encomendas_ano);
+			$stmt->bind_param("si", $nome_ano_escolar, $encomendas_inicial);
 			$resultado = $stmt->execute();
 
 			if($resultado == false){
@@ -26,16 +26,14 @@
 		else if(isset($_POST['editar'])){
 			$id_ano_escolar = intval($_POST['edit_id_ano_escolar']);
 			$nome_ano_escolar = $_POST['edit_nome_ano_escolar'];
-            $encomendas_ano = intval($_POST['edit_encomendas_ano']);
             $encomendas_inicial = intval($_POST['edit_encomendas_inicial']);
 
 			$sql = "UPDATE ano_escolar
 					SET nome_ano_escolar = ?,
-                        encomendas_ano = ?,
                         encomendas_inicial = ?
 					WHERE id_ano_escolar = ?";
 			$stmt = $conn->prepare($sql);
-			$stmt->bind_param("siii", $nome_ano_escolar, $encomendas_ano, $encomendas_inicial, $id_ano_escolar);
+			$stmt->bind_param("sii", $nome_ano_escolar, $encomendas_inicial, $id_ano_escolar);
 			$resultado = $stmt->execute();
 
 			if($resultado == false){
@@ -97,12 +95,7 @@
 																</div>
 															</div>
 
-															<div class="row">
-																<div class="col-8">
-                                                                    <label for="edit_encomendas_ano">Encomendas Ano: </label>
-																	<input type="text" name="edit_encomendas_ano" id="edit_encomendas_ano">
-																</div>
-															</div>
+
 
 															<div class="row">
 																<div class="col-8">
@@ -131,7 +124,7 @@
 
 														<div class="col-3 col-12xsmall">
                                                             <label for="encomendas_ano">Nº encomenda inicial:</label>
-															<input type="text" name="encomendas_ano" required id="encomendas_ano">
+															<input type="text" name="encomendas_inicial" required id="encomendas_inicial">
 														</div>
 
 														<div class="col-3 col-12xsmall" style="align-self: flex-end;">
@@ -239,7 +232,6 @@
 
 					document.getElementById('edit_id_ano_escolar').value = id;
 					document.getElementById('edit_nome_ano_escolar').value = nome_ano_escolar;
-                    document.getElementById('edit_encomendas_ano').value = encomendas_ano;
                     document.getElementById('edit_encomendas_inicial').value = encomendas_inicial;
 
 					const modal = document.getElementById('modal-gestao');
