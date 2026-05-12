@@ -2,9 +2,12 @@
 carregarTabela();
 
 
-// Validar para aceitar apenas números no ISBN
+// Validar para aceitar apenas números no ISBN e preço
 document.getElementById('isbn').addEventListener('input', (e) => {
     e.target.value = e.target.value.replace(/[^0-9]/g, '');
+});
+document.getElementById('preco_manual').addEventListener('input', (e) => {
+    e.target.value = e.target.value.replace(/[^0-9.,]/g, '');
 });
 
 // Event listener pra quando digitar no campo ISBN
@@ -118,6 +121,8 @@ btn_guardar_manual.addEventListener('click', ()=>{
         });
 
     document.querySelector('.form-add-manual').style.display = "none";
+
+    carregarTabela();
 });
 
 
