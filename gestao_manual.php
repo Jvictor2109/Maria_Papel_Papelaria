@@ -165,7 +165,7 @@ function checarIsbn(mysqli $conn, array $request){
 											<?php
 											// Verificar se já está autenticado
 											if (isset($_SESSION['user_id'])) {?>
-												<h2 >Manuais</h2>
+												<h2>Gestão de Manuais</h2>
 												<span id="msgErro"></span>
 
 												<div class="row">

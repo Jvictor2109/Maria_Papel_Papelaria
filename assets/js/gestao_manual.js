@@ -11,36 +11,36 @@ document.getElementById('preco_manual').addEventListener('input', (e) => {
 });
 
 // Event listener pra quando digitar no campo ISBN
-document.getElementById('isbn').addEventListener('keyup', (e) =>{
+document.getElementById('isbn').addEventListener('keyup', (e) => {
     const form = document.querySelector('.form-add-manual');
     const isbn = e.target.value.trim();
-    if(e.target.value.length > 0 ){
+    if (e.target.value.length > 0) {
         form.style.display = "flex";
         form.querySelectorAll('input, select').forEach(el => el.disabled = false);
     }
-    else{
+    else {
         form.style.display = "none";
     }
 
-    if(isbn.length == 10 || isbn.length == 13){
+    if (isbn.length == 10 || isbn.length == 13) {
         fetch('gestao_manual.php', {
-            method:"post",
-            headers:{ 'Content-Type': 'application/json' },
-            body:JSON.stringify({acao:"checar_isbn", isbn:isbn})
-        }).then(response =>response.json())
-        .then(data=>{
-            if(data["resultado"] == true){                
-                mostrarMsg("red", "ISBN já existente na base de dados");
-                // desativar os campos
-                form.querySelectorAll('input, select').forEach(el => el.disabled = true);
-            }
-        });
+            method: "post",
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ acao: "checar_isbn", isbn: isbn })
+        }).then(response => response.json())
+            .then(data => {
+                if (data["resultado"] == true) {
+                    mostrarMsg("red", "ISBN já existente na base de dados");
+                    // desativar os campos
+                    form.querySelectorAll('input, select').forEach(el => el.disabled = true);
+                }
+            });
     }
 });
 
 // Event listener de adicionar manual
 const btn_guardar_manual = document.getElementById('btn_guardar_manual');
-btn_guardar_manual.addEventListener('click', ()=>{
+btn_guardar_manual.addEventListener('click', () => {
 
     // Pega cada um dos campos e verifica se estão preenchidos
     const isbn = document.getElementById('isbn').value;
@@ -54,71 +54,105 @@ btn_guardar_manual.addEventListener('click', ()=>{
     // Checkboxes
     const agrupamentos = document.querySelectorAll('.checkbox_agrupamento:checked');
     const anos_escolares = document.querySelectorAll('.checkbox_ano_escolar:checked');
-    
+
 
     // Verificar os campos vazios
-    if (!nome_manual || preco_manual <= 0 || !editora || !disciplina || !tipo_manual || 
-        agrupamentos.length == 0 || anos_escolares.length == 0 ||(isbn.length != 10 && isbn.length != 13) || isNaN(preco_manual)){
-        mostrarMsg("red", "Verifique os campos");
+    if (isbn.length != 10 && isbn.length != 13) {
+        mostrarMsg("red", "ISBN inválido");
+        return;
+    }
+
+    if (!nome_manual) {
+        mostrarMsg("red", "Falta o campo Nome do manual");
+        return;
+    }
+
+    if(preco_manual <= 0){
+        mostrarMsg("red", "Preço do manual é invalido");
+        return;
+    }
+
+    if(!editora){
+        mostrarMsg("red", "Falta o campo editora");
+        return;
+    }
+
+    if(!disciplina){
+        mostrarMsg("red", "Falta o campo disciplina");
+        return;
+    }
+
+    if(!tipo_manual){
+        mostrarMsg("red", "Falta o campo Tipo de manual");
+        return;
+    }
+
+    if(agrupamentos.length == 0){
+        mostrarMsg("red", "Selecione pelo menos 1 agrupamento");
+        return;
+    }
+
+    if(anos_escolares.length == 0){
+        mostrarMsg("red", "Selecione pelo menos 1 ano escolar");
         return;
     }
 
     // Montar o JSON pro fetch
     let ids_agrupamentos = [];
-    agrupamentos.forEach(agp =>{
+    agrupamentos.forEach(agp => {
         ids_agrupamentos.push(agp.value);
     })
 
     let ids_anos_escolares = [];
-    anos_escolares.forEach(ano =>{
+    anos_escolares.forEach(ano => {
         ids_anos_escolares.push(ano.value);
     })
 
     const dados = {
-        "acao":"adicionar",
-        "isbn":isbn,
-        "nome_manual":nome_manual,
-        "cod_manual":cod_manual,
-        "preco_manual":preco_manual,
-        "editora":editora,
-        "disciplina":disciplina,
-        "tipo_manual":tipo_manual,
-        "agrupamentos":ids_agrupamentos,
-        "anos_escolares":ids_anos_escolares
+        "acao": "adicionar",
+        "isbn": isbn,
+        "nome_manual": nome_manual,
+        "cod_manual": cod_manual,
+        "preco_manual": preco_manual,
+        "editora": editora,
+        "disciplina": disciplina,
+        "tipo_manual": tipo_manual,
+        "agrupamentos": ids_agrupamentos,
+        "anos_escolares": ids_anos_escolares
     }
 
     // Envia pro PHP
     fetch('gestao_manual.php', {
-        method:"post",
-        headers:{ 'Content-Type': 'application/json' },
-        body:JSON.stringify(dados)
+        method: "post",
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dados)
 
-    }).then(response =>response.json())
-    .then(data =>{
-        if(data["resultado"] == "sucesso"){
-            mostrarMsg("green", data["msg"]);
-        }
-        else if(data["resultado"] == "erro"){
-            mostrarMsg("red", data["msg"]);
-        }
-        
-    }); 
+    }).then(response => response.json())
+        .then(data => {
+            if (data["resultado"] == "sucesso") {
+                mostrarMsg("green", data["msg"]);
+            }
+            else if (data["resultado"] == "erro") {
+                mostrarMsg("red", data["msg"]);
+            }
+
+        });
 
     // Limpa os inputs e esconde o formulário após a adição
     const textInputs = document.querySelectorAll('input[type="text"]');
-        textInputs.forEach(input => {
-            input.value = "";
-        });
+    textInputs.forEach(input => {
+        input.value = "";
+    });
 
     const checkboxes = document.querySelectorAll('input[type="checkbox"]');
-        checkboxes.forEach(checkbox => {
-            checkbox.checked = false;
-        });
-    
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+
     const selects = document.querySelectorAll('select');
-        selects.forEach(select => {
-            select.selectedIndex = 0;
-        });
+    selects.forEach(select => {
+        select.selectedIndex = 0;
+    });
 
     document.querySelector('.form-add-manual').style.display = "none";
 
@@ -127,33 +161,33 @@ btn_guardar_manual.addEventListener('click', ()=>{
 
 
 // Função que popula a tabela
-function carregarTabela(){
+function carregarTabela() {
     let dados = {};
 
     fetch('gestao_manual.php', {
-        method:"post",
-        headers:{ 'Content-Type': 'application/json' },
-        body:JSON.stringify({"acao":"listar_manuais"})
+        method: "post",
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ "acao": "listar_manuais" })
     }).then(response => response.json())
-    .then(data =>{
-        dados = data;
-        console.log(dados);
-        
-        renderTabela(dados);
-    });
+        .then(data => {
+            dados = data;
+            console.log(dados);
 
-    
-    
+            renderTabela(dados);
+        });
+
+
+
 }
 
 
 // Função que constroi a tabela
-function renderTabela(dados){
+function renderTabela(dados) {
     const tbody = document.querySelector('tbody');
     tbody.innerHTML = '';
 
     // Itera sobre cada linha e adiciona à tabela
-    dados.forEach(element =>{
+    dados.forEach(element => {
         let linha = document.createElement('tr');
 
         let id_manual = document.createElement('td');
@@ -163,34 +197,34 @@ function renderTabela(dados){
         let isbn_manual = document.createElement('td');
         isbn_manual.innerText = element.isbn_manual;
         linha.appendChild(isbn_manual);
-        
+
         let nome_manual = document.createElement('td');
         nome_manual.innerText = element.nome_manual;
         linha.appendChild(nome_manual);
-        
+
         let preco_manual = document.createElement('td');
         preco_manual.innerText = element.preco_manual;
         linha.appendChild(preco_manual);
-        
+
         let cod_manual = document.createElement('td');
         cod_manual.innerText = element.cod_manual;
         linha.appendChild(cod_manual);
-        
+
         let nome_editora = document.createElement('td');
         nome_editora.innerText = element.nome_editora;
         linha.appendChild(nome_editora);
 
         // Vai ao servidor buscar todos os anos escolares associados ao livro
         fetch('gestao_manual.php', {
-            method:"post",
-            headers:{ 'Content-Type': 'application/json' },
-            body:JSON.stringify({"acao":"checar_anos_escolares", "id_manual":element.id_manual})
+            method: "post",
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ "acao": "checar_anos_escolares", "id_manual": element.id_manual })
         }).then(response => response.json())
-        .then(data =>{
-            let anos_escolares = document.createElement('td');
-            anos_escolares.innerText = data.resultado.join('\n');
-            linha.appendChild(anos_escolares);            
-        });
+            .then(data => {
+                let anos_escolares = document.createElement('td');
+                anos_escolares.innerText = data.resultado.join('\n');
+                linha.appendChild(anos_escolares);
+            });
 
         tbody.appendChild(linha);
     })
@@ -198,14 +232,24 @@ function renderTabela(dados){
 
 
 // Função mensagem de erro
+// A mensagem só sai caso altere o campo
 const msgErro = document.getElementById('msgErro');
+document.querySelectorAll('input').forEach(el=>{
+    el.addEventListener('input', ()=>{
+        msgErro.style.display = "none";
+    })
+})
+document.querySelectorAll('select').forEach(el=>{
+    el.addEventListener('change', ()=>{
+        msgErro.style.display = "none";
+    })
+})
+
+
 function mostrarMsg(cor, conteudo) {
     msgErro.style.color = cor;
     msgErro.innerText = conteudo;
-
-    setTimeout(() => {
-        msgErro.innerText = "";
-    }, 2000)
+    msgErro.style.display = "flex";
 }
 
 

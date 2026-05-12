@@ -32,10 +32,10 @@
     <ul>
         <li><a href="index.php">Início</a></li>
             
+        <li><a href="expedicao_vasp.php">Expedições VASP</a></li>
                 <?php
                     if(isset($_SESSION['user_id'])){
                         echo '<li><a href="reposicao.php">Material a pedir</a></li>';
-                        echo '<li><a href="expedicao_vasp.php">Expedições VASP</a></li>';
 
                     }
 

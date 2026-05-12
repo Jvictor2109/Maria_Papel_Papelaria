@@ -75,7 +75,7 @@
 											<?php
 											// Verificar se já está autenticado
 											if (isset($_SESSION['user_id'])) {?>
-												<h2 >Disciplinas</h2>
+												<h2> Gestão de Disciplinas</h2>
 
 												<!-- Modal com formulário pra editar -->
 												<div id="modal-gestao" class="modal-overlay" style="display: none;">
