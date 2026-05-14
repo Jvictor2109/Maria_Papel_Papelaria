@@ -67,7 +67,7 @@ btn_guardar_manual.addEventListener('click', () => {
         return;
     }
 
-    if(preco_manual <= 0){
+    if(preco_manual <= 0 || isNaN(preco_manual)){
         mostrarMsg("red", "Preço do manual é invalido");
         return;
     }
@@ -250,6 +250,13 @@ function mostrarMsg(cor, conteudo) {
     msgErro.style.color = cor;
     msgErro.innerText = conteudo;
     msgErro.style.display = "flex";
+
+    // Se for mensagem de sucesso, deve desaparecer dps
+    if(cor == "green"){
+        setTimeout(() => {
+            msgErro.style.display = "none";
+        }, 2000);
+    }
 }
 
 
