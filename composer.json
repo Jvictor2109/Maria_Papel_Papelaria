@@ -1,7 +1,8 @@
 {
     "require": {
         "smalot/pdfparser": "^2.12",
-        "shuchkin/simplexlsxgen": "^1.5"
+        "shuchkin/simplexlsxgen": "^1.5",
+        "shuchkin/simplexlsx": "^1.1"
     },
     "config":{
         "platform": {

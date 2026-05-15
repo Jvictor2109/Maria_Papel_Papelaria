@@ -165,7 +165,35 @@ function checarIsbn(mysqli $conn, array $request){
 											<?php
 											// Verificar se já está autenticado
 											if (isset($_SESSION['user_id'])) {?>
-												<h2>Gestão de Manuais</h2>
+
+											<!-- Modal para carregar manuais -->~
+											<div id="modal_carregar_manuais" class="modal-overlay" style="display: none;">
+												<div class="box modal-content">
+													<span id="close-modal" class="modal-close">&times;</span>
+													<h3>Carregar Manuais</h3>
+
+													<p id="modalError"></p>
+
+													<strong>Preencha as informações dos manuais no ficheiro modelo e faça upload.  <a href="modelo_carregar_manuais.xlsx" download="Modelo_Carregar_Manuais">Download do ficheiro modelo</a></strong>
+														<div class="row gtr-uniform">
+															<input type="file" name="xlsx_manuais" id="xlsx_manuais" style="margin-top: 30px;">
+														</div>
+														<div class="row-gtr-uniform">
+															<input type="submit" class="primary" id="submit_manuais_bulk" value="Carregar Manuais" style="margin-top: 30px;">
+														</div>
+												</div>
+											</div>
+
+
+
+											<div class="row">
+												<div class="col-4">
+													<h2>Gestão de Manuais</h2>
+												</div>
+												<div class="col-2">
+													<button class="primary" id="btn_carregar_manual">Carregar manuais</button>
+												</div>
+											</div>
 												<span id="msgErro"></span>
 
 												<div class="row">

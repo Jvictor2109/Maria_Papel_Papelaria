@@ -1,6 +1,27 @@
 // Carrega a tabela assim que carrega a pagina
 carregarTabela();
 
+// Controle do modal de carregar manual
+// Mostrar modal
+const modal = document.getElementById('modal_carregar_manuais');
+const btnCarregarManual = document.getElementById('btn_carregar_manual');
+btnCarregarManual.addEventListener('click', function (e){
+    e.preventDefault();
+    modal.style.display ="flex";
+
+})
+// Fechar manual
+const btnCloseModal = document.getElementById('close-modal');
+btnCloseModal.addEventListener('click', ()=>{
+    modal.style.display = "none";
+})
+// Fecha o modal ao clicar fora da caixa do modal
+window.addEventListener('click', function (e) {
+    if (e.target === modal) {
+        modal.style.display = 'none';
+    }
+});
+
 
 // Validar para aceitar apenas números no ISBN e preço
 document.getElementById('isbn').addEventListener('input', (e) => {
@@ -160,6 +181,35 @@ btn_guardar_manual.addEventListener('click', () => {
 });
 
 
+// Event listener de adicionar Excel com manuais
+const submit_manuais_bulk = document.getElementById('submit_manuais_bulk');
+submit_manuais_bulk.addEventListener('click', ()=>{
+    const xlsx = document.getElementById('xlsx_manuais');
+    const formData = new FormData();
+    formData.append('xlsx', xlsx.files[0]);
+
+    fetch('upload_manuais.php', {
+        method:"post",
+        body:formData
+    }).then(response => response.json())
+    .then(data =>{
+        if(data['resultado'] == "sucesso"){
+            window.location.href = "upload_manuais.php";
+        }
+        else{
+            const modalError = document.getElementById('modalError');
+            modalError.style.color = "red";
+            modalError.innerText = `${data['msg']}`;
+
+            setTimeout(() => {
+                modalError.innerText = "";
+            }, 2000);
+
+        }
+    })
+})
+
+
 // Função que popula a tabela
 function carregarTabela() {
     let dados = {};
@@ -171,13 +221,8 @@ function carregarTabela() {
     }).then(response => response.json())
         .then(data => {
             dados = data;
-            console.log(dados);
-
             renderTabela(dados);
         });
-
-
-
 }
 
 
@@ -231,6 +276,7 @@ function renderTabela(dados) {
 }
 
 
+
 // Função mensagem de erro
 // A mensagem só sai caso altere o campo
 const msgErro = document.getElementById('msgErro');
@@ -245,7 +291,6 @@ document.querySelectorAll('select').forEach(el=>{
     })
 })
 
-
 function mostrarMsg(cor, conteudo) {
     msgErro.style.color = cor;
     msgErro.innerText = conteudo;
@@ -254,7 +299,7 @@ function mostrarMsg(cor, conteudo) {
     // Se for mensagem de sucesso, deve desaparecer dps
     if(cor == "green"){
         setTimeout(() => {
-            msgErro.style.display = "none";
+            msgErro.style.display = "none"
         }, 2000);
     }
 }
