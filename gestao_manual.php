@@ -315,7 +315,7 @@ function checarIsbn(mysqli $conn, array $request){
 												<div class="row">
 													<div class="col-12">
 														<!-- Tabela que mostra os itens -->
-														<div class="table-wrapper" style="max-height: 400px; overflow-y: auto;">
+														<div class="table-wrapper" style="max-height: 400px; overflow-y: auto; display:none">
 															<table>
 																<thead>
 																	<tr>

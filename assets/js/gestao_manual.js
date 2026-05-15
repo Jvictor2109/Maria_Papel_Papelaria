@@ -1,6 +1,3 @@
-// Carrega a tabela assim que carrega a pagina
-carregarTabela();
-
 // Controle do modal de carregar manual
 // Mostrar modal
 const modal = document.getElementById('modal_carregar_manuais');
@@ -187,14 +184,15 @@ submit_manuais_bulk.addEventListener('click', ()=>{
     const xlsx = document.getElementById('xlsx_manuais');
     const formData = new FormData();
     formData.append('xlsx', xlsx.files[0]);
+    formData.append('acao', 'upload_xlsx');
 
-    fetch('upload_manuais.php', {
+    fetch('carregar_manuais.php', {
         method:"post",
         body:formData
     }).then(response => response.json())
     .then(data =>{
         if(data['resultado'] == "sucesso"){
-            window.location.href = "upload_manuais.php";
+            window.location.href = "carregar_manuais.php";
         }
         else{
             const modalError = document.getElementById('modalError');
