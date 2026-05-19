@@ -166,11 +166,12 @@ function checarIsbn(mysqli $conn, array $request){
 											// Verificar se já está autenticado
 											if (isset($_SESSION['user_id'])) {?>
 
-											<!-- Modal para carregar manuais -->~
+											<!-- Modal para carregar manuais -->
 											<div id="modal_carregar_manuais" class="modal-overlay" style="display: none;">
 												<div class="box modal-content">
 													<span id="close-modal" class="modal-close">&times;</span>
 													<h3>Carregar Manuais</h3>
+													
 
 													<p id="modalError"></p>
 
@@ -194,6 +195,9 @@ function checarIsbn(mysqli $conn, array $request){
 													<button class="primary" id="btn_carregar_manual">Carregar manuais</button>
 												</div>
 											</div>
+
+											<h4>Introduza o ISBN do manual para adicioná-lo ou editar suas informações</h4>
+
 												<span id="msgErro"></span>
 
 												<div class="row">

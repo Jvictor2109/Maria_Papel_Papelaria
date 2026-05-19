@@ -173,8 +173,6 @@ btn_guardar_manual.addEventListener('click', () => {
     });
 
     document.querySelector('.form-add-manual').style.display = "none";
-
-    carregarTabela();
 });
 
 
