@@ -10,12 +10,23 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 	switch($request["acao"]){
 		case "adicionar":
 			if(addManual($conn, $request)){
-			echo json_encode(['resultado' => 'sucesso', 'msg' => 'Manual adicionado com sucesso!']);
+				echo json_encode(['resultado' => 'sucesso', 'msg' => 'Manual adicionado com sucesso!']);
+				exit();
 			}
 			else{
 				echo json_encode(['resultado' => 'erro', 'msg' => 'Não foi possível adicionar à base de dados']);
+				exit();
 			};
-			exit();
+			
+		case "editar":
+			if(editManual($conn, $request)){
+				echo json_encode(['resultado' => 'sucesso', 'msg' => 'Manual editado com sucesso!']);
+				exit();
+			}
+			else{
+				echo json_encode(['resultado' => 'erro', 'msg' => 'Não foi possível editar manual']);			
+				exit();	
+			}
 		
 		case "checar_isbn":
 			echo json_encode(['resultado' => checarIsbn($conn, $request)]);
@@ -28,16 +39,122 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 		case "checar_anos_escolares":
 			echo json_encode(checarAnosEscolares($conn, $request));
 			exit();
+
+		case "checar_agrupamentos":
+			echo json_encode(checarAgrupamentos($conn, $request));
+			exit();
+			
+		case "get_info_manual":
+			echo json_encode(['resultado' => get_info_manual($conn, $request)]);
+			exit();
+
 	}
 
 	
 }
 
 
+function editManual(mysqli $conn, array $request){
+
+	// Extrai os dados da request
+	$isbn = $request["isbn"];
+	$nome_manual = $request["nome_manual"];
+	$cod_manual = $request["cod_manual"];
+	$preco_manual = floatval($request["preco_manual"]);
+	$editora = intval($request["editora"]);
+	$disciplina = intval($request["disciplina"]);
+	$tipo_manual = $request["tipo_manual"];
+	$agrupamentos = $request["agrupamentos"];
+	$anos_escolares = $request["anos_escolares"];
+
+	// Começa o processo de inserção de dados
+	// Ou tudo é inserido corretamente, ou nada é inserido
+	$conn->begin_transaction();
+
+	try{
+		// Pega o Id do manual
+		$stmt = $conn->prepare("SELECT id_manual FROM manual WHERE isbn_manual = ?");
+		$stmt->bind_param("s", $isbn);
+		$stmt->execute();
+		$id = $stmt->get_result()->fetch_row()[0];
+		$stmt->close();
+
+		// Edita o manual
+		$sql = "UPDATE manual 
+			SET nome_manual = ?, cod_manual = ?, preco_manual = ?, id_editora = ?,
+	 		id_disciplina = ?, tipo_manual = ?
+	 		WHERE id_manual = ?";
+
+		$stmt = $conn->prepare($sql);
+		$stmt->bind_param("ssdiisi",$nome_manual,$cod_manual,$preco_manual, $editora,$disciplina,$tipo_manual,$id);
+		$stmt->execute();
+
+
+		$stmt->close();
+
+		// Apago as linhas das tabelas auxiliares
+		$sql = "DELETE FROM manual_agrupamento 
+				WHERE id_manual = ?";
+		
+		$stmt = $conn->prepare($sql);
+		$stmt->bind_param("i", $id);
+		$stmt->execute();
+		$stmt->close();
+		
+		$sql = "DELETE FROM manual_ano_escolar
+				WHERE id_manual = ?";
+		
+		$stmt = $conn->prepare($sql);
+		$stmt->bind_param("i", $id);
+		$stmt->execute();
+		$stmt->close();
+
+
+		// Insere as relações de agrupamento
+		$sql = "INSERT INTO manual_agrupamento (id_manual, id_agrupamento) VALUES (?,?)";
+		$stmt = $conn->prepare($sql);
+		foreach($agrupamentos as $id_agrupamento){
+			$stmt->bind_param("ii", $id, $id_agrupamento);
+			$stmt->execute();
+
+		}
+		$stmt->close();
+		
+		// Insere as relações de anos escolares
+		$sql = "INSERT INTO manual_ano_escolar (id_manual, id_ano_escolar) VALUES (?,?)";
+		$stmt = $conn->prepare($sql);
+		foreach($anos_escolares as $id_ano_escolar){
+			$stmt->bind_param("ii", $id, $id_ano_escolar);
+			$stmt->execute();
+		}
+		$stmt->close();
+
+		$conn->commit();
+		return true;
+
+	}catch(Exception $e){
+		$conn->rollback();
+		return false;
+	}	
+
+}
+
+
+function get_info_manual(mysqli $conn, array $request){
+	$sql = "SELECT * FROM manual WHERE isbn_manual = ?";
+	$stmt = $conn->prepare($sql);
+	$stmt->bind_param("s", $request["isbn"]);
+	$stmt->execute();
+	$resultado = $stmt->get_result()->fetch_assoc();
+	return $resultado;
+
+}
+
+
 function checarAnosEscolares(mysqli $conn, array $request){
 	$id_manual = $request['id_manual'];
 
-	$sql = "SELECT nome_ano_escolar FROM ano_escolar 
+	$sql = "SELECT ano_escolar.id_ano_escolar FROM ano_escolar 
 			JOIN manual_ano_escolar ON manual_ano_escolar.id_ano_escolar=ano_escolar.id_ano_escolar
 			WHERE id_manual = ?";
 	$stmt = $conn->prepare($sql);
@@ -46,9 +163,27 @@ function checarAnosEscolares(mysqli $conn, array $request){
 	$resultado = $stmt->get_result();
 	$anos = [];
 	while($row = $resultado->fetch_assoc()){
-		$anos[] = $row['nome_ano_escolar'];
+		$anos[] = $row['id_ano_escolar'];
 	}
 	return ['resultado'=>$anos];
+}
+
+
+function checarAgrupamentos(mysqli $conn, array $request){
+	$id_manual = $request['id_manual'];
+
+	$sql = "SELECT agrupamento.id_agrupamento FROM agrupamento 
+			JOIN manual_agrupamento ON manual_agrupamento.id_agrupamento=agrupamento.id_agrupamento
+			WHERE id_manual = ?";
+	$stmt = $conn->prepare($sql);
+	$stmt->bind_param("i", $id_manual);
+	$stmt->execute();
+	$resultado = $stmt->get_result();
+	$agrupamentos = [];
+	while($row = $resultado->fetch_assoc()){
+		$agrupamentos[] = $row['id_agrupamento'];
+	}
+	return ['resultado'=>$agrupamentos];
 }
 
 
@@ -56,7 +191,6 @@ function listarManuais(mysqli $conn){
 	$sql = "SELECT * FROM manual JOIN editora ON manual.id_editora=editora.id_editora";
 	$resultado = mysqli_query($conn, $sql);
 	$dados = mysqli_fetch_all($resultado, MYSQLI_ASSOC);
-
 	return $dados;
 }
 
@@ -266,7 +400,7 @@ function checarIsbn(mysqli $conn, array $request){
 																<select name="tipo_manual" id="tipo_manual">
 																	<option value="" selected>Selecione o tipo de manual</option>
 																	<option value="Manual">Manual</option>
-																	<option value="Livro de FIchas">Livro de Fichas</option>
+																	<option value="Livro de Fichas">Livro de Fichas</option>
 																</select>
 															</div>
 

@@ -29,7 +29,7 @@ document.getElementById('preco_manual').addEventListener('input', (e) => {
 });
 
 // Event listener pra quando digitar no campo ISBN
-document.getElementById('isbn').addEventListener('keyup', (e) => {
+document.getElementById('isbn').addEventListener('keyup', async (e) => {
     const form = document.querySelector('.form-add-manual');
     const isbn = e.target.value.trim();
     if (e.target.value.length > 0) {
@@ -41,24 +41,65 @@ document.getElementById('isbn').addEventListener('keyup', (e) => {
     }
 
     if (isbn.length == 10 || isbn.length == 13) {
-        fetch('gestao_manual.php', {
-            method: "post",
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ acao: "checar_isbn", isbn: isbn })
-        }).then(response => response.json())
-            .then(data => {
-                if (data["resultado"] == true) {
-                    mostrarMsg("red", "ISBN já existente na base de dados");
-                    // desativar os campos
-                    form.querySelectorAll('input, select').forEach(el => el.disabled = true);
+        const existe = await verificar_ISBN_existente(isbn);
+        if(existe){
+             mostrarMsg("red", "ISBN já existente na base de dados, está a editar suas informações");
+
+            // Vai buscar os dados à base de dados e popula os campos
+            let response = await fetch('gestao_manual.php',{
+                method:"post",
+                headers:{ 'Content-Type': 'application/json' },
+                body:JSON.stringify({'acao':'get_info_manual', 'isbn':isbn})
+            });
+            let data = await response.json();
+            let manual = data["resultado"];
+            
+            $('#nome_manual').val(manual["nome_manual"]);
+            $('#codigo_manual').val(manual["cod_manual"]);
+            $('#preco_manual').val(manual["preco_manual"]);
+            $('#editora').val(manual["id_editora"]);
+            $('#disciplina').val(manual["id_disciplina"]);
+            $('#tipo_manual').val(manual["tipo_manual"]);
+            
+            // Busca a informação de quais agrupamentos e anos escolares devem estar selecionados
+            response = await fetch('gestao_manual.php',{
+                method:"post",
+                headers:{ 'Content-Type': 'application/json' },
+                body:JSON.stringify({'acao':'checar_anos_escolares', 'id_manual':manual["id_manual"]})
+            });
+            data = await response.json();
+            const anos_escolares = data["resultado"];
+            
+            anos_escolares.forEach(ano =>{
+                const checkbox = document.querySelector(`.checkbox_ano_escolar[value="${ano}"]`);
+                if(checkbox){
+                    checkbox.checked = true;
                 }
             });
+            
+            response = await fetch('gestao_manual.php',{
+                method:"post",
+                headers:{ 'Content-Type': 'application/json' },
+                body:JSON.stringify({'acao':'checar_agrupamentos', 'id_manual':manual["id_manual"]})
+            });
+            data = await response.json();
+            const agrupamentos = data["resultado"];
+            
+            agrupamentos.forEach(ano =>{
+                const checkbox = document.querySelector(`.checkbox_agrupamento[value="${ano}"]`);
+                if(checkbox){
+                    checkbox.checked = true;
+                }
+            });
+            
+
+        }
     }
 });
 
 // Event listener de adicionar manual
 const btn_guardar_manual = document.getElementById('btn_guardar_manual');
-btn_guardar_manual.addEventListener('click', () => {
+btn_guardar_manual.addEventListener('click', async () => {
 
     // Pega cada um dos campos e verifica se estão preenchidos
     const isbn = document.getElementById('isbn').value;
@@ -73,106 +114,16 @@ btn_guardar_manual.addEventListener('click', () => {
     const agrupamentos = document.querySelectorAll('.checkbox_agrupamento:checked');
     const anos_escolares = document.querySelectorAll('.checkbox_ano_escolar:checked');
 
+    // Verifica se o ISBN já existe, e trata cada caso
+    const isbn_existe = await verificar_ISBN_existente(isbn);
+    if(isbn_existe){
+        guardarManual("editar", isbn, nome_manual, cod_manual, preco_manual, editora, disciplina, tipo_manual,agrupamentos, anos_escolares)
+    }
+    else{
+        guardarManual("adicionar", isbn, nome_manual, cod_manual, preco_manual, editora, disciplina, tipo_manual,agrupamentos, anos_escolares)
 
-    // Verificar os campos vazios
-    if (isbn.length != 10 && isbn.length != 13) {
-        mostrarMsg("red", "ISBN inválido");
-        return;
     }
 
-    if (!nome_manual) {
-        mostrarMsg("red", "Falta o campo Nome do manual");
-        return;
-    }
-
-    if(preco_manual <= 0 || isNaN(preco_manual)){
-        mostrarMsg("red", "Preço do manual é invalido");
-        return;
-    }
-
-    if(!editora){
-        mostrarMsg("red", "Falta o campo editora");
-        return;
-    }
-
-    if(!disciplina){
-        mostrarMsg("red", "Falta o campo disciplina");
-        return;
-    }
-
-    if(!tipo_manual){
-        mostrarMsg("red", "Falta o campo Tipo de manual");
-        return;
-    }
-
-    if(agrupamentos.length == 0){
-        mostrarMsg("red", "Selecione pelo menos 1 agrupamento");
-        return;
-    }
-
-    if(anos_escolares.length == 0){
-        mostrarMsg("red", "Selecione pelo menos 1 ano escolar");
-        return;
-    }
-
-    // Montar o JSON pro fetch
-    let ids_agrupamentos = [];
-    agrupamentos.forEach(agp => {
-        ids_agrupamentos.push(agp.value);
-    })
-
-    let ids_anos_escolares = [];
-    anos_escolares.forEach(ano => {
-        ids_anos_escolares.push(ano.value);
-    })
-
-    const dados = {
-        "acao": "adicionar",
-        "isbn": isbn,
-        "nome_manual": nome_manual,
-        "cod_manual": cod_manual,
-        "preco_manual": preco_manual,
-        "editora": editora,
-        "disciplina": disciplina,
-        "tipo_manual": tipo_manual,
-        "agrupamentos": ids_agrupamentos,
-        "anos_escolares": ids_anos_escolares
-    }
-
-    // Envia pro PHP
-    fetch('gestao_manual.php', {
-        method: "post",
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(dados)
-
-    }).then(response => response.json())
-        .then(data => {
-            if (data["resultado"] == "sucesso") {
-                mostrarMsg("green", data["msg"]);
-            }
-            else if (data["resultado"] == "erro") {
-                mostrarMsg("red", data["msg"]);
-            }
-
-        });
-
-    // Limpa os inputs e esconde o formulário após a adição
-    const textInputs = document.querySelectorAll('input[type="text"]');
-    textInputs.forEach(input => {
-        input.value = "";
-    });
-
-    const checkboxes = document.querySelectorAll('input[type="checkbox"]');
-    checkboxes.forEach(checkbox => {
-        checkbox.checked = false;
-    });
-
-    const selects = document.querySelectorAll('select');
-    selects.forEach(select => {
-        select.selectedIndex = 0;
-    });
-
-    document.querySelector('.form-add-manual').style.display = "none";
 });
 
 
@@ -271,6 +222,121 @@ function renderTabela(dados) {
     })
 }
 
+
+function guardarManual(acao, isbn, nome_manual, cod_manual, preco_manual, 
+    editora, disciplina, tipo_manual,agrupamentos, anos_escolares){
+        // Verificar os campos vazios
+    if (isbn.length != 10 && isbn.length != 13) {
+        mostrarMsg("red", "ISBN inválido");
+        return;
+    }
+
+    if (!nome_manual) {
+        mostrarMsg("red", "Falta o campo Nome do manual");
+        return;
+    }
+
+    if(preco_manual <= 0 || isNaN(preco_manual)){
+        mostrarMsg("red", "Preço do manual é invalido");
+        return;
+    }
+
+    if(!editora){
+        mostrarMsg("red", "Falta o campo editora");
+        return;
+    }
+
+    if(!disciplina){
+        mostrarMsg("red", "Falta o campo disciplina");
+        return;
+    }
+
+    if(!tipo_manual){
+        mostrarMsg("red", "Falta o campo Tipo de manual");
+        return;
+    }
+
+    if(agrupamentos.length == 0){
+        mostrarMsg("red", "Selecione pelo menos 1 agrupamento");
+        return;
+    }
+
+    if(anos_escolares.length == 0){
+        mostrarMsg("red", "Selecione pelo menos 1 ano escolar");
+        return;
+    }
+
+    // Montar o JSON pro fetch
+    let ids_agrupamentos = [];
+    agrupamentos.forEach(agp => {
+        ids_agrupamentos.push(agp.value);
+    })
+
+    let ids_anos_escolares = [];
+    anos_escolares.forEach(ano => {
+        ids_anos_escolares.push(ano.value);
+    })
+
+    const dados = {
+        "acao": acao,
+        "isbn": isbn,
+        "nome_manual": nome_manual,
+        "cod_manual": cod_manual,
+        "preco_manual": preco_manual,
+        "editora": editora,
+        "disciplina": disciplina,
+        "tipo_manual": tipo_manual,
+        "agrupamentos": ids_agrupamentos,
+        "anos_escolares": ids_anos_escolares
+    }
+
+    // Envia pro PHP
+    fetch('gestao_manual.php', {
+        method: "post",
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dados)
+
+    }).then(response => response.json())
+        .then(data => {
+            if (data["resultado"] == "sucesso") {
+                mostrarMsg("green", data["msg"]);
+                return true;
+            }
+            else if (data["resultado"] == "erro") {
+                mostrarMsg("red", data["msg"]);
+                return false;
+            }
+        });
+
+    const textInputs = document.querySelectorAll('input[type="text"]');
+    textInputs.forEach(input => {
+        input.value = "";
+    });
+
+    const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+
+    const selects = document.querySelectorAll('select');
+    selects.forEach(select => {
+        select.selectedIndex = 0;
+    });
+
+    document.querySelector('.form-add-manual').style.display = "none";
+}
+
+
+async function verificar_ISBN_existente(isbn){
+    const response = await fetch('gestao_manual.php', {
+    method: "post",
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ acao: "checar_isbn", isbn: isbn })
+    });
+    
+    const data = await response.json();
+    return data["resultado"];
+}
 
 
 // Função mensagem de erro
