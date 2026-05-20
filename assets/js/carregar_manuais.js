@@ -28,28 +28,57 @@ btnCarregarManuais.addEventListener('click', ()=>{
     const tabela = document.getElementById('tabela');
     let manuais = [];
     
+    let temErro = false;
+    let primeiroErro;
     for(let i = 1; i < tabela.rows.length; i++){
+
         const isbn = tabela.rows[i].cells[0].textContent.trim();
         const nome_manual = tabela.rows[i].cells[1].textContent.trim();
         const codigo_manual = tabela.rows[i].cells[2].textContent.trim();
         const preco_manual = tabela.rows[i].cells[3].textContent.trim();
         
         // Verifica as checkboxes
-        const editora = tabela.rows[i].cells[4].querySelector('select').value;
-        const disciplina = tabela.rows[i].cells[5].querySelector('select').value;
-        const tipo_manual = tabela.rows[i].cells[6].querySelector('select').value;
+        const editora = tabela.rows[i].cells[4].querySelector('select');
+        const disciplina = tabela.rows[i].cells[5].querySelector('select');
+        const tipo_manual = tabela.rows[i].cells[6].querySelector('select');
 
 
-        if(!editora){
-            // TODO: MENSAGEM DE ERRO
-            return;
+        if(!editora.value){
+            editora.classList.add('combobox-error');
+            editora.addEventListener('change', ()=>{
+                editora.classList.remove('combobox-error');
+            });
+
+            if(!primeiroErro){
+                primeiroErro = editora;
+            }
+            temErro = true;
         }
-        if(!disciplina){
-            // TODO: MENSAGEM DE ERRO
-            return;
+        else if(!disciplina.value){
+            disciplina.classList.add('combobox-error');
+            disciplina.addEventListener('change', ()=>{
+                disciplina.classList.remove('combobox-error');
+            });
+
+            if(!primeiroErro){
+                primeiroErro = disciplina;
+            }
+            temErro = true;
         }
-        if(!tipo_manual){
-            // TODO: MENSAGEM DE ERRO
+        else if(!tipo_manual.value){
+            tipo_manual.classList.add('combobox-error');
+            tipo_manual.addEventListener('change', ()=>{
+                tipo_manual.classList.remove('combobox-error');
+            });
+            if(!primeiroErro){
+                primeiroErro = tipo_manual;
+            }
+            temErro = true;
+        }
+
+        if(temErro){
+            primeiroErro.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            primeiroErro.focus();   
             return;
         }
 
@@ -58,9 +87,9 @@ btnCarregarManuais.addEventListener('click', ()=>{
             "nome_manual":nome_manual,
             "codigo_manual":codigo_manual,
             "preco_manual":preco_manual,
-            "editora":editora,
-            "disciplina":disciplina,
-            "tipo_manual":tipo_manual,
+            "editora":editora.value,
+            "disciplina":disciplina.value,
+            "tipo_manual":tipo_manual.value,
             "agrupamentos":ids_agrupamentos,
             "anos_escolares":ids_anos_escolares
         };
@@ -77,6 +106,8 @@ btnCarregarManuais.addEventListener('click', ()=>{
     }).then(response=>response.json())
     .then(data=>{
         alert(data['msg']);
+        window.location.href = "gestao_manual.php";
+        return;
     })
     
 })

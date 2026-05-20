@@ -4075,3 +4075,8 @@ button.btn-concluido:active,
 .form-add-manual input, select, .checkbox-group{
     margin-bottom: 10px;
 }
+
+.combobox-error{
+  border: 2px solid #e74c3c !important;
+  background-color: #fdf0f0;
+}

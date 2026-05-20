@@ -212,7 +212,7 @@ function guardarManuais(mysqli $conn, array $manuais){
 																<td><?= $manual['preco_manual'] ?></td>
 
 																<td>
-																	<select name="editora" id="editora">
+																	<select name="editora">
 																	<option value="" selected>Selecione editora</option>
 																	<?php 
 																	$sql = "SELECT * FROM editora";
@@ -227,7 +227,7 @@ function guardarManuais(mysqli $conn, array $manuais){
 																</td>
 
 																<td>
-																	<select name="disciplina" id="disciplina">
+																	<select name="disciplina">
 																	<option value="" selected>Selecione disciplina</option>
 																	<?php 
 																	$sql = "SELECT * FROM disciplina";
@@ -244,10 +244,10 @@ function guardarManuais(mysqli $conn, array $manuais){
 																</td>
 
 																<td>
-																	<select name="tipo_manual" id="tipo_manual">
+																	<select name="tipo_manual">
 																		<option value="" selected>Selecione o tipo de manual</option>
 																		<option value="Manual">Manual</option>
-																		<option value="Livro de FIchas">Livro de Fichas</option>
+																		<option value="Livro de Fichas">Livro de Fichas</option>
 																	</select>
 																</td>
 															</tr>
