@@ -78,6 +78,7 @@ function guardarManuais(mysqli $conn, array $manuais){
 	$conn->begin_transaction();
 
 	try{
+		// Prepara todas as  queries que vão ser usadas
 		$stmtCheck = $conn->prepare(
 			"SELECT id_manual FROM manual WHERE isbn_manual = ?"
 		);
@@ -89,15 +90,38 @@ function guardarManuais(mysqli $conn, array $manuais){
 			"UPDATE manual SET nome_manual=?, preco_manual=?, cod_manual=?, id_editora=?, id_disciplina=?, tipo_manual=?
 			WHERE isbn_manual=?"
 		);
+		$stmtGetId = $conn->prepare(
+			"SELECT id_manual FROM manual
+			WHERE isbn_manual = ?"
+		);
+		$stmtDeleteAgrupamento = $conn->prepare(
+			"DELETE FROM manual_agrupamento
+			WHERE id_manual = ?"
+		);
+		$stmtDeleteAnoEscolar = $conn->prepare(
+			"DELETE FROM manual_ano_escolar
+			WHERE id_manual = ?"
+		);
+		$stmtInsertAgrupamento = $conn->prepare(
+			"INSERT INTO manual_agrupamento (id_manual, id_agrupamento)
+			VALUES (?,?)"
+		);
+		$stmtInsertAnoEscoalr = $conn->prepare(
+			"INSERT INTO manual_ano_escolar (id_manual, id_ano_escolar)
+			VALUES (?,?)"
+		);
+
 
 		foreach($manuais as $manual){
-			$isbn         = $manual["isbn"];
-			$nome_manual  = $manual["nome_manual"];
-			$cod_manual   = $manual["codigo_manual"];
+			$isbn = $manual["isbn"];
+			$nome_manual = $manual["nome_manual"];
+			$cod_manual = $manual["codigo_manual"];
 			$preco_manual = floatval($manual["preco_manual"]);
-			$editora      = intval($manual["editora"]);
-			$disciplina   = intval($manual["disciplina"]);
-			$tipo_manual  = $manual["tipo_manual"];
+			$editora = intval($manual["editora"]);
+			$disciplina = intval($manual["disciplina"]);
+			$tipo_manual = $manual["tipo_manual"];
+			$ids_agrupamentos = $manual["agrupamentos"];
+			$ids_anos_escolares = $manual["anos_escolares"];
 
 			// Verifica se o ISBN já existe
 			$stmtCheck->bind_param("s", $isbn);
@@ -112,9 +136,40 @@ function guardarManuais(mysqli $conn, array $manuais){
 				$stmtUpdate->execute();
 			}
 
+			// Adiciona as entradas nas tabelas auxiliares
+			// Pega o id do manual
+			$stmtGetId->bind_param("s", $isbn);
+			$stmtGetId->execute();
+			$resultado = $stmtGetId->get_result();
+			$id_manual = $resultado->fetch_row()[0];
+
+			// Apagar entradas das tabelas com esse id
+			$stmtDeleteAgrupamento->bind_param("i", $id_manual);
+			$stmtDeleteAgrupamento->execute();
+			
+			$stmtDeleteAnoEscolar->bind_param("i", $id_manual);
+			$stmtDeleteAnoEscolar->execute();
+
+
+			// Adiciona as linhas às tabelas
+			foreach($ids_agrupamentos as $id_agrupamento){
+				$stmtInsertAgrupamento->bind_param("ii", $id_manual, $id_agrupamento);
+				$stmtInsertAgrupamento->execute();
+			}
+			
+			foreach($ids_anos_escolares as $id_ano_escolar){
+				$stmtInsertAnoEscoalr->bind_param("ii", $id_manual, $id_ano_escolar);
+				$stmtInsertAnoEscoalr->execute();
+			}
+
 			$stmtCheck->free_result();
 		}
 
+		$stmtGetId->close();
+		$stmtDeleteAgrupamento->close();
+		$stmtDeleteAnoEscolar->close();
+		$stmtInsertAgrupamento->close();
+		$stmtInsertAnoEscoalr->close();
 		$stmtCheck->close();
 		$stmtInsert->close();
 		$stmtUpdate->close();
@@ -159,6 +214,8 @@ function guardarManuais(mysqli $conn, array $manuais){
 									<div class="col-6 col-12-small">
 										<div class="box">
 											<h2>Carregar manuais</h2>
+
+											<p id="erro" style="color: red;"></p>
 
 											<h3>Selecione o agrupamento:</h3>
 											<?php 

@@ -16,11 +16,21 @@ btnCarregarManuais.addEventListener('click', ()=>{
     });
 
     if(ids_agrupamentos.length == 0){
-        // TODO: MENSAGEM DE ERRO
+        const errorMsg= document.getElementById('erro');
+        errorMsg.innerText = "Selecione pelo menos um agrupamento";
+        const check_agrupamentos = document.querySelectorAll('.checkbox_agrupamento');
+        check_agrupamentos.forEach(agp=>{
+            agp.addEventListener('change', ()=>{errorMsg.innerText = ""});
+        });
         return;
     }
     if(ids_anos_escolares.length == 0){
-        // TODO: MENSAGEM DE ERRO
+        const errorMsg= document.getElementById('erro');
+        errorMsg.innerText = "Selecione pelo menos um ano escolar";
+        const check_anos_escolares = document.querySelectorAll('.checkbox_ano_escolar');
+        check_anos_escolares.forEach(ano=>{
+            ano.addEventListener('change', ()=>{errorMsg.innerText = ""});
+        });
         return;
     }
 
