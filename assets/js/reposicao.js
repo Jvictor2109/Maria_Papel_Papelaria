@@ -14,10 +14,14 @@ const closeModal = document.getElementById('close-modal');
 const modalInfo = document.getElementById('modal-info');
 const closeModalInfo = document.getElementById('close-modal-info');
 
-
 // Modal de Editar
 const modalEditar = document.getElementById('modal-editar');
 const closeModalEditar = document.getElementById('close-modal-editar');
+
+// Modal de cancelar pedido
+const modalCancelar = document.getElementById('modal-cancelar');
+const closeModalCancelar = document.getElementById('close-modal-cancelar');
+
 
 // Abre o modal ao clicar no botão
 if (btnAddPedido) {
@@ -65,6 +69,11 @@ if (closeModalEditar) {
     });
 }
 
+// Fecha o modal cancelar ao clicar no X
+closeModalCancelar.addEventListener('click', ()=>{
+    modalCancelar.style.display = 'none';
+})
+
 // Fecha o modal ao clicar fora da caixa do modal
 window.addEventListener('click', function (e) {
     if (e.target === modalReposicao) {
@@ -75,6 +84,9 @@ window.addEventListener('click', function (e) {
     }
     if (e.target === modalEditar) {
         modalEditar.style.display = 'none';
+    }
+    if(e.target == modalCancelar){
+        modalCancelar.style.display = 'none';
     }
 });
 
@@ -97,7 +109,7 @@ botoes_tab.forEach(botao => {
             // Altera a informação de qual tabela está sendo mostrada
             tabelaAtiva = "pedidos";
         }
-        else {
+        else if(botao.id == "tab_historico"){
             // Mostra os filtros de data e esconde o filtro de estado
             datas.forEach(filtro => {
                 filtro.style.display = "flex";
@@ -107,6 +119,14 @@ botoes_tab.forEach(botao => {
 
             // Altera a informação de qual tabela está sendo mostrada
             tabelaAtiva = "historico";
+        }
+        else if(botao.id == "tab_cancelado"){
+            datas.forEach(filtro => {
+                filtro.style.display = "flex";
+            })
+
+            estado.style.display = "none";
+            tabelaAtiva = "cancelado";
         }
 
         renderTabela(dados);
@@ -302,7 +322,6 @@ function renderTabela(dados) {
             if (element.concluido == 0) {
                 return false;
             }
-
             return true;
         })
     }
@@ -311,8 +330,21 @@ function renderTabela(dados) {
             if (element.concluido == 1) {
                 return false;
             }
+            if(element.cancelado == 1){
+                return false;
+            }
 
             return true;
+        })
+    }
+    else if (tabelaAtiva == "cancelado"){
+        dados = dados.filter(element=>{
+            if(element.cancelado != 0){
+                return true;
+            }
+            else{
+                return false;
+            }
         })
     }
 
@@ -374,7 +406,7 @@ function renderTabela(dados) {
         let acoes = document.createElement('td');
         acoes.classList.add('td-acoes');
 
-        if (element.pedido == 1 && element.concluido == 0) {
+        if (element.pedido == 1 && element.concluido == 0 && element.cancelado == 0) {
             // Botão "Marcar como concluído"
             const botao = document.createElement('button');
             botao.innerText = "Marcar como Concluído";
@@ -382,7 +414,7 @@ function renderTabela(dados) {
             botao.addEventListener('click', () => attEstadoConcluido(element.item_id));
             acoes.appendChild(botao);
         }
-        else if (element.pedido == 0) {
+        else if (element.pedido == 0 && element.cancelado == 0) {
             // Botão "Marcar como pedido"
             const botao = document.createElement('button');
             botao.innerText = "Marcar como pedido";
@@ -391,12 +423,12 @@ function renderTabela(dados) {
             acoes.appendChild(botao);
         }
 
-        // Botão de editar
-        if (element.concluido == 0) {
+        // Botão de editar e cancelar
+        if (element.concluido == 0 && element.cancelado == 0) {
             const btnEditar = document.createElement('button');
             btnEditar.innerText = "Editar"
             btnEditar.classList.add('button', 'secondary', 'small');
-
+            
             // Preenche o modal de editar com os dados
             btnEditar.addEventListener('click', () => {
                 document.getElementById('edit_id').value = element.item_id;
@@ -413,11 +445,22 @@ function renderTabela(dados) {
 
             });
             acoes.appendChild(btnEditar);
+    
+            // Botão de cancelar
+            const btnCancelar = document.createElement('button');
+            btnCancelar.innerText = "Cancelar"
+            btnCancelar.classList.add('button', 'btn-cancelar', 'small');
+            // Abre o modal de cancelamento
+            btnCancelar.addEventListener('click', ()=>{
+                $('#cancelar-obs').val(element.observacoes);
+                $('#cancelar-id').val(element.item_id);
+
+                modalCancelar.style.display = "flex";
+            })
+
+            acoes.appendChild(btnCancelar);
         }
-
-
-
-
+        
         // Botão de mais informações
         const btnInfo = document.createElement('a');
         btnInfo.href = "#";
@@ -492,6 +535,43 @@ function attEstadoConcluido(id) {
                 mostrarMsg("red", data['msg']);
             }
         });
+}
+
+
+function attEstadoCancelado(){
+    const item_id = document.getElementById('cancelar-id').value;
+    const observacoes = document.getElementById('cancelar-obs').value;
+
+    if(!observacoes){
+        modalCancelar.style.display = "none";
+        mostrarMsg("red", "Deve colocar algo nas observações ao cancelar um pedido");
+        return;
+    }
+
+    const dados = {
+        "acao":"atualizar",
+        "estado":"cancelado",
+        "id":item_id,
+        "observacoes":observacoes
+    }
+
+    fetch('reposicao.php',{
+        method:"post",
+        headers:{ "Content-Type": "application/json" },
+        body:JSON.stringify(dados)
+    }).then(response => response.json())
+    .then(data =>{
+        if (data['resultado'] == "sucesso") {
+            //tratar sucesso -> Recarregar tabela
+            modalCancelar.style.display = "none";
+            mostrarMsg("green", data['msg']);
+            carregartabela();
+        }
+        else {
+            //Mensagem de erro vinda do servidor
+            mostrarMsg("red", data['msg']);
+        }
+    })
 }
 
 

@@ -138,12 +138,14 @@ function editarItem($conn, $request){
 }
 
 
-function attItem($conn, $request)
+function attItem(mysqli $conn, array $request)
 {
 	$estado = $request['estado'];
 	$item_id = intval($request['id']);
 	$data = date("y-m-d");
 	$user_id = intval($_SESSION['user_id']);
+	$observacoes = $request["observacoes"] || "";
+	$stmt = null;
 
 
 	if ($estado == "pedido") {
@@ -155,7 +157,8 @@ function attItem($conn, $request)
 
 		$stmt = $conn->prepare($sql);
 		$stmt->bind_param("issi", $pedido, $data, $user_id, $item_id);
-	} else if ($estado == "concluido") {
+	} 
+	else if ($estado == "concluido") {
 		$concluido = 1;
 		$sql = "UPDATE reposicao
 				SET concluido = ?, data_conclusao = ?, id_concluido_por = ?
@@ -163,6 +166,15 @@ function attItem($conn, $request)
 
 		$stmt = $conn->prepare($sql);
 		$stmt->bind_param("issi", $concluido, $data, $user_id, $item_id);
+	}
+	else if($estado == "cancelado"){
+		$cancelado = 1;
+		$sql = "UPDATE reposicao
+				SET cancelado = ?, data_cancelado = ?, cancelado_por = ?, observacoes = ?
+				WHERE item_id = ?";
+		
+		$stmt = $conn->prepare($sql);
+		$stmt->bind_param("isisi", $cancelado, $data, $user_id, $observacoes, $item_id);
 	}
 
 	if ($stmt->execute()) {
@@ -270,6 +282,20 @@ function attItem($conn, $request)
 							</div>
 						</div>
 
+						<!-- Modal de cancelar pedido -->
+						<div id="modal-cancelar" class="modal-overlay" style="display: none;">
+							<div class="box modal-content" style="max-width: 500px;">
+								<span id="close-modal-cancelar" class="modal-close">&times;</span>
+								<h3>Cancelar pedido</h3>
+								<div id="info-content">
+									<input type="hidden" id="cancelar-id" value="">
+									<p>Observações:</p>
+									<textarea id="cancelar-obs" style="margin-bottom: 20px;"></textarea>
+									<button id="btnCancelar" class="btn-cancelar" onclick="attEstadoCancelado()">Cancelar pedido</button>
+								</div>
+							</div>
+						</div>
+
 						<!-- Modal de Editar Pedido -->
 						<div id="modal-editar" class="modal-overlay" style="display: none;">
 							<div class="box modal-content">
@@ -336,6 +362,7 @@ function attItem($conn, $request)
 						<div style="display: flex; align-items: center; gap: 20px; margin-bottom: 2em;">
 							<button class="secundary btnTab" id="tab_ativo">Pedidos a concluir</button>
 							<button class="secundary btnTab" id="tab_historico">Pedidos concluídos</button>
+							<button class="secundary btnTab" id="tab_cancelado">Pedidos cancelados</button>
 						</div>
 
 						<h3>Filtrar por: </h3>
