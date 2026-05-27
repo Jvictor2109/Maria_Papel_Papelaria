@@ -144,7 +144,7 @@ function attItem(mysqli $conn, array $request)
 	$item_id = intval($request['id']);
 	$data = date("y-m-d");
 	$user_id = intval($_SESSION['user_id']);
-	$observacoes = $request["observacoes"] || "";
+	$observacoes = $request["observacoes"] ?? "";
 	$stmt = null;
 
 

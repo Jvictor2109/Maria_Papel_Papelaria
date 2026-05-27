@@ -497,7 +497,8 @@ function attEstadoPedido(id) {
         body: JSON.stringify({
             "acao": "atualizar",
             "estado": "pedido",
-            "id": id
+            "id": id,
+            "observacoes":""
         })
     }).then(response => response.json())
         .then(data => {
@@ -521,7 +522,8 @@ function attEstadoConcluido(id) {
         body: JSON.stringify({
             "acao": "atualizar",
             "estado": "concluido",
-            "id": id
+            "id": id,
+            "observacoes":""
         })
     }).then(response => response.json())
         .then(data => {
@@ -554,6 +556,7 @@ function attEstadoCancelado(){
         "id":item_id,
         "observacoes":observacoes
     }
+
 
     fetch('reposicao.php',{
         method:"post",
