@@ -16,15 +16,20 @@ if($_SERVER['REQUEST_METHOD'] == "POST"){
 			if($_FILES['xlsx']['type'] != "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"){
 				echo json_encode(['resultado' => 'erro', 'msg' => 'O Ficheiro adicionado não é uma tabela Excel']);
 				exit();
-			}
-	
-			//Ler o ficheiro e extrair os dados
-			if ( $xlsx = SimpleXLSX::parse($_FILES['xlsx']['tmp_name']) ) {
+				}
+				
+				//Ler o ficheiro e extrair os dados
+				if ( $xlsx = SimpleXLSX::parse($_FILES['xlsx']['tmp_name']) ) {
 				
 				$manuais = [];
 				/** @var array $coluna */  // Por algum motivo precisa disso pra poder parar de aparecer erro no vscode
 				foreach($xlsx->rows() as $linha => $coluna){
 					// Pula os cabeçalhos
+					if($linha == 0 && $coluna[0] != "MPP - Carregar manuais"){
+						echo json_encode(['resultado' => 'erro', 'msg' => 'O Ficheiro adicionado não corresponde ao modelo']);
+						exit();
+					}
+
 					if($linha < 2){
 						continue;
 					}
