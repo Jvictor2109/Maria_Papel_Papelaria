@@ -36,6 +36,7 @@
                 <?php
                     if(isset($_SESSION['user_id'])){
                         echo '<li><a href="reposicao.php">Material a pedir</a></li>';
+                        echo '<li><a href="encomendar_manuais.php">Encomenda manuais escolares</a></li>';
 
                     }
 
