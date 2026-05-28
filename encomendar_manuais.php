@@ -3,6 +3,69 @@
 session_start();
 include('db_connect.php');
 
+if($_SERVER["REQUEST_METHOD"] == "POST"){
+	$request = json_decode(file_get_contents('php://input'), true);
+
+	switch($request["acao"]){
+		case "filtrar_manuais":
+			echo json_encode(filtrarManuais($conn, $request));
+			exit();
+	}
+}
+
+function filtrarManuais(mysqli $conn, array $request){
+	// Constrói o WHERE da query
+	$condicoes = [];
+	$parametros = [];
+	$tipos_dados = "";
+
+	if(!empty($request['agrupamento'])){
+		$condicoes[] = "id_agrupamento = ?";
+		$parametros[] = $request['agrupamento'];
+		$tipos_dados .= "i";
+	}
+		
+	if(!empty($request["ano_escolar"])){
+		$condicoes[] = "id_ano_escolar = ?";
+		$parametros[] = $request['ano_escolar'];
+		$tipos_dados .= "i";
+	}
+
+	if(!empty($request["tipo_manual"])){
+		$condicoes[] = "tipo_manual = ?";
+		$parametros[] = $request['tipo_manual'];
+		$tipos_dados .= "s";
+	}
+
+	if(count($condicoes) == 0){
+		$where = "";
+	}
+	else{
+		$where = 'WHERE ' . implode(' AND ', $condicoes);
+	}
+
+	$sql = "SELECT DISTINCT manual.*, nome_disciplina FROM manual
+			JOIN manual_agrupamento ON manual.id_manual=manual_agrupamento.id_manual
+			JOIN manual_ano_escolar ON manual.id_manual=manual_ano_escolar.id_manual
+			JOIN disciplina	 ON manual.id_disciplina=disciplina.id_disciplina 
+			$where
+			ORDER BY manual.id_disciplina ASC, manual.tipo_manual DESC";
+	
+	$stmt = $conn->prepare($sql);
+
+	if(!$stmt){
+		die($conn->error);
+	}
+
+	if($tipos_dados){
+		$stmt->bind_param($tipos_dados, ...$parametros);
+	}
+
+	$stmt->execute();
+	$resultado = $stmt->get_result();
+	return $resultado->fetch_all(MYSQLI_ASSOC);
+}
+
 ?>
 
 <!DOCTYPE HTML>
@@ -37,7 +100,16 @@ include('db_connect.php');
 						<h2>Encomendar manuais</h2>
                         
                         <div class="box">
-                            <h3>Filtrar manuais</h3>
+							<div class="row">
+								<div class="col-2">
+									<h3>Filtrar manuais</h3>
+								</div>
+
+								<div class="col-2">
+									<span id="ErroFiltrar"></span>
+								</div>
+							</div>
+							
 
                             <div class="divFiltros">
                                 <div class="filtros">
@@ -81,28 +153,43 @@ include('db_connect.php');
                                         </select>
                                     </div>
 
-                                    <button type="submit" id="btnFiltrar">Filtrar</button>
-
+                                    <button type="submit" id="btnFiltrar" class="small">Filtrar</button>
                                 </div>
                             </div>
-                        </div>
 
-						<!-- Tabela mostrando os dados -->
-						<div class="table-wrapper">
-							<table class="alt">
-								<thead>
-									<tr>
-										<th>Id Agrupamento</th>
-										<th>Nome Agrupamento</th>
-										<th>Ações</th>
-									</tr>
-								</thead>
+							<!-- Tabela mostrando os manuais -->
+							<div class="table-wrapper">
+								<table class="alt">
+									<thead>
+										<tr>
+											<th>ISBN</th>
+											<th>Nome</th>
+											<th>Preço</th>
+											<th>Disciplina</th>
+											<th>Tipo de manual</th>
+											<th>
+												Selecionar
+												<input type="checkbox" id="selecionarAll">
+												<label for="selecionarAll"></label>
+											</th>
+											<th>
+												Voucher
+												<input type="checkbox" id="voucherAll">
+												<label for="voucherAll"></label>
+											</th>
+										</tr>
+									</thead>
+	
+									<tbody>
+										
+									</tbody>
+								</table>
+							</div>
 
-								<tbody>
-									
-								</tbody>
-							</table>
-						</div>
+
+							<h3 id="total">Total: </h3>
+                        </div> <!-- box -->
+
 
 					<?php }
 						else{
@@ -154,6 +241,7 @@ include('db_connect.php');
 				modal.style.display = 'flex';
 			}
 		</script>
+        <script src="assets/js/encomendar_manuais.js"></script>
 			<script src="assets/js/gestao.js"></script>
 			<script src="assets/js/jquery.min.js"></script>
 			<script src="assets/js/browser.min.js"></script>

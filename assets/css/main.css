@@ -4035,7 +4035,7 @@ button.btn-cancelar:active,
 .filtros {
     display: flex !important;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     flex-wrap: wrap;
 }
 
