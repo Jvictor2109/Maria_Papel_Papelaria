@@ -29,13 +29,15 @@ voucherAll.addEventListener('change', function (){
 
 
 // Função que calcula o valor total da encomenda
-function calcularTotal(){
+function atualizarTotal(){
     // Pega os valores de todos os campos "selecionar" marcados
     const checkboxSelecionar = document.querySelectorAll('.checkbox-selecionar:checked');
+    let caucao = 0;
 
     let totalSelecionar = 0;
     checkboxSelecionar.forEach(manual => {
         totalSelecionar += parseFloat(manual.dataset.preco);
+        caucao += 5;
     });
     
     // Pega os valores de todos os campos "voucher" marcados
@@ -44,9 +46,13 @@ function calcularTotal(){
     let totalVoucher = 0;
     checkboxVoucher.forEach(manual => {
         totalVoucher += parseFloat(manual.dataset.preco);
+        caucao -= 5;
     });
 
-    let total = totalSelecionar - totalVoucher;
+    const total = totalSelecionar - totalVoucher;
+
+    document.getElementById('totalEncomenda').innerText = total;
+    document.getElementById('valorCaucao').innerText = caucao;
 }
 
 // Função que constroi a tabela
@@ -86,7 +92,7 @@ function renderTabela(dados) {
         checkboxSelecionar.dataset.preco = element.preco_manual;
         checkboxSelecionar.id = 'checkSelecionar-'+element.id_manual;
         checkboxSelecionar.classList.add('checkbox-selecionar');
-        checkboxSelecionar.addEventListener('change', calcularTotal);
+        checkboxSelecionar.addEventListener('change', atualizarTotal);
 
         let labelSelecionar = document.createElement('label');
         labelSelecionar.htmlFor = 'checkSelecionar-'+element.id_manual;
@@ -103,7 +109,7 @@ function renderTabela(dados) {
         checkboxVoucher.dataset.preco = element.preco_manual;
         checkboxVoucher.id = 'checkVoucher-'+element.id_manual;
         checkboxVoucher.classList.add('checkbox-voucher');
-        checkboxVoucher.addEventListener('change', calcularTotal);
+        checkboxVoucher.addEventListener('change', atualizarTotal);
 
         let labelVoucher = document.createElement('label');
         labelVoucher.htmlFor = 'checkVoucher-'+element.id_manual;

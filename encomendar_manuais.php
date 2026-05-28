@@ -187,8 +187,46 @@ function filtrarManuais(mysqli $conn, array $request){
 							</div>
 
 
-							<h3 id="total">Total: </h3>
+							<div class="row aln-middle">
+								<div class="col-3">
+									<strong>Total da encomenda: <span id="totalEncomenda">0</span>€</strong> 
+								</div>
+
+								<div class="col-2">
+									<strong>Valor da caução: <span id="valorCaucao">0</span>€</strong>
+								</div>
+
+								<div class="col-3">
+									<strong>Caução paga: </strong>
+									<input type="number" id="caucaoPaga">
+								</div>
+							</div>
+
+							<div class="row aln-middle" style="margin-top:30px;">
+								<div class="col-3">
+									<input type="checkbox" id="plastificarManuais">
+									<label for="plastificarManuais"><strong>Plastificar Manuais</strong></label>
+								</div>
+								<div class="col-3">
+									<input type="checkbox" id="plastificarLivroDeFichas">
+									<label for="plastificarLivroDeFichas"><strong>Plastificar Livro de fichas</strong></label>
+								</div>
+							</div>
+
+							<div class="row aln-middle" style="margin-top: 10px;">
+								<div class="col-3">
+									<input type="checkbox" id="checkEtiquetas">
+									<label for="checkEtiquetas"><strong>Etiquetas</strong></label>
+									<textarea id="etiquetas"></textarea>
+								</div>
+								<div class="col-3">
+									<input type="checkbox" id="checkObservacoes">
+									<label for="checkObservacoes"><strong>Observações</strong></label>
+									<textarea id="observacoes"></textarea>
+								</div>
+							</div>
                         </div> <!-- box -->
+
 
 
 					<?php }
