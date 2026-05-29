@@ -97,9 +97,130 @@ function filtrarManuais(mysqli $conn, array $request){
 					<?php
 					// Verificar se já está autenticado
 					if (isset($_SESSION['user_id'])) {?>
+
+                        <!-- Modal de confirmação de encomenda -->
+						<div id="modal-confirmar" class="modal-overlay" style="display: none;">
+							<div class="box modal-content">
+								<span id="close-modal-confirmar" class="modal-close">&times;</span>
+
+								<h3>Confirmar encomenda</h3>
+
+								<div id="confirmar-content">
+									<!-- Informações da encomenda -->
+									<div class="box">
+										<h4>Informações da encomenda</h4>
+
+										<div class="row">
+											<div class="col-6">
+												<strong>Agrupamento: </strong>
+												<span id="confirmar_agrupamento"></span>
+											</div>
+
+											<div class="col-3">
+												<strong>Ano escolar: </strong>
+												<span id="confirmar_ano"></span>
+											</div>
+										</div>
+									</div>
+
+									<!-- Tabela de manuais selecionados e especificações da encomenda-->
+									<div class="box">
+										<h4>Manuais selecionados</h4>
+										
+										<div class="table-wrapper">
+											<table class="alt">
+												<thead>
+													<tr>
+														<th>ISBN</th>
+														<th>Nome</th>
+														<th>Preço</th>
+														<th>Voucher</th>
+													</tr>
+												</thead>
+												<tbody id="tabela-confirmar">
+
+												</tbody>
+											</table>
+										</div>
+
+										<div class="row">
+											<div class="col-3">
+												<strong>Total encomenda: </strong><span id="confirmarTotalEncomenda"></span>
+											</div>
+											<div class="col-3">
+												<strong>Caução paga: </strong><span id="confirmarCaucaoPaga"></span>
+											</div>
+										</div>
+
+										<div class="row">
+											<div class="col-3">
+												<strong>Plastificar Manuais: </strong><span id="confirmarPlastManuais"></span>
+											</div>
+											<div class="col-4">
+												<strong>Plastificar Livro de fichas: </strong><span id="confirmarPlastLivroFichas"></span>
+											</div>
+										</div>
+
+										<div class="row">
+											<div class="col-12">
+												<strong>Etiquetas: </strong><span id="confirmarEtiquetas"></span>
+											</div>
+										</div>
+										<div class="row">
+											<div class="col-12">
+												<strong>Observações: </strong><span id="confirmarObs"></span>
+											</div>
+										</div>
+
+									</div>
+
+									<!-- Informações de contato -->
+									<div class="box">
+										<h4>Informações do Aluno e encarregado de educação</h4>
+
+										<div class="row">
+											<div class="col-6">
+												<strong>Nome do aluno: </strong><span id="confirmarAluno"></span>
+											</div>
+											<div class="col-6">
+												<strong>NIF: </strong><span id="confirmarNIF"></span>
+											</div>
+										</div>
+
+										<div class="row">
+											<div class="col-12">
+												<strong>Nome do encarregado de educação: </strong><span id="confirmarEnc"></span>
+											</div>
+										</div>
+
+										<div class="row">
+											<div class="col-6">
+												<strong>Email: </strong><span id="confirmarEmail"></span>
+											</div>
+											<div class="col-6">
+												<strong>Telemóvel: </strong><span id="confirmarTelemovel"></span>
+											</div>
+										</div>
+									</div>
+
+									<!-- Botões de ação -->
+									<div class="row">
+										<div class="col-3">
+											<button id="btnConfirmarEncomenda" class="primary">Confirmar encomenda</button>
+										</div>
+										<div class="col-3">
+											<button id="btnCancelarEncomenda">Voltar atrás</button>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+
+
 						<h2>Encomendar manuais</h2>
-                        
-                        <div class="box">
+
+						<!-- Filtros dos manuais e tabela -->
+						<div class="box">
 							<div class="row">
 								<div class="col-2">
 									<h3>Filtrar manuais</h3>
@@ -111,51 +232,51 @@ function filtrarManuais(mysqli $conn, array $request){
 							</div>
 							
 
-                            <div class="divFiltros">
-                                <div class="filtros">
+							<div class="divFiltros">
+								<div class="filtros">
 
-                                    <div class="filtro-grupo">
-                                        <label for="filtroAgrupamento">Agrupamento: </label>
-                                        <select id="filtroAgrupamento">
-                                            <option value="" selected>Selecionar agrupamento</option>
-                                            <?php 
-                                            $sql = "SELECT * FROM agrupamento";
-                                            $resultado = $conn->query($sql);
+									<div class="filtro-grupo">
+										<label for="filtroAgrupamento">Agrupamento: </label>
+										<select id="filtroAgrupamento">
+											<option value="" selected>Selecionar agrupamento</option>
+											<?php 
+											$sql = "SELECT * FROM agrupamento";
+											$resultado = $conn->query($sql);
 
-                                            while($row = $resultado->fetch_assoc()){?>
-                                                <option value="<?= $row["id_agrupamento"] ?>"><?= $row["nome_agrupamento"] ?></option>
-                                            <?php }
-                                            ?>
-                                        </select>
-                                    </div>
-                                    
-                                    <div class="filtro-grupo">
-                                        <label for="filtroAnoEscolar">Ano Escolar: </label>
-                                        <select id="filtroAnoEscolar">
-                                            <option value="" selected>Selecionar ano escolar</option>
-                                            <?php 
-                                            $sql = "SELECT * FROM ano_escolar";
-                                            $resultado = $conn->query($sql);
+											while($row = $resultado->fetch_assoc()){?>
+												<option value="<?= $row["id_agrupamento"] ?>"><?= $row["nome_agrupamento"] ?></option>
+											<?php }
+											?>
+										</select>
+									</div>
+									
+									<div class="filtro-grupo">
+										<label for="filtroAnoEscolar">Ano Escolar: </label>
+										<select id="filtroAnoEscolar">
+											<option value="" selected>Selecionar ano escolar</option>
+											<?php 
+											$sql = "SELECT * FROM ano_escolar";
+											$resultado = $conn->query($sql);
 
-                                            while($row = $resultado->fetch_assoc()){?>
-                                                <option value="<?= $row["id_ano_escolar"] ?>"><?= $row["nome_ano_escolar"] ?></option>
-                                            <?php }
-                                            ?>
-                                        </select>
-                                    </div>
+											while($row = $resultado->fetch_assoc()){?>
+												<option value="<?= $row["id_ano_escolar"] ?>"><?= $row["nome_ano_escolar"] ?></option>
+											<?php }
+											?>
+										</select>
+									</div>
 
-                                    <div class="filtro-grupo">
-                                        <label for="filtroTipoManual">Tipo de manual: </label>
-                                        <select id="filtroTipoManual">
-                                            <option value="" selected>Selecionar tipo de manual</option>
-                                            <option value="Manual">Manual</option>
-                                            <option value="Livro de Fichas">Livro de fichas</option>
-                                        </select>
-                                    </div>
+									<div class="filtro-grupo">
+										<label for="filtroTipoManual">Tipo de manual: </label>
+										<select id="filtroTipoManual">
+											<option value="" selected>Selecionar tipo de manual</option>
+											<option value="Manual">Manual</option>
+											<option value="Livro de Fichas">Livro de fichas</option>
+										</select>
+									</div>
 
-                                    <button type="submit" id="btnFiltrar" class="small">Filtrar</button>
-                                </div>
-                            </div>
+									<button type="submit" id="btnFiltrar" class="small">Filtrar</button>
+								</div>
+							</div>
 
 							<!-- Tabela mostrando os manuais -->
 							<div class="table-wrapper">
@@ -180,7 +301,7 @@ function filtrarManuais(mysqli $conn, array $request){
 										</tr>
 									</thead>
 	
-									<tbody>
+									<tbody id="tabela-filtro">
 										
 									</tbody>
 								</table>
@@ -201,31 +322,84 @@ function filtrarManuais(mysqli $conn, array $request){
 									<input type="number" id="caucaoPaga">
 								</div>
 							</div>
+						</div>
 
-							<div class="row aln-middle" style="margin-top:30px;">
-								<div class="col-3">
-									<input type="checkbox" id="plastificarManuais">
-									<label for="plastificarManuais"><strong>Plastificar Manuais</strong></label>
-								</div>
-								<div class="col-3">
-									<input type="checkbox" id="plastificarLivroDeFichas">
-									<label for="plastificarLivroDeFichas"><strong>Plastificar Livro de fichas</strong></label>
+						<!-- Opções da encomenda e contatos -->
+						<div class="row" style="display: flex; align-items: stretch;">
+							<!-- Opções da encomenda -->
+							<div class="col-6" style="display: flex; flex-direction: column;">
+								<div class="box" style="height: 100%;">
+									<div class="row aln-middle">
+										<div class="col-6">
+											<input type="checkbox" id="plastificarManuais">
+											<label for="plastificarManuais"><strong>Plastificar Manuais</strong></label>
+										</div>
+										<div class="col-6">
+											<input type="checkbox" id="plastificarLivroDeFichas">
+											<label for="plastificarLivroDeFichas"><strong>Plastificar Livro de fichas</strong></label>
+										</div>
+									</div>
+		
+									<div class="row aln-middle" style="margin-top: 10px;">
+										<div class="col-6">
+											<input type="checkbox" id="checkEtiquetas">
+											<label for="checkEtiquetas"><strong>Etiquetas</strong></label>
+											<textarea id="etiquetas"></textarea>
+										</div>
+										<div class="col-6">
+											<label for="observacoes"><strong>Observações</strong></label>
+											<textarea id="observacoes"></textarea>
+										</div>
+									</div>
 								</div>
 							</div>
 
-							<div class="row aln-middle" style="margin-top: 10px;">
-								<div class="col-3">
-									<input type="checkbox" id="checkEtiquetas">
-									<label for="checkEtiquetas"><strong>Etiquetas</strong></label>
-									<textarea id="etiquetas"></textarea>
-								</div>
-								<div class="col-3">
-									<input type="checkbox" id="checkObservacoes">
-									<label for="checkObservacoes"><strong>Observações</strong></label>
-									<textarea id="observacoes"></textarea>
+							<!-- Contactos -->
+							<div class="col-6" style="display: flex; flex-direction: column;">
+								<div class="box" style="height: 100%;">
+									<!-- Nome do aluno e NIF -->
+									<div class="row" style="margin: 10px 0;">
+										<div class="col-8 input-contato" >
+											<label for="nomeAluno">Nome do aluno: </label>
+											<input type="text" id="nomeAluno" >
+										</div>
+										<div class="col-4 input-contato">
+											<label for="nif">NIF: </label>
+											<input type="text" id="nif"  pattern="[0-9]*" maxlength="9">
+										</div>
+									</div>
+
+									<!-- Nome do Encarregado de educação -->
+									<div class="row" style="margin: 10px 0;">
+										<div class="col-12 input-contato">
+											<label for="nomeEnc">Nome do Encarregado de educação: </label>
+											<input type="text" id="nomeEnc">
+										</div>
+									</div>
+
+									<!-- Email e telefone -->
+									<div class="row" style="margin: 10px 0;">
+										<div class="col-6 input-contato" >
+											<label for="email">Email: </label>
+											<input type="email" id="email" >
+										</div>
+										<div class="col-6 input-contato">
+											<label for="telemovel">Telemóvel: </label>
+											<input type="text" id="telemovel"  pattern="[0-9]*" maxlength="9">
+										</div>
+									</div>
 								</div>
 							</div>
-                        </div> <!-- box -->
+						</div> 
+
+						<div class="row aln-middle">
+							<div class="col-2 ">
+								<button id="btnEncomendar">Encomendar</button>
+							</div>
+							<div class="col-6">
+								<strong id="errorMsg"></strong>
+							</div>
+						</div>
 
 
 
@@ -267,18 +441,6 @@ function filtrarManuais(mysqli $conn, array $request){
 		</div>
 
 		<!-- Scripts -->
-		<script>
-			function editar(id){
-				// Popula o modal
-				const nome_agrupamento = document.getElementById(`nome_agrupamento_${id}`).innerText;
-
-				document.getElementById('edit_id_agrupamento').value = id;
-				document.getElementById('edit_nome_agrupamento').value = nome_agrupamento;
-
-				const modal = document.getElementById('modal-gestao');
-				modal.style.display = 'flex';
-			}
-		</script>
         <script src="assets/js/encomendar_manuais.js"></script>
 			<script src="assets/js/gestao.js"></script>
 			<script src="assets/js/jquery.min.js"></script>

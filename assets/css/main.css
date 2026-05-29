@@ -4095,3 +4095,18 @@ button.btn-cancelar:active,
   border: 2px solid #e74c3c !important;
   background-color: #fdf0f0;
 }
+
+.input-contato{
+  display: flex; 
+  align-items: center; 
+  gap:8px; 
+  padding: 5px;
+}
+
+.input-contato label{
+  white-space: nowrap; margin: 0;
+}
+
+.input-contato input{
+  margin: 0;
+}

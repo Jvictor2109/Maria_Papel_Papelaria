@@ -1,3 +1,4 @@
+let manuais = [];
 // Botão de filtrar
 const btnFiltrar = document.getElementById('btnFiltrar');
 btnFiltrar.addEventListener('click', async ()=>{
@@ -6,7 +7,7 @@ btnFiltrar.addEventListener('click', async ()=>{
     const ano_escolar = document.getElementById('filtroAnoEscolar').value;
     const tipo_manual = document.getElementById('filtroTipoManual').value;
 
-    const manuais = await filtrarManuais(agrupamento, ano_escolar, tipo_manual);
+    manuais = await filtrarManuais(agrupamento, ano_escolar, tipo_manual);
     renderTabela(manuais);
 })
 
@@ -16,7 +17,9 @@ selecionarAll.addEventListener('change', function (){
     checkboxes = document.querySelectorAll('.checkbox-selecionar');
     checkboxes.forEach(checkbox=>{
         checkbox.checked = this.checked;
-    })
+    });
+
+    atualizarTotal();
 });
 
 const voucherAll = document.getElementById('voucherAll');
@@ -24,8 +27,188 @@ voucherAll.addEventListener('change', function (){
     checkboxes = document.querySelectorAll('.checkbox-voucher');
     checkboxes.forEach(checkbox=>{
         checkbox.checked = this.checked;
-    })
+    });
+
+    atualizarTotal();
 });
+
+
+// Modal de confirmar encomenda
+const modalConfirmar = document.getElementById('modal-confirmar');
+const closeModalConfirmar = document.getElementById('close-modal-confirmar');
+closeModalConfirmar.addEventListener('click', ()=>{
+    modalConfirmar.style.display = "none";
+});
+
+// Fecha o modal ao clicar fora da caixa do modal
+window.addEventListener('click', function (e) {
+    if (e.target === modalConfirmar) {
+        modalConfirmar.style.display = 'none';
+    }
+});
+
+
+// Botão de encomendar
+const btnEncomendar = document.getElementById('btnEncomendar');
+btnEncomendar.addEventListener('click', ()=>{
+    // Verificar se tem algum manual selecionado
+    const manuais_selecionados = document.querySelectorAll('.checkbox-selecionar:checked');
+
+    if(manuais_selecionados.length == 0){
+        mostrarMsg("red", "Selecione pelo menos 1 manual");
+        return;
+    }
+
+    // Verificar se tem nome do aluno e do EE
+    const nomeAluno = document.getElementById('nomeAluno').value;
+    const nomeEnc = document.getElementById('nomeEnc').value;
+
+    if(!nomeAluno){
+        mostrarMsg("red", "Introduza o nome do aluno");
+        return;
+    }
+
+    if(!nomeEnc){
+        mostrarMsg("red", "Introduza o nome do encarregado de educação");
+        return;
+    }
+    
+    // Verificar se tem email ou telefone
+    // Verificar se email tá certo
+    const email = document.getElementById('email').value;
+    const telemovel = document.getElementById('telemovel').value;
+
+    if(!email && !telemovel){
+        mostrarMsg("red", "Introduza pelo menos um email ou telemóvel");
+        return;
+    }
+
+    if(email){
+        if(/^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(email.trim()) == false){
+            mostrarMsg("red", "Introduza um email válido");
+            return;
+        }
+    }
+
+    // Verificar se existe etiquetas: tem que ter observações
+    const checkEtiquetas = document.getElementById('checkEtiquetas').checked;
+
+    if(checkEtiquetas){
+        const obs_etiquetas = document.getElementById('etiquetas').value;
+        if(!obs_etiquetas){
+            mostrarMsg("red", "Introduza o nome para a etiqueta");
+            return;
+        }
+    }
+
+    // Popular o modal com as informações
+    const agrupamentos = document.getElementById('filtroAgrupamento');
+    const agrupamento = agrupamentos.selectedOptions[0].text;
+    document.getElementById('confirmar_agrupamento').innerText = agrupamento;
+    
+    const anos = document.getElementById('filtroAnoEscolar');
+    const ano = anos.selectedOptions[0].text;
+    document.getElementById('confirmar_ano').innerText = ano;
+
+    renderTabelaConfirmar();
+
+    document.getElementById('confirmarTotalEncomenda').innerText = document.getElementById('totalEncomenda').innerText + "€";
+
+    document.getElementById('confirmarCaucaoPaga').innerText = document.getElementById('caucaoPaga').value + "€";
+    
+    const plastManuais = document.getElementById('plastificarManuais');
+    if(plastManuais.checked){
+        document.getElementById('confirmarPlastManuais').innerText = "Sim";
+    }
+    else{
+        document.getElementById('confirmarPlastManuais').innerText = "Não";
+    }
+
+    const plastLivroFichas = document.getElementById('plastificarLivroDeFichas');
+    if(plastLivroFichas.checked){
+        document.getElementById('confirmarPlastLivroFichas').innerText = "Sim";
+    }
+    else{
+        document.getElementById('confirmarPlastLivroFichas').innerText = "Não";
+    }
+
+    if(checkEtiquetas){
+        document.getElementById('confirmarEtiquetas').innerText = "Sim - " + document.getElementById('etiquetas').value;
+    }
+    else{
+        document.getElementById('confirmarEtiquetas').innerText = "Não";
+    }
+
+    document.getElementById('confirmarObs').innerText = document.getElementById('observacoes').value;
+
+    document.getElementById('confirmarAluno').innerText = document.getElementById('nomeAluno').value;
+    document.getElementById('confirmarNIF').innerText = document.getElementById('nif').value;
+    document.getElementById('confirmarEnc').innerText = document.getElementById('nomeEnc').value;
+    document.getElementById('confirmarEmail').innerText = document.getElementById('email').value;
+    document.getElementById('confirmarTelemovel').innerText = document.getElementById('telemovel').value;
+
+
+    modalConfirmar.style.display = "flex";
+});
+
+
+const btnConfirmarEncomenda = document.getElementById('btnConfirmarEncomenda');
+btnConfirmarEncomenda.addEventListener('click', ()=>{
+    // FAZER DEPOIS
+    alert("Daqui irá para 'confirmar_encomenda.php' e a encomenda é adicionada a base de dados");
+});
+
+const btnCancelarEncomenda = document.getElementById('btnCancelarEncomenda');
+btnCancelarEncomenda.addEventListener('click', ()=>{
+    modalConfirmar.style.display = "none";
+})
+
+
+
+// Tabela confirmar
+function renderTabelaConfirmar(){
+    const tbody = document.getElementById('tabela-confirmar');
+    tbody.innerHTML = '';
+
+    // Verifica cada linha da tabela de filtros e extrai somente os selecionados
+
+    const tabelaFiltros = document.querySelectorAll('#tabela-filtro tr');
+
+    tabelaFiltros.forEach(tr=>{
+        const selecionado = tr.querySelector('.checkbox-selecionar');
+        if(!selecionado.checked){
+            return;
+        }
+
+        const linha = document.createElement('tr');
+        const celulas = tr.querySelectorAll('td');
+
+        let isbn = document.createElement('td');
+        isbn.innerText = celulas[0].innerText;        
+        linha.appendChild(isbn);
+
+        let nome = document.createElement('td');
+        nome.innerText = celulas[1].innerText;        
+        linha.appendChild(nome);
+
+        let preco = document.createElement('td');
+        preco.innerText = celulas[2].innerText;        
+        linha.appendChild(preco);
+
+        let voucher = document.createElement('td');
+        let checkvoucher = celulas[6].querySelector('input[type="checkbox"]');
+        if(checkvoucher.checked == true){
+            voucher.innerText = "Sim";
+        }    
+        else{
+            voucher.innerText = "Não";
+        }
+        linha.appendChild(voucher);
+
+        tbody.appendChild(linha);
+    })
+
+}
 
 
 // Função que calcula o valor total da encomenda
@@ -57,7 +240,7 @@ function atualizarTotal(){
 
 // Função que constroi a tabela
 function renderTabela(dados) {
-    const tbody = document.querySelector('tbody');
+    const tbody = document.getElementById('tabela-filtro');
     tbody.innerHTML = '';
 
     // Itera sobre cada linha e adiciona à tabela
@@ -91,6 +274,7 @@ function renderTabela(dados) {
         checkboxSelecionar.type = "checkbox";
         checkboxSelecionar.dataset.preco = element.preco_manual;
         checkboxSelecionar.id = 'checkSelecionar-'+element.id_manual;
+        checkboxSelecionar.dataset.id_manual = element.id_manual;
         checkboxSelecionar.classList.add('checkbox-selecionar');
         checkboxSelecionar.addEventListener('change', atualizarTotal);
 
@@ -144,7 +328,7 @@ async function filtrarManuais(agrupamento, ano_escolar, tipo_manual){
 
 
 function mostrarMsg(cor, conteudo) {
-    const msg = document.getElementById('ErroFiltrar');
+    const msg = document.getElementById('errorMsg');
     msg.style.color = cor;
     msg.innerText = conteudo;
 
