@@ -1,10 +1,19 @@
 let manuais = [];
+
 // Botão de filtrar
 const btnFiltrar = document.getElementById('btnFiltrar');
 btnFiltrar.addEventListener('click', async ()=>{
     // Verifica se pelo menos uma combobox está preenchida
     const agrupamento = document.getElementById('filtroAgrupamento').value;
+    if(!agrupamento){
+        mostrarMsg("red", "Selecione um agrupamento", "erroFiltrar");
+        return;
+    }
     const ano_escolar = document.getElementById('filtroAnoEscolar').value;
+    if(!ano_escolar){
+        mostrarMsg("red", "Selecione um ano escolar", "erroFiltrar");
+        return;
+    }
     const tipo_manual = document.getElementById('filtroTipoManual').value;
 
     manuais = await filtrarManuais(agrupamento, ano_escolar, tipo_manual);
@@ -17,8 +26,16 @@ selecionarAll.addEventListener('change', function (){
     checkboxes = document.querySelectorAll('.checkbox-selecionar');
     checkboxes.forEach(checkbox=>{
         checkbox.checked = this.checked;
+        
+        if(this.checked == false){
+            let id_manual = checkbox.dataset.id_manual;
+            let checkVoucher = document.getElementById(`checkVoucher-${id_manual}`);
+            if(checkVoucher){
+                checkVoucher.checked = false;
+            }
+        }
     });
-
+    
     atualizarTotal();
 });
 
@@ -27,6 +44,11 @@ voucherAll.addEventListener('change', function (){
     checkboxes = document.querySelectorAll('.checkbox-voucher');
     checkboxes.forEach(checkbox=>{
         checkbox.checked = this.checked;
+        
+        if(this.checked == true){
+            let id_manual = checkbox.dataset.id_manual;
+            document.getElementById(`checkSelecionar-${id_manual}`).checked = true;
+        }
     });
 
     atualizarTotal();
@@ -48,9 +70,10 @@ window.addEventListener('click', function (e) {
 });
 
 
-// Botão de encomendar
+// Mostra o modal de confirmar encomenda, e constrói o objeto a ser enviado pro backend
+let encomenda = {};
 const btnEncomendar = document.getElementById('btnEncomendar');
-btnEncomendar.addEventListener('click', ()=>{
+btnEncomendar.addEventListener('click', async function (){
     // Verificar se tem algum manual selecionado
     const manuais_selecionados = document.querySelectorAll('.checkbox-selecionar:checked');
 
@@ -58,6 +81,16 @@ btnEncomendar.addEventListener('click', ()=>{
         mostrarMsg("red", "Selecione pelo menos 1 manual");
         return;
     }
+
+    const id_manuais = [];
+    manuais_selecionados.forEach(manual =>{
+        id_manuais.push(manual.dataset.id_manual);
+    })
+
+    encomenda.id_manuais = id_manuais;
+
+    const ano_escolar = document.getElementById('filtroAnoEscolar').value;
+    encomenda.id_ano_escolar = ano_escolar;
 
     // Verificar se tem nome do aluno e do EE
     const nomeAluno = document.getElementById('nomeAluno').value;
@@ -72,6 +105,9 @@ btnEncomendar.addEventListener('click', ()=>{
         mostrarMsg("red", "Introduza o nome do encarregado de educação");
         return;
     }
+
+    encomenda.nome_aluno = nomeAluno;
+    encomenda.nome_ee = nomeEnc;
     
     // Verificar se tem email ou telefone
     // Verificar se email tá certo
@@ -90,6 +126,9 @@ btnEncomendar.addEventListener('click', ()=>{
         }
     }
 
+    encomenda.email = email ?? null;
+    encomenda.telemovel = telemovel ?? null;
+
     // Verificar se existe etiquetas: tem que ter observações
     const checkEtiquetas = document.getElementById('checkEtiquetas').checked;
 
@@ -99,37 +138,58 @@ btnEncomendar.addEventListener('click', ()=>{
             mostrarMsg("red", "Introduza o nome para a etiqueta");
             return;
         }
+
+        encomenda.etiqueta = true;
+        encomenda.obs_etiquetas = obs_etiquetas;
+    }
+    else{
+        encomenda.etiqueta = false;
+        encomenda.obs_etiquetas = null;
     }
 
     // Popular o modal com as informações
+
+    const id_encomenda = await getIdEncomenda();
+    document.getElementById('idEncomenda').innerText = id_encomenda;
+
     const agrupamentos = document.getElementById('filtroAgrupamento');
     const agrupamento = agrupamentos.selectedOptions[0].text;
     document.getElementById('confirmar_agrupamento').innerText = agrupamento;
+    encomenda.agrupamento = agrupamento;
     
     const anos = document.getElementById('filtroAnoEscolar');
     const ano = anos.selectedOptions[0].text;
     document.getElementById('confirmar_ano').innerText = ano;
+    encomenda.ano = ano;
 
     renderTabelaConfirmar();
 
-    document.getElementById('confirmarTotalEncomenda').innerText = document.getElementById('totalEncomenda').innerText + "€";
+    const total_encomenda = document.getElementById('totalEncomenda').innerText;
+    document.getElementById('confirmarTotalEncomenda').innerText = total_encomenda + "€";
+    encomenda.total_encomenda = total_encomenda;
 
-    document.getElementById('confirmarCaucaoPaga').innerText = document.getElementById('caucaoPaga').value + "€";
+    const caucao_paga = document.getElementById('caucaoPaga').value;
+    document.getElementById('confirmarCaucaoPaga').innerText = caucao_paga + "€";
+    encomenda.caucao_paga = caucao_paga;
     
     const plastManuais = document.getElementById('plastificarManuais');
     if(plastManuais.checked){
         document.getElementById('confirmarPlastManuais').innerText = "Sim";
+        encomenda.plast_manuais = true;
     }
     else{
         document.getElementById('confirmarPlastManuais').innerText = "Não";
+        encomenda.plast_manuais = false;
     }
 
     const plastLivroFichas = document.getElementById('plastificarLivroDeFichas');
     if(plastLivroFichas.checked){
         document.getElementById('confirmarPlastLivroFichas').innerText = "Sim";
+        encomenda.plast_livro_fichas = true;
     }
     else{
         document.getElementById('confirmarPlastLivroFichas').innerText = "Não";
+        encomenda.plast_livro_fichas = false;
     }
 
     if(checkEtiquetas){
@@ -139,10 +199,19 @@ btnEncomendar.addEventListener('click', ()=>{
         document.getElementById('confirmarEtiquetas').innerText = "Não";
     }
 
-    document.getElementById('confirmarObs').innerText = document.getElementById('observacoes').value;
+    const obs_encomenda = document.getElementById('observacoes').value;
+    document.getElementById('confirmarObs').innerText = obs_encomenda;
+    encomenda.obs_encomenda = obs_encomenda ?? null;
+
+    const codigoMega = document.getElementById('codigoMega').value;
+    document.getElementById('confirmarCodigoMega').innerText = codigoMega;
+    encomenda.codigoMega = codigoMega;
 
     document.getElementById('confirmarAluno').innerText = document.getElementById('nomeAluno').value;
-    document.getElementById('confirmarNIF').innerText = document.getElementById('nif').value;
+
+    const nif = document.getElementById('nif').value
+    document.getElementById('confirmarNIF').innerText = nif;
+    encomenda.nif = nif ?? "";
     document.getElementById('confirmarEnc').innerText = document.getElementById('nomeEnc').value;
     document.getElementById('confirmarEmail').innerText = document.getElementById('email').value;
     document.getElementById('confirmarTelemovel').innerText = document.getElementById('telemovel').value;
@@ -152,10 +221,21 @@ btnEncomendar.addEventListener('click', ()=>{
 });
 
 
+// Envia dados para serem adicionados à base de dados
 const btnConfirmarEncomenda = document.getElementById('btnConfirmarEncomenda');
-btnConfirmarEncomenda.addEventListener('click', ()=>{
-    // FAZER DEPOIS
-    alert("Daqui irá para 'confirmar_encomenda.php' e a encomenda é adicionada a base de dados");
+btnConfirmarEncomenda.addEventListener('click', async function(){
+    const response = await fetch('encomendar_manuais.php', {
+        method:"post",
+        headers: { 'Content-Type': 'application/json' },
+        body:JSON.stringify({
+            "acao":"adicionar_encomenda",
+            "encomenda":encomenda
+        })
+    });
+
+    const data = await response.json()
+    alert(data["resultado"], data["caminho_pdf"]);
+    location.reload();
 });
 
 const btnCancelarEncomenda = document.getElementById('btnCancelarEncomenda');
@@ -164,11 +244,11 @@ btnCancelarEncomenda.addEventListener('click', ()=>{
 })
 
 
-
 // Tabela confirmar
 function renderTabelaConfirmar(){
     const tbody = document.getElementById('tabela-confirmar');
     tbody.innerHTML = '';
+    encomenda.manuais = [];
 
     // Verifica cada linha da tabela de filtros e extrai somente os selecionados
 
@@ -197,44 +277,66 @@ function renderTabelaConfirmar(){
 
         let voucher = document.createElement('td');
         let checkvoucher = celulas[6].querySelector('input[type="checkbox"]');
-        if(checkvoucher.checked == true){
+        if(checkvoucher && checkvoucher.checked == true){
             voucher.innerText = "Sim";
         }    
         else{
             voucher.innerText = "Não";
         }
         linha.appendChild(voucher);
-
         tbody.appendChild(linha);
+
+        encomenda.manuais.push({
+            isbn: celulas[0].innerText,
+            nome: celulas[1].innerText,
+            preco: celulas[2].innerText,
+            voucher: voucher.innerText,
+            disciplina: celulas[3].innerText,
+            tipo_manual: celulas[4].innerText
+
+        });
     })
 
 }
 
+
+async function getIdEncomenda(){
+    const id_ano_escolar = document.getElementById('filtroAnoEscolar').value;
+
+    const response = await fetch('encomendar_manuais.php', {
+        method:"post",
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            "acao":"get_id_encomenda",
+            "id_ano_escolar": id_ano_escolar
+
+        })
+    });
+
+    const data = await response.json();
+    return data.resultado;    
+}
 
 // Função que calcula o valor total da encomenda
 function atualizarTotal(){
     // Pega os valores de todos os campos "selecionar" marcados
     const checkboxSelecionar = document.querySelectorAll('.checkbox-selecionar:checked');
     let caucao = 0;
+    let total = 0;
 
-    let totalSelecionar = 0;
-    checkboxSelecionar.forEach(manual => {
-        totalSelecionar += parseFloat(manual.dataset.preco);
+    checkboxSelecionar.forEach(manual=>{
+        let id_manual = manual.dataset.id_manual;
+        let voucher = document.getElementById(`checkVoucher-${id_manual}`);
+
+        if(voucher && voucher.checked == true){
+            return;
+        }
+
         caucao += 5;
-    });
-    
-    // Pega os valores de todos os campos "voucher" marcados
-    const checkboxVoucher = document.querySelectorAll('.checkbox-voucher:checked');
+        total += parseFloat(manual.dataset.preco);
+    })
 
-    let totalVoucher = 0;
-    checkboxVoucher.forEach(manual => {
-        totalVoucher += parseFloat(manual.dataset.preco);
-        caucao -= 5;
-    });
-
-    const total = totalSelecionar - totalVoucher;
-
-    document.getElementById('totalEncomenda').innerText = total;
+    document.getElementById('totalEncomenda').innerText = total.toFixed(2);
     document.getElementById('valorCaucao').innerText = caucao;
 }
 
@@ -276,7 +378,19 @@ function renderTabela(dados) {
         checkboxSelecionar.id = 'checkSelecionar-'+element.id_manual;
         checkboxSelecionar.dataset.id_manual = element.id_manual;
         checkboxSelecionar.classList.add('checkbox-selecionar');
-        checkboxSelecionar.addEventListener('change', atualizarTotal);
+        checkboxSelecionar.addEventListener('change', function(){
+            // Desmarca automaticamente o voucher se o manual for desmarcado
+            if(this.checked == false){
+                let checkVoucher = document.getElementById(`checkVoucher-${element.id_manual}`);
+                if(checkVoucher){
+                    checkVoucher.checked = false;
+                }
+
+                selecionarAll.checked = false;
+                voucherAll.checked = false;
+            }
+            atualizarTotal();
+        });
 
         let labelSelecionar = document.createElement('label');
         labelSelecionar.htmlFor = 'checkSelecionar-'+element.id_manual;
@@ -286,21 +400,39 @@ function renderTabela(dados) {
         linha.appendChild(selecionar);
 
         // Campo voucher
-        let voucher = document.createElement('td');
+        if(element.tipo_manual == "Manual"){
+            let voucher = document.createElement('td');
+    
+            let checkboxVoucher = document.createElement('input');
+            checkboxVoucher.type = "checkbox";
+            checkboxVoucher.dataset.preco = element.preco_manual;
+            checkboxVoucher.dataset.id_manual = element.id_manual;
+            checkboxVoucher.id = 'checkVoucher-'+element.id_manual;
+            checkboxVoucher.classList.add('checkbox-voucher');
+            checkboxVoucher.addEventListener('change', function(){
+                
+                // Seleciona automaticamente o manual
+                if(this.checked == true){
+                    let id_manual = checkboxVoucher.dataset.id_manual;                
+                    document.getElementById(`checkSelecionar-${id_manual}`).checked = true;
+                }
+                else{
+                    voucherAll.checked = false;
+                }
 
-        let checkboxVoucher = document.createElement('input');
-        checkboxVoucher.type = "checkbox";
-        checkboxVoucher.dataset.preco = element.preco_manual;
-        checkboxVoucher.id = 'checkVoucher-'+element.id_manual;
-        checkboxVoucher.classList.add('checkbox-voucher');
-        checkboxVoucher.addEventListener('change', atualizarTotal);
-
-        let labelVoucher = document.createElement('label');
-        labelVoucher.htmlFor = 'checkVoucher-'+element.id_manual;
-
-        voucher.appendChild(checkboxVoucher);
-        voucher.appendChild(labelVoucher);
-        linha.appendChild(voucher);
+                atualizarTotal();
+            });
+    
+            let labelVoucher = document.createElement('label');
+            labelVoucher.htmlFor = 'checkVoucher-'+element.id_manual;
+    
+            voucher.appendChild(checkboxVoucher);
+            voucher.appendChild(labelVoucher);
+            linha.appendChild(voucher);
+        }
+        else{
+            linha.appendChild(document.createElement('td'));
+        }
 
 
         tbody.appendChild(linha);
@@ -327,8 +459,8 @@ async function filtrarManuais(agrupamento, ano_escolar, tipo_manual){
 }
 
 
-function mostrarMsg(cor, conteudo) {
-    const msg = document.getElementById('errorMsg');
+function mostrarMsg(cor, conteudo, span = 'errorMsg') {
+    const msg = document.getElementById(span);
     msg.style.color = cor;
     msg.innerText = conteudo;
 

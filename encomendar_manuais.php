@@ -2,6 +2,7 @@
 // Verificação de sessão em todas as páginas protegidas
 session_start();
 include('db_connect.php');
+require_once("vendor/autoload.php");
 
 if($_SERVER["REQUEST_METHOD"] == "POST"){
 	$request = json_decode(file_get_contents('php://input'), true);
@@ -10,8 +11,207 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 		case "filtrar_manuais":
 			echo json_encode(filtrarManuais($conn, $request));
 			exit();
+		
+		case "get_id_encomenda":
+			echo json_encode(['resultado'=>getIdEncomenda($conn,$request)]);
+			exit();
+		
+		case "adicionar_encomenda":
+			adcEncomenda($conn, $request);
+			exit();
 	}
 }
+
+
+function adcEncomenda(mysqli $conn, array $request){
+	$encomenda = $request["encomenda"];
+
+	// Começa uma transação. ou tudo entra na base de dados, ou nada entra
+	// Atualiza encomenda, manual, encomenda_manual, e ano_escolar
+	$conn->begin_transaction();
+
+	try{
+		// Adiciona linha na tabela encomenda
+
+		$stmtEncomenda = $conn->prepare(
+			"INSERT INTO encomenda (data_encomenda, nome_aluno_encomenda, nif_encomenda, ee_encomenda,
+			telefone_encomenda, email_encomenda, num_encomenda, plast_manuais, plast_livro_fichas, etiquetas,
+			obs_etiquetas, obs_encomenda, total_encomenda, valor_caucao, id_utilizador)
+			VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+		);
+
+		$data_encomenda = date("y-m-d");
+		$nome_aluno_encomenda = $encomenda["nome_aluno"];
+		$nif_encomenda = $encomenda["nif"];
+		$ee_encomenda = $encomenda["nome_ee"];
+		$telefone_encomenda = $encomenda["telemovel"];
+		$email_encomenda = $encomenda["email"];
+		$num_encomenda = getIdEncomenda($conn, $encomenda);
+		$plast_manuais = $encomenda["plast_manuais"];
+		$plast_livro_fichas = $encomenda["plast_livro_fichas"];
+		$etiquetas = $encomenda["etiqueta"];
+		$obs_etiquetas = $encomenda["obs_etiquetas"];
+		$obs_encomenda = $encomenda["obs_encomenda"];
+		$total_encomenda = floatval($encomenda["total_encomenda"]);
+		$caucao_paga = floatval($encomenda["caucao_paga"]);
+		$id_utilizador = $_SESSION["user_id"];
+
+		$stmtEncomenda->bind_param("ssssssiiiissddi", $data_encomenda, $nome_aluno_encomenda, $nif_encomenda, $ee_encomenda,
+		$telefone_encomenda, $email_encomenda, $num_encomenda, $plast_manuais, $plast_livro_fichas, $etiquetas, $obs_etiquetas,
+		$obs_encomenda, $total_encomenda, $caucao_paga, $id_utilizador);
+
+		$stmtEncomenda->execute();
+		
+		// Salva o id da encomenda pra usar depois
+		$id_encomenda = $conn->insert_id;
+
+		// Adiciona linhas na tabela encomenda_manual
+		$stmtEncomendaManual = $conn->prepare(
+			"INSERT INTO encomenda_manual (id_encomenda, id_manual)
+			VALUES (?,?)"
+		);
+
+		// Atualiza linha na tabela manual
+		$stmtManual = $conn->prepare(
+			"UPDATE manual
+			SET quant_manuais_pedir = quant_manuais_pedir + 1, quant_manuais_enc = quant_manuais_enc + 1
+			WHERE id_manual = ?"
+		);
+
+		foreach($encomenda["id_manuais"] as $id_manual){
+			$stmtEncomendaManual->bind_param("ii", $id_encomenda, $id_manual);
+			$stmtEncomendaManual->execute();
+
+			$stmtManual->bind_param("i", $id_manual);
+			$stmtManual->execute();
+		}
+		
+
+		// Adiciona +1 em encomendas_ano na tabela ano_escolar
+		$stmtAnoEscolar = $conn->prepare(
+			"UPDATE ano_escolar
+			SET encomendas_ano = encomendas_ano + 1
+			WHERE id_ano_escolar = ?"
+		);
+
+		$stmtAnoEscolar->bind_param("i", $encomenda["id_ano_escolar"]);
+		$stmtAnoEscolar->execute();
+
+
+
+
+		$stmtEncomenda->close();
+		$stmtEncomendaManual->close();
+		$stmtManual->close();
+		$stmtAnoEscolar->close();
+
+		// Cria o pdf, adiciona na base de dados e retorna
+		$pdf = new \TCPDF('P', 'mm', 'A4', true, 'UTF-8', false);
+
+		$pdf->SetCreator('Maria Papel'); 
+		$pdf->setPrintHeader(false);      
+		$pdf->setPrintFooter(false);       
+		$pdf->SetMargins(15, 15, 15);      
+		$pdf->AddPage();
+
+		// Cabeçalho
+		$pdf->SetFont('helvetica', 'B', 14);
+		$pdf->Cell(180, 7, 'MARIA PAPEL PAPELARIA', 0, 1, 'C');
+		$pdf->SetFont('helvetica', 'B', 12);
+		$pdf->Cell(0, 6, 'Encomenda de Manuais Escolares', 0, 1, 'C');
+		$pdf->Cell(0, 6, 'Ano Letivo 2026/2027', 0, 1, 'C');
+		$pdf->Ln(8);
+
+		// Informações do aluno
+		$pdf->SetFont('helvetica', '', 10);
+		$largura = ($pdf->getPageWidth() - 30) / 2;
+
+		$pdf->Cell($largura, 5, 'Aluno(a): ' . $nome_aluno_encomenda, 0, 0);
+		$pdf->Cell($largura, 5, 'Encomenda: ' . $num_encomenda, 0, 1, 'R');
+
+		$pdf->Cell($largura, 5, 'Encarregado de educação: ' . $ee_encomenda, 0, 0);
+		$pdf->Cell($largura, 5, 'Ano: ' . $encomenda['ano'], 0, 1, 'R');
+
+		$pdf->Cell($largura, 5, 'Contacto: ' . $telefone_encomenda, 0, 0);
+		$pdf->Cell($largura, 5, 'NIF: ' . $nif_encomenda, 0, 1, 'R');
+
+		$pdf->Cell($largura, 5, 'Data: ' . date("d/m/Y"), 0, 0);
+		$pdf->Cell($largura, 5, 'Agrupamento: ' . $encomenda['agrupamento'], 0, 1, 'R');
+		$pdf->Ln(8);
+
+		// Tabela
+		$pdf->SetFont('helvetica', 'B', 9);
+		$pdf->SetFillColor(220, 220, 220);
+
+		// Cabeçalho da tabela
+		$pdf->Cell(25, 7, 'ISBN',        1, 0, 'L', true);
+		$pdf->Cell(75, 7, 'Nome',        1, 0, 'L', true);
+		$pdf->Cell(28, 7, 'Disciplina',  1, 0, 'L', true);
+		$pdf->Cell(25, 7, 'Tipo',        1, 0, 'C', true);
+		$pdf->Cell(16, 7, 'Voucher',     1, 0, 'C', true);
+		$pdf->Cell(11,  7, 'Preço',       1, 1, 'R', true);
+
+		// Linhas da tabela
+		$pdf->SetFont('helvetica', '', 8);
+		foreach ($encomenda["manuais"] as $manual) {
+			$pdf->Cell(25, 6, $manual['isbn'], 1, 0, 'L');
+			$pdf->Cell(75, 6, $manual['nome'], 1, 0, 'L');
+			$pdf->Cell(28, 6, $manual['disciplina'], 1, 0, 'L');
+			$pdf->Cell(25, 6, $manual['tipo_manual'], 1, 0, 'C');
+			$pdf->Cell(16, 6, $manual['voucher'], 1, 0, 'C');
+			$pdf->Cell(11, 6, round(floatval($manual["preco"])), 1, 1, 'R');
+		}
+		$pdf->Ln(8);
+
+		// Informações da encomenda
+		$pdf->SetFont('helvetica', '', 10);
+		$pdf->Cell(0, 5, 'Total Encomenda: ' . $total_encomenda . ' | Valor Pago: ' . $caucao_paga . ' | Falta Pagar: ' . ($total_encomenda - $caucao_paga), 0, 1);
+		// Plastificar Manuais
+		if ($encomenda['plast_manuais']) {
+			$pdf->Cell(0, 5, 'Plastificar Manuais: Sim', 0, 1);
+		} else {
+			$pdf->Cell(0, 5, 'Plastificar Manuais: Não', 0, 1);
+		}
+
+		// Plastificar Livros de Fichas
+		if ($encomenda['plast_livro_fichas']) {
+			$pdf->Cell(0, 5, 'Plastificar livros de fichas: Sim', 0, 1);
+		} else {
+			$pdf->Cell(0, 5, 'Plastificar livros de fichas: Não', 0, 1);
+		}
+
+		// Etiquetas
+		if ($encomenda['etiqueta']) {
+			$pdf->Cell(0, 5, 'Etiquetas: Sim - ' . $encomenda['obs_etiquetas'], 0, 1);
+		} else {
+			$pdf->Cell(0, 5, 'Etiquetas: Não', 0, 1);
+		}
+		$pdf->Cell(0, 5, 'Observações: ' . $encomenda['obs_encomenda'], 0, 1);
+		$pdf->Cell(0, 5, 'Código MEGA: ' . $encomenda["codigoMega"], 0, 1);
+
+
+		$pasta   = __DIR__ . '/encomendas/' . $encomenda['ano'] . '/';
+		$arquivo = 'encomenda_' . $num_encomenda . '.pdf';
+		$caminho = $pasta . $arquivo;
+
+		if (!is_dir($pasta)) {
+			mkdir($pasta, 0755, true);
+		}
+
+		$pdf->Output($caminho, 'F'); 
+
+		$conn->commit();
+	}
+	catch(Exception $e){
+		$conn->rollback();
+		echo json_encode(['resultado'=> 'Não foi possível adicionar a encomenda à base de dados.']);
+		return;
+	}
+	
+	// Retorna sucesso e o caminho do PDF
+	echo json_encode(['resultado'=>'Encomenda adicionada com sucesso à base de dados', 'caminho_pdf'=>$caminho]);
+}
+
 
 function filtrarManuais(mysqli $conn, array $request){
 	// Constrói o WHERE da query
@@ -49,7 +249,7 @@ function filtrarManuais(mysqli $conn, array $request){
 			JOIN manual_ano_escolar ON manual.id_manual=manual_ano_escolar.id_manual
 			JOIN disciplina	 ON manual.id_disciplina=disciplina.id_disciplina 
 			$where
-			ORDER BY manual.id_disciplina ASC, manual.tipo_manual DESC";
+			ORDER BY manual.id_disciplina ASC, manual.tipo_manual ASC";
 	
 	$stmt = $conn->prepare($sql);
 
@@ -64,6 +264,20 @@ function filtrarManuais(mysqli $conn, array $request){
 	$stmt->execute();
 	$resultado = $stmt->get_result();
 	return $resultado->fetch_all(MYSQLI_ASSOC);
+}
+
+
+function getIdEncomenda(mysqli $conn, array $request){
+	$id_ano_escolar = intval($request["id_ano_escolar"]);
+
+	$sql = "SELECT encomendas_ano FROM ano_escolar
+			WHERE id_ano_escolar = ?";
+	$stmt = $conn->prepare($sql);
+	$stmt->bind_param("i", $id_ano_escolar);
+	$stmt->execute();
+	$resultado = $stmt->get_result();
+	$resultado = $resultado->fetch_assoc();
+	return $resultado["encomendas_ano"] +1;
 }
 
 ?>
@@ -108,7 +322,7 @@ function filtrarManuais(mysqli $conn, array $request){
 								<div id="confirmar-content">
 									<!-- Informações da encomenda -->
 									<div class="box">
-										<h4>Informações da encomenda</h4>
+										<h4>Encomenda Nº<span id="idEncomenda"></span></h4>
 
 										<div class="row">
 											<div class="col-6">
@@ -172,6 +386,13 @@ function filtrarManuais(mysqli $conn, array $request){
 											</div>
 										</div>
 
+										<div class="row">
+											<div class="col-12">
+												<strong>Código MEGA: </strong>
+												<span id="confirmarCodigoMega"></span>
+											</div>
+										</div>
+
 									</div>
 
 									<!-- Informações de contato -->
@@ -226,8 +447,8 @@ function filtrarManuais(mysqli $conn, array $request){
 									<h3>Filtrar manuais</h3>
 								</div>
 
-								<div class="col-2">
-									<span id="ErroFiltrar"></span>
+								<div class="col-6">
+									<span id="erroFiltrar"></span>
 								</div>
 							</div>
 							
@@ -319,7 +540,7 @@ function filtrarManuais(mysqli $conn, array $request){
 
 								<div class="col-3">
 									<strong>Caução paga: </strong>
-									<input type="number" id="caucaoPaga">
+									<input type="number" id="caucaoPaga" default=0>
 								</div>
 							</div>
 						</div>
@@ -349,6 +570,13 @@ function filtrarManuais(mysqli $conn, array $request){
 										<div class="col-6">
 											<label for="observacoes"><strong>Observações</strong></label>
 											<textarea id="observacoes"></textarea>
+										</div>
+									</div>
+
+									<div class="row-aln-middle" style="margin-top:10px;">
+										<div class="col-12">
+											<strong>Código MEGA: </strong>
+											<input type="text" id="codigoMega">
 										</div>
 									</div>
 								</div>

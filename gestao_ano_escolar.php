@@ -9,9 +9,9 @@
 			$nome_ano_escolar = $_POST['nome_ano_escolar'];
             $encomendas_inicial = intval($_POST['encomendas_inicial']);
 
-			$sql = "INSERT INTO ano_escolar (nome_ano_escolar, encomendas_inicial) VALUES (?, ?)";
+			$sql = "INSERT INTO ano_escolar (nome_ano_escolar, encomendas_inicial, encomendas_ano) VALUES (?, ?, ?)";
 			$stmt = $conn->prepare($sql);
-			$stmt->bind_param("si", $nome_ano_escolar, $encomendas_inicial);
+			$stmt->bind_param("si", $nome_ano_escolar, $encomendas_inicial, $encomendas_inicial);
 			$resultado = $stmt->execute();
 
 			if($resultado == false){
@@ -149,7 +149,7 @@
 														<tbody>
 															<?php 
 																// Busca os dados à base de dados e constrói a tabela
-																$sql = "SELECT * FROM ano_escolar ORDER BY encomendas_inicial";
+																$sql = "SELECT *, (encomendas_ano - encomendas_inicial) AS 'encomendas' FROM ano_escolar ORDER BY encomendas_inicial";
 																$stmt = $conn->prepare($sql);
 																$stmt->execute();
 																$resultado = $stmt->get_result();
@@ -170,7 +170,7 @@
 																	<tr>
 																		<td id="id_ano_escolar"><?= $linha['id_ano_escolar'] ?></td>
 																		<td id="nome_ano_escolar_<?= $linha['id_ano_escolar'] ?>"><?= $linha['nome_ano_escolar'] ?></td>
-                                                                        <td id="encomendas_ano_<?= $linha['id_ano_escolar'] ?>"><?= $linha['encomendas_ano'] ?></td>
+                                                                        <td id="encomendas_ano_<?= $linha['id_ano_escolar'] ?>"><?= $linha['encomendas'] ?></td>
                                                                         <td id="encomendas_inicial_<?= $linha['id_ano_escolar'] ?>"><?= $linha['encomendas_inicial'] ?></td>
 																		<td><button class="primary small" onclick="editar(<?= $linha['id_ano_escolar'] ?>)">Editar</button></td>
 																	</tr>
