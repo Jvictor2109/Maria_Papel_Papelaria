@@ -234,8 +234,15 @@ btnConfirmarEncomenda.addEventListener('click', async function(){
     });
 
     const data = await response.json()
-    alert(data["resultado"], data["caminho_pdf"]);
-    location.reload();
+    if(data["resultado"] == "sucesso"){
+        document.getElementById('num_encomenda_sucesso').innerText = data["num_encomenda"];
+        
+        const link_pdf = document.getElementById('caminho_pdf_sucesso');
+        link_pdf.innerText = data["caminho_pdf"];
+        link_pdf.href = data["caminho_pdf"];
+
+        document.getElementById('modal-sucesso').style.display = "flex";
+    }
 });
 
 const btnCancelarEncomenda = document.getElementById('btnCancelarEncomenda');

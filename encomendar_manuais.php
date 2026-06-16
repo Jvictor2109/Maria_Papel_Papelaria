@@ -32,7 +32,6 @@ function adcEncomenda(mysqli $conn, array $request){
 
 	try{
 		// Adiciona linha na tabela encomenda
-
 		$stmtEncomenda = $conn->prepare(
 			"INSERT INTO encomenda (data_encomenda, nome_aluno_encomenda, nif_encomenda, ee_encomenda,
 			telefone_encomenda, email_encomenda, num_encomenda, plast_manuais, plast_livro_fichas, etiquetas,
@@ -40,7 +39,7 @@ function adcEncomenda(mysqli $conn, array $request){
 			VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
 		);
 
-		$data_encomenda = date("y-m-d");
+		$data_encomenda = date("Y-m-d");
 		$nome_aluno_encomenda = $encomenda["nome_aluno"];
 		$nif_encomenda = $encomenda["nif"];
 		$ee_encomenda = $encomenda["nome_ee"];
@@ -97,109 +96,25 @@ function adcEncomenda(mysqli $conn, array $request){
 		$stmtAnoEscolar->bind_param("i", $encomenda["id_ano_escolar"]);
 		$stmtAnoEscolar->execute();
 
+		
+		// Cria o pdf e salva o caminho na base de dados
+		$caminho = gerarPdf($conn, $encomenda, $num_encomenda);
+		
+		$stmtPdf = $conn->prepare(
+			"UPDATE encomenda 
+			SET doc_encomenda = ?
+			WHERE id_encomenda = ?"
+		);
+
+		$stmtPdf->bind_param("si", $caminho,$id_encomenda);
+		$stmtPdf->execute();
 
 
-
+		$stmtPdf->close();
 		$stmtEncomenda->close();
 		$stmtEncomendaManual->close();
 		$stmtManual->close();
 		$stmtAnoEscolar->close();
-
-		// Cria o pdf, adiciona na base de dados e retorna
-		$pdf = new \TCPDF('P', 'mm', 'A4', true, 'UTF-8', false);
-
-		$pdf->SetCreator('Maria Papel'); 
-		$pdf->setPrintHeader(false);      
-		$pdf->setPrintFooter(false);       
-		$pdf->SetMargins(15, 15, 15);      
-		$pdf->AddPage();
-
-		// Cabeçalho
-		$pdf->SetFont('helvetica', 'B', 14);
-		$pdf->Cell(180, 7, 'MARIA PAPEL PAPELARIA', 0, 1, 'C');
-		$pdf->SetFont('helvetica', 'B', 12);
-		$pdf->Cell(0, 6, 'Encomenda de Manuais Escolares', 0, 1, 'C');
-		$pdf->Cell(0, 6, 'Ano Letivo 2026/2027', 0, 1, 'C');
-		$pdf->Ln(8);
-
-		// Informações do aluno
-		$pdf->SetFont('helvetica', '', 10);
-		$largura = ($pdf->getPageWidth() - 30) / 2;
-
-		$pdf->Cell($largura, 5, 'Aluno(a): ' . $nome_aluno_encomenda, 0, 0);
-		$pdf->Cell($largura, 5, 'Encomenda: ' . $num_encomenda, 0, 1, 'R');
-
-		$pdf->Cell($largura, 5, 'Encarregado de educação: ' . $ee_encomenda, 0, 0);
-		$pdf->Cell($largura, 5, 'Ano: ' . $encomenda['ano'], 0, 1, 'R');
-
-		$pdf->Cell($largura, 5, 'Contacto: ' . $telefone_encomenda, 0, 0);
-		$pdf->Cell($largura, 5, 'NIF: ' . $nif_encomenda, 0, 1, 'R');
-
-		$pdf->Cell($largura, 5, 'Data: ' . date("d/m/Y"), 0, 0);
-		$pdf->Cell($largura, 5, 'Agrupamento: ' . $encomenda['agrupamento'], 0, 1, 'R');
-		$pdf->Ln(8);
-
-		// Tabela
-		$pdf->SetFont('helvetica', 'B', 9);
-		$pdf->SetFillColor(220, 220, 220);
-
-		// Cabeçalho da tabela
-		$pdf->Cell(25, 7, 'ISBN',        1, 0, 'L', true);
-		$pdf->Cell(75, 7, 'Nome',        1, 0, 'L', true);
-		$pdf->Cell(28, 7, 'Disciplina',  1, 0, 'L', true);
-		$pdf->Cell(25, 7, 'Tipo',        1, 0, 'C', true);
-		$pdf->Cell(16, 7, 'Voucher',     1, 0, 'C', true);
-		$pdf->Cell(11,  7, 'Preço',       1, 1, 'R', true);
-
-		// Linhas da tabela
-		$pdf->SetFont('helvetica', '', 8);
-		foreach ($encomenda["manuais"] as $manual) {
-			$pdf->Cell(25, 6, $manual['isbn'], 1, 0, 'L');
-			$pdf->Cell(75, 6, $manual['nome'], 1, 0, 'L');
-			$pdf->Cell(28, 6, $manual['disciplina'], 1, 0, 'L');
-			$pdf->Cell(25, 6, $manual['tipo_manual'], 1, 0, 'C');
-			$pdf->Cell(16, 6, $manual['voucher'], 1, 0, 'C');
-			$pdf->Cell(11, 6, round(floatval($manual["preco"])), 1, 1, 'R');
-		}
-		$pdf->Ln(8);
-
-		// Informações da encomenda
-		$pdf->SetFont('helvetica', '', 10);
-		$pdf->Cell(0, 5, 'Total Encomenda: ' . $total_encomenda . ' | Valor Pago: ' . $caucao_paga . ' | Falta Pagar: ' . ($total_encomenda - $caucao_paga), 0, 1);
-		// Plastificar Manuais
-		if ($encomenda['plast_manuais']) {
-			$pdf->Cell(0, 5, 'Plastificar Manuais: Sim', 0, 1);
-		} else {
-			$pdf->Cell(0, 5, 'Plastificar Manuais: Não', 0, 1);
-		}
-
-		// Plastificar Livros de Fichas
-		if ($encomenda['plast_livro_fichas']) {
-			$pdf->Cell(0, 5, 'Plastificar livros de fichas: Sim', 0, 1);
-		} else {
-			$pdf->Cell(0, 5, 'Plastificar livros de fichas: Não', 0, 1);
-		}
-
-		// Etiquetas
-		if ($encomenda['etiqueta']) {
-			$pdf->Cell(0, 5, 'Etiquetas: Sim - ' . $encomenda['obs_etiquetas'], 0, 1);
-		} else {
-			$pdf->Cell(0, 5, 'Etiquetas: Não', 0, 1);
-		}
-		$pdf->Cell(0, 5, 'Observações: ' . $encomenda['obs_encomenda'], 0, 1);
-		$pdf->Cell(0, 5, 'Código MEGA: ' . $encomenda["codigoMega"], 0, 1);
-
-
-		$pasta   = __DIR__ . '/encomendas/' . $encomenda['ano'] . '/';
-		$arquivo = 'encomenda_' . $num_encomenda . '.pdf';
-		$caminho = $pasta . $arquivo;
-
-		if (!is_dir($pasta)) {
-			mkdir($pasta, 0755, true);
-		}
-
-		$pdf->Output($caminho, 'F'); 
-
 		$conn->commit();
 	}
 	catch(Exception $e){
@@ -209,7 +124,146 @@ function adcEncomenda(mysqli $conn, array $request){
 	}
 	
 	// Retorna sucesso e o caminho do PDF
-	echo json_encode(['resultado'=>'Encomenda adicionada com sucesso à base de dados', 'caminho_pdf'=>$caminho]);
+	echo json_encode(['resultado'=>'sucesso', 'caminho_pdf'=>$caminho, 'num_encomenda'=>$num_encomenda]);
+}
+
+
+function gerarPdf(mysqli $conn, array $encomenda, $num_encomenda){
+	// Extrai as informações
+	$nome_aluno_encomenda = $encomenda["nome_aluno"];
+	$nome_aluno_encomenda = $encomenda["nome_aluno"];
+	$nif_encomenda = $encomenda["nif"];
+	$ee_encomenda = $encomenda["nome_ee"];
+	$telefone_encomenda = $encomenda["telemovel"];
+	$email_encomenda = $encomenda["email"];
+	$plast_manuais = $encomenda["plast_manuais"];
+	$plast_livro_fichas = $encomenda["plast_livro_fichas"];
+	$etiquetas = $encomenda["etiqueta"];
+	$obs_etiquetas = $encomenda["obs_etiquetas"];
+	$obs_encomenda = $encomenda["obs_encomenda"];
+	$total_encomenda = floatval($encomenda["total_encomenda"]);
+	$caucao_paga = floatval($encomenda["caucao_paga"]);
+	$id_utilizador = $_SESSION["user_id"];
+	$ano = $encomenda["ano"];
+	$codigoMega = $encomenda["codigoMega"];
+	$agrupamento = $encomenda["agrupamento"];
+
+	$pdf = new \TCPDF('P', 'mm', 'A4', true, 'UTF-8', false);
+
+	$pdf->SetCreator('Maria Papel'); 
+	$pdf->setPrintHeader(false);      
+	$pdf->setPrintFooter(false);       
+	$pdf->SetMargins(15, 15, 15);      
+	$pdf->AddPage();
+
+	// Cabeçalho
+	$pdf->SetFont('helvetica', 'B', 14);
+	$pdf->Cell(180, 7, 'MARIA PAPEL PAPELARIA', 0, 1, 'C');
+	$pdf->SetFont('helvetica', 'B', 12);
+	$pdf->Cell(0, 6, 'Encomenda de Manuais Escolares', 0, 1, 'C');
+	$pdf->Cell(0, 6, 'Ano Letivo 2026/2027', 0, 1, 'C');
+	$pdf->Ln(8);
+
+	// Informações do aluno
+	$pdf->SetFont('helvetica', '', 10);
+	$largura = ($pdf->getPageWidth() - 30) / 2;
+
+	$pdf->Cell($largura, 5, 'Aluno(a): ' . $nome_aluno_encomenda, 0, 0);
+	$pdf->Cell($largura, 5, 'Encomenda: ' . $num_encomenda, 0, 1, 'R');
+
+	$pdf->Cell($largura, 5, 'Encarregado de educação: ' . $ee_encomenda, 0, 0);
+	$pdf->Cell($largura, 5, 'Ano: ' . $encomenda['ano'], 0, 1, 'R');
+
+	$pdf->Cell($largura, 5, 'Contacto: ' . $telefone_encomenda, 0, 0);
+	$pdf->Cell($largura, 5, 'NIF: ' . $nif_encomenda, 0, 1, 'R');
+
+	$pdf->Cell($largura, 5, 'Data: ' . date("d/m/Y"), 0, 0);
+	$pdf->Cell($largura, 5, 'Agrupamento: ' . $agrupamento, 0, 1, 'R');
+
+	$pdf->Cell($largura, 5, 'Email: ' . $email_encomenda, 0, 0);
+
+	$pdf->Ln(8);
+
+	// Tabela
+	$pdf->SetFont('helvetica', 'B', 9);
+	$pdf->SetFillColor(220, 220, 220);
+
+	// Cabeçalho da tabela
+	$pdf->Cell(25, 7, 'ISBN',        1, 0, 'L', true);
+	$pdf->Cell(75, 7, 'Nome',        1, 0, 'L', true);
+	$pdf->Cell(28, 7, 'Disciplina',  1, 0, 'L', true);
+	$pdf->Cell(25, 7, 'Tipo',        1, 0, 'C', true);
+	$pdf->Cell(16, 7, 'Voucher',     1, 0, 'C', true);
+	$pdf->Cell(11,  7, 'Preço',       1, 1, 'R', true);
+
+	// Linhas da tabela
+	$pdf->SetFont('helvetica', '', 8);
+	foreach ($encomenda["manuais"] as $manual) {
+		$pdf->Cell(25, 6, $manual['isbn'], 1, 0, 'L');
+		$pdf->Cell(75, 6, $manual['nome'], 1, 0, 'L');
+		$pdf->Cell(28, 6, $manual['disciplina'], 1, 0, 'L');
+		$pdf->Cell(25, 6, $manual['tipo_manual'], 1, 0, 'C');
+		$pdf->Cell(16, 6, $manual['voucher'], 1, 0, 'C');
+		$pdf->Cell(11, 6, round(floatval($manual["preco"])), 1, 1, 'R');
+	}
+	$pdf->Ln(8);
+
+	// Informações da encomenda
+	$pdf->SetFont('helvetica', '', 10);
+	
+	$pdf->Cell($largura, 5, 'Total da encomenda: ' . $total_encomenda, 0, 0);
+	// Plastificar Manuais
+	if ($plast_manuais) {
+		$pdf->Cell($largura, 5, 'Plastificar Manuais: Sim', 0, 1, 'R');
+	} else {
+		$pdf->Cell($largura, 5, 'Plastificar Manuais: Não', 0, 1, 'R');
+	}
+
+	$pdf->Cell($largura, 5, 'Valor pago: ' . $caucao_paga, 0, 0);
+	// Plastificar Livros de Fichas
+	if ($plast_livro_fichas) {
+		$pdf->Cell($largura, 5, 'Plastificar livros de fichas: Sim', 0, 1, 'R');
+	} else {
+		$pdf->Cell($largura, 5, 'Plastificar livros de fichas: Não', 0, 1, 'R');
+	}
+
+	$pdf->Cell($largura, 5, 'Falta pagar: ' . ($total_encomenda-$caucao_paga), 0, 0);
+	// Etiquetas
+	if ($etiquetas) {
+		$pdf->Cell($largura, 5, 'Etiquetas: Sim - ' . $obs_etiquetas, 0, 1, 'R');
+	} else {
+		$pdf->Cell($largura, 5, 'Etiquetas: Não', 0, 1, 'R');
+	}
+	$pdf->Cell(0, 5, 'Observações: ' . $obs_encomenda, 0, 1);
+	$pdf->Cell(0, 5, 'Código MEGA: ' . $codigoMega, 0, 1);
+
+	// Rodapé
+	$stmtUtilizador = $conn->prepare("SELECT username FROM utilizador WHERE id_utilizador = ?");
+	$stmtUtilizador->bind_param("i", $id_utilizador);
+	$stmtUtilizador->execute();
+	$result = $stmtUtilizador->get_result();
+	$row = $result->fetch_assoc();
+	$utilizador = $row["username"];
+
+	$pdf->setY(-30);
+	$pdf->SetFont('helvetica', '', 10);
+	$texto_rodape = 'Documento gerado no dia ' . date("d/m/Y") . ' às ' . date("H:i:s") . ' | Utilizador: ' . $utilizador;
+	$pdf->Cell(180, 5, $texto_rodape, 0, 1, 'C');
+
+	$pasta_relativa = '/MPP_3/encomendas/' . $ano . '/';
+	$arquivo = 'encomenda_' . $num_encomenda . '.pdf';
+
+	$pasta_absoluta = __DIR__ . '/encomendas/' . $ano . '/';
+
+	if (!is_dir($pasta_absoluta)) {
+		mkdir($pasta_absoluta, 0755, true);
+	}
+
+	// Salva o PDF no disco com caminho absoluto
+	$pdf->Output($pasta_absoluta . $arquivo, 'F');
+	$stmtUtilizador->close();
+	// Retorna o caminho pra ser salvo na base de dados
+	return $pasta_relativa . $arquivo;
 }
 
 
@@ -434,6 +488,19 @@ function getIdEncomenda(mysqli $conn, array $request){
 										</div>
 									</div>
 								</div>
+							</div>
+						</div>
+
+						<!-- Modal de sucesso -->
+						<div id="modal-sucesso" class="modal-overlay" style="display: none;">
+							<div class="box modal-content" style="max-width: 500px;">
+								<h3>Encomenda criada com sucesso</h3>
+								
+								<p><strong>A encomenda Nº<span id="num_encomenda_sucesso"></span> foi criada com sucesso.</strong></p>
+								<p><strong>Link para o documento pdf:</strong> <a id="caminho_pdf_sucesso" target="_blank"></a></p> 
+								
+
+								<button class="primary" onclick="location.reload()">Concluído</button>
 							</div>
 						</div>
 
