@@ -51,16 +51,25 @@ else{
 											 ?>
 
 											<!-- Formulário para introduzir pdf -->
-												<form method="post" action="extrairTabela.php" enctype="multipart/form-data">
-													<div class="row gtr-uniform">
-														<div class="col-6 col-12-xsmall">
-															<input type="file" name="pdf_file" id="pdf_file"/>
-														</div>
-														<div class="col-12">
-															<input type="submit" value="Enviar PDF" class="primary" />
-														</div>
+											<form method="post" action="extrairTabela.php" enctype="multipart/form-data">
+												<div class="row gtr-uniform">
+													<div class="col-6 col-12-xsmall">
+														<input type="file" name="pdf_file" id="pdf_file"/>
 													</div>
-												</form>
+													<div class="col-12">
+														<input type="submit" value="Enviar PDF" class="primary" />
+													</div>
+												</div>
+											</form>
+											
+											<!-- Modal de sucesso -->
+											<div id="modal-sucesso" class="modal-overlay" style="display: none;">
+												<div class="box modal-content" style="max-width: 500px;">
+													<h3>Expedições VASP</h3>
+													<p><strong>Ficheiro Excel exportado com sucesso!</strong></p>													
+													<button class="primary" onclick="location.reload()">Concluído</button>
+												</div>
+											</div>
 
 											<!-- Tabela mostrando os artigos extraídos -->
 											<h4>Artigos encontrados</h4>

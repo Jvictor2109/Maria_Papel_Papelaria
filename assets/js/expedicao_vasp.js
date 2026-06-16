@@ -25,7 +25,15 @@ function exportarExcel(){
     }).then(response => response.json())
       .then(data => {
             if(data['sucesso']==true){
-                window.location.href = 'exportarExcel.php';
+                 // Criar link invisível para download (não navega fora da página)
+                const link = document.createElement('a');
+                link.href = 'exportarExcel.php';
+                link.style.display = 'none';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                document.getElementById('modal-sucesso').style.display = "flex";
             }
         });
 }
