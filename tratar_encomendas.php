@@ -69,7 +69,7 @@ function getEncomendas(mysqli $conn){
 															<th>Número da encomenda</th>
 															<th>Data da encomenda</th>
 															<th>Dias em espera</th>
-															<th>Detalhes da encomenda</th>
+															<th> </th>
 														</tr>
 													</thead>
 

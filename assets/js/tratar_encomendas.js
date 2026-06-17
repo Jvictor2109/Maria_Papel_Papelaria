@@ -50,8 +50,8 @@ async function renderTabela(){
         const detalhes_encomenda = document.createElement('td');
         const link_encomenda = document.createElement('a');
 
-        link_encomenda.href = `detalhe_encomenda.php?id=${encomenda.id_encomenda}`;
-        link_encomenda.innerText = 'Ver detalhes da encomenda';
+        link_encomenda.href = `editar_encomenda.php?id=${encomenda.id_encomenda}`;
+        link_encomenda.innerText = 'Editar encomenda';
 
         detalhes_encomenda.appendChild(link_encomenda);
         linha.appendChild(detalhes_encomenda);
