@@ -66,8 +66,8 @@ function adcEncomenda(mysqli $conn, array $request){
 
 		// Adiciona linhas na tabela encomenda_manual
 		$stmtEncomendaManual = $conn->prepare(
-			"INSERT INTO encomenda_manual (id_encomenda, id_manual)
-			VALUES (?,?)"
+			"INSERT INTO encomenda_manual (id_encomenda, id_manual, voucher)
+			VALUES (?,?,?)"
 		);
 
 		// Atualiza linha na tabela manual
@@ -77,11 +77,18 @@ function adcEncomenda(mysqli $conn, array $request){
 			WHERE id_manual = ?"
 		);
 
-		foreach($encomenda["id_manuais"] as $id_manual){
-			$stmtEncomendaManual->bind_param("ii", $id_encomenda, $id_manual);
+		foreach($encomenda["manuais"] as $manual){
+			if($manual["voucher"] == "Sim"){
+				$voucher = 1;
+			}
+			else{
+				$voucher = 0;
+			}
+
+			$stmtEncomendaManual->bind_param("iii", $id_encomenda, $manual["id_manual"], $voucher);
 			$stmtEncomendaManual->execute();
 
-			$stmtManual->bind_param("i", $id_manual);
+			$stmtManual->bind_param("i", $manual["id_manual"]);
 			$stmtManual->execute();
 		}
 		

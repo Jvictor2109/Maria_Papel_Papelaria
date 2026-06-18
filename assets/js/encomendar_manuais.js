@@ -82,13 +82,6 @@ btnEncomendar.addEventListener('click', async function (){
         return;
     }
 
-    const id_manuais = [];
-    manuais_selecionados.forEach(manual =>{
-        id_manuais.push(manual.dataset.id_manual);
-    })
-
-    encomenda.id_manuais = id_manuais;
-
     const ano_escolar = document.getElementById('filtroAnoEscolar').value;
     encomenda.id_ano_escolar = ano_escolar;
 
@@ -299,8 +292,8 @@ function renderTabelaConfirmar(){
             preco: celulas[2].innerText,
             voucher: voucher.innerText,
             disciplina: celulas[3].innerText,
-            tipo_manual: celulas[4].innerText
-
+            tipo_manual: celulas[4].innerText,
+            id_manual: celulas[0].dataset.id_manual
         });
     })
 
@@ -358,6 +351,7 @@ function renderTabela(dados) {
 
         let isbn_manual = document.createElement('td');
         isbn_manual.innerText = element.isbn_manual;
+        isbn_manual.dataset.id_manual = element.id_manual;
         linha.appendChild(isbn_manual);
 
         let nome_manual = document.createElement('td');
