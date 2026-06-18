@@ -10,15 +10,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 ?>
 
 <!DOCTYPE HTML>
-<!--
-	Editorial by HTML5 UP
-	html5up.net | @ajlkn
-	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
--->
 <html>
 
 <head>
-    <title>MPP - Detalhe Encomenda</title>
+    <title>MPP - Editar Encomenda</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
     <link rel="stylesheet" href="assets/css/main.css" />
@@ -41,6 +36,74 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     // Verificar se já está autenticado
                     if (isset($_SESSION['user_id'])) { ?>
                         <h2>Editar encomenda Nº <?= $_GET["id"] ?></h2>
+
+                        <div class="box">
+                            <h3>Detalhes da encomenda</h3>
+
+                            <?php 
+                            $stmt = $conn->prepare(
+                                "SELECT * FROM encomenda
+                                JOIN utilizador ON utilizador.id_utilizador = encomenda.id_utilizador
+                                WHERE id_encomenda = ?"
+                            );
+
+                            $stmt->bind_param("i", $_GET["id"]);
+
+                            $stmt->execute();
+
+                            $result = $stmt->get_result();
+
+                            if($result->num_rows != 1){
+                                header("Location: tratar_encomendas.php");
+                                exit();
+                            }
+
+                            $encomenda = $result->fetch_assoc();
+                            ?>
+
+                            <div class="row">
+                                <div class="col-4 col-12-small">
+                                    <ul class="alt">
+                                        <li><strong>ID: </strong><?= $encomenda["id_encomenda"] ?></li>
+                                        <li><strong>Data: </strong><?= date('d/m/Y', strtotime($encomenda["data_encomenda"])) ?></li>
+                                        <li><strong>Número da encomenda: </strong><?= $encomenda["num_encomenda"] ?></li>
+                                        <li><strong>Utilizador: </strong><?= $encomenda["username"] ?></li>
+                                    </ul>
+                                </div>
+
+                                <div class="col-4 col-12-small">
+                                    <ul class="alt">
+                                        <li><strong>Aluno: </strong> joao</li>
+                                        <li><strong>NIF Aluno: </strong> 999999999</li>
+                                        <li><strong>E.E. Aluno: </strong> Libna</li>
+                                        <li><strong>Telefone: </strong> 999999999</li>
+                                    </ul>
+                                </div>
+
+                                <br>
+
+                                <div class="col-4 col-12-small">
+                                    <ul class="alt">
+                                        <li><strong>Plastificar Manuais: </strong> não</li>
+                                        <li><strong>Plastificas livro de fichas: </strong> não</li>
+                                        <li><strong>Etiquetas: </strong> Sim - tal coisa sjsjsjsjsjsjsjsjsjjsjs</li>
+                                        <li><strong>Observações: </strong> tralalelo tralalala 676767</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-4 col-12-small">
+                                    <p><strong>Total encomenda: </strong> 67€</p>
+                                </div>
+                                <div class="col-4 col-12-small">
+                                    <p><strong>Caução paga:</strong> 5€</p>
+                                </div>
+                                <div class="col-4 col-12-small">
+                                    <p><strong>Doc. Encomenda: </strong> /encomendas/etc</p>
+                                </div>
+                            </div>
+                        </div>
 
                         
 
