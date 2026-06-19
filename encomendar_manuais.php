@@ -35,8 +35,8 @@ function adcEncomenda(mysqli $conn, array $request){
 		$stmtEncomenda = $conn->prepare(
 			"INSERT INTO encomenda (data_encomenda, nome_aluno_encomenda, nif_encomenda, ee_encomenda,
 			telefone_encomenda, email_encomenda, num_encomenda, plast_manuais, plast_livro_fichas, etiquetas,
-			obs_etiquetas, obs_encomenda, total_encomenda, valor_caucao, id_utilizador)
-			VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+			obs_etiquetas, obs_encomenda, total_encomenda, valor_caucao, id_utilizador, codigo_mega, id_ano_encomenda)
+			VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
 		);
 
 		$data_encomenda = date("Y-m-d");
@@ -54,10 +54,12 @@ function adcEncomenda(mysqli $conn, array $request){
 		$total_encomenda = floatval($encomenda["total_encomenda"]);
 		$caucao_paga = floatval($encomenda["caucao_paga"]);
 		$id_utilizador = $_SESSION["user_id"];
+		$codigoMega = $encomenda["codigoMega"];
+		$id_ano_encomenda = $encomenda["id_ano_escolar"];
 
-		$stmtEncomenda->bind_param("ssssssiiiissddi", $data_encomenda, $nome_aluno_encomenda, $nif_encomenda, $ee_encomenda,
+		$stmtEncomenda->bind_param("ssssssiiiissddisi", $data_encomenda, $nome_aluno_encomenda, $nif_encomenda, $ee_encomenda,
 		$telefone_encomenda, $email_encomenda, $num_encomenda, $plast_manuais, $plast_livro_fichas, $etiquetas, $obs_etiquetas,
-		$obs_encomenda, $total_encomenda, $caucao_paga, $id_utilizador);
+		$obs_encomenda, $total_encomenda, $caucao_paga, $id_utilizador, $codigoMega, $id_ano_encomenda);
 
 		$stmtEncomenda->execute();
 		

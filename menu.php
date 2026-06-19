@@ -36,7 +36,16 @@
                 <?php
                     if(isset($_SESSION['user_id'])){
                         echo '<li><a href="reposicao.php">Material a pedir</a></li>';
-                        echo '<li><a href="encomendar_manuais.php">Encomenda manuais escolares</a></li>';
+                        echo '
+                            <li>
+                                <span class="opener">Gestão Encomendas</span>
+                                <ul>
+                                    <li><a href="encomendar_manuais.php">Encomendar manuais escolares</a></li>
+                                    <li><a href="tratar_encomendas.php">Encomendas a tratar</a></li>
+                                    <li><a href="pesquisar_manuais.php">Pesquisar manuais</a></li>
+                                </ul>
+                            </li>
+                        ';
 
                     }
 

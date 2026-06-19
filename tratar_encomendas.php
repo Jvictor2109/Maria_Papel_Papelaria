@@ -22,6 +22,7 @@ function getEncomendas(mysqli $conn){
     $stmt->execute();
     $result = $stmt->get_result();
     $encomendas = $result->fetch_all(MYSQLI_ASSOC);
+	$stmt->close();
     return $encomendas;
 }
 
@@ -61,6 +62,29 @@ function getEncomendas(mysqli $conn){
 										<div class="box">
 											<h4>Encomendas por tratar: <span id="num_encomendas_tratar"></span></h5>
 
+											<!-- Filtro de ano escolar -->
+											<h4>Filtrar por ano escolar</h4>
+											<div class="row">
+												<div class="col-12">
+												<?php 
+													$stmt = $conn->prepare(
+														"SELECT * FROM ano_escolar"
+													);
+													$stmt->execute();
+													$result = $stmt->get_result();
+													$anos = $result->fetch_all(MYSQLI_ASSOC);
+
+													foreach($anos as $ano){?>
+														<input type="checkbox" class="filtroAno" id="<?= $ano["id_ano_escolar"] ?>" value="<?= $ano["id_ano_escolar"] ?>">
+														<label for="<?= $ano["id_ano_escolar"] ?>"><?= $ano["nome_ano_escolar"] ?></label>
+
+													<?php
+													}
+												?>
+												</div>
+											</div>
+
+											<!-- Tabela -->
 											<div class="table-wrapper">
 												<table class="alt">
 													<thead>
