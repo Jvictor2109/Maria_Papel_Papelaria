@@ -105,6 +105,16 @@ function adcEncomenda(mysqli $conn, array $request){
 		$stmtAnoEscolar->bind_param("i", $encomenda["id_ano_escolar"]);
 		$stmtAnoEscolar->execute();
 
+		// Adiciona observação na encomenda, dizendo que foi registada.
+		$observacao_registada = "A encomenda foi registada.";
+		$data_registada = date("Y-m-d H:i:s");
+		$stmt_registada = $conn->prepare(
+			"INSERT INTO observacao_encomenda (id_encomenda, observacao_encomenda, data_observacao, id_utilizador)
+			VALUES (?,?,?,?)"
+		);
+		$stmt_registada->bind_param("issi", $id_encomenda, $observacao_registada, $data_registada, $id_utilizador);
+		$stmt_registada->execute();
+
 		
 		// Cria o pdf e salva o caminho na base de dados
 		$caminho = gerarPdf($conn, $encomenda, $num_encomenda);
@@ -120,6 +130,7 @@ function adcEncomenda(mysqli $conn, array $request){
 
 
 		$stmtPdf->close();
+		$stmt_registada->close();
 		$stmtEncomenda->close();
 		$stmtEncomendaManual->close();
 		$stmtManual->close();
