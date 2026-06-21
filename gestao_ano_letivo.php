@@ -25,11 +25,116 @@
 			exit();
 		}
         else if(isset($_POST["fechar"])){
-            // Colocar todos os outros anos letivos como fechados (ter certeza que nao existem 2 ativos)
-            // fazer a soma de encomendas do ano letivo
-            // zerar contagem dos anos escolares
-            // limpar tabelas encomenda, manual_encomenda, observacao_encomenda
-            // apagar ficheiros de /encomenda e /encomendas_a_editora
+            $id_ano_letivo = $_POST["fechar_id_ano_letivo"];
+            $nome_ano_letivo = $_POST["novo_nome_ano_letivo"];
+
+            $conn->begin_transaction();
+            
+            try{
+                // Colocar todos os outros anos letivos como fechados (ter certeza que nao existem 2 ativos)
+                $stmt_fechar_ano = $conn->prepare(
+                    "UPDATE ano_letivo
+                    SET ano_letivo_ativo = 0"
+                );
+                $stmt_fechar_ano->execute();
+
+                // fazer a soma de encomendas do ano letivo
+                $stmt_soma_encomendas = $conn->prepare(
+                    "SELECT SUM(encomendas_ano - encomendas_inicial) AS encomendas_ano_letivo
+                    FROM ano_escolar"
+                );
+                $stmt_soma_encomendas->execute();
+                $result = $stmt_soma_encomendas->get_result()->fetch_assoc();
+                $encomendas_ano_letivo = $result["encomendas_ano_letivo"];
+
+                // Atualizar total ano letivo
+                $stmt_atualizar_total = $conn->prepare(
+                    "UPDATE ano_letivo
+                    SET enc_ano_letivo = ?
+                    WHERE id_ano_letivo = ?"
+                );
+                $stmt_atualizar_total->bind_param("ii",$encomendas_ano_letivo, $id_ano_letivo);
+                $stmt_atualizar_total->execute();
+                
+                // zerar contagem dos anos escolares
+                $stmt_zerar_anos = $conn->prepare(
+                    "UPDATE ano_escolar
+                    SET encomendas_ano = encomendas_inicial"
+                );
+                $stmt_zerar_anos->execute();
+                
+                // limpar tabelas encomenda, manual_encomenda, observacao_encomenda
+                $conn->query("DELETE FROM observacao_encomenda");
+                $conn->query("DELETE FROM encomenda_manual");
+                $conn->query("DELETE FROM encomenda");
+
+                // Volta os IDs pra 1
+                $conn->query("ALTER TABLE observacao_encomenda AUTO_INCREMENT = 1");
+                $conn->query("ALTER TABLE encomenda_manual AUTO_INCREMENT = 1");
+                $conn->query("ALTER TABLE encomenda AUTO_INCREMENT = 1");
+
+
+                // apagar ficheiros de /encomenda e /encomendas_a_editora
+                $pastaPDF = __DIR__ . '/encomendas/';
+                $pastaExcel = __DIR__ . '/encomendas_a_editora/';
+                
+                // PDF
+                $iterator = new RecursiveIteratorIterator(
+                    new RecursiveDirectoryIterator($pastaPDF, RecursiveDirectoryIterator::SKIP_DOTS)
+                );
+
+                foreach($iterator as $item){
+                    if($item->isFile() && $item->getExtension() == 'pdf'){
+                        unlink($item->getPathName());
+                    }
+                }
+
+                // Excel
+                $iterator = new RecursiveIteratorIterator(
+                    new RecursiveDirectoryIterator($pastaExcel, RecursiveDirectoryIterator::SKIP_DOTS)
+                );
+
+                foreach($iterator as $item){
+                    if($item->isFile() && $item->getExtension() == 'pdf'){
+                        unlink($item->getPathName());
+                    }
+                }
+
+                // criar novo ano letivo
+                $stmt_novo_ano = $conn->prepare(
+                    "INSERT INTO ano_letivo (nome_ano_letivo, ano_letivo_ativo)
+                    VALUES (?,?)"
+                );
+                $ativo = 1;
+                $stmt_novo_ano->bind_param("si", $nome_ano_letivo, $ativo);
+                $stmt_novo_ano->execute();
+
+
+                
+                $stmt_fechar_ano->close();
+                $stmt_soma_encomendas->close();
+                $stmt_atualizar_total->close();
+                $stmt_zerar_anos->close();
+                $stmt_novo_ano->close();
+                $conn->commit();
+
+                // Alert de sucesso
+                echo "<script>
+                        alert('Novo ano letivo iniciado com sucesso');
+                        location.href = 'gestao_ano_letivo.php';
+                    </script>";
+                exit();
+
+            }
+            catch(Exception $e){
+                $conn->rollback();
+                echo "<script>
+                    alert('Não foi possível fechar o ano letivo');
+                    console.log($e);
+                    location.href = 'gestao_ano_letivo.php';
+                </script>";
+                exit();
+            }
 	    }
     }
 
@@ -137,7 +242,8 @@
 														<tbody>
 															<?php 
 																// Busca os dados à base de dados e constrói a tabela
-																$sql = "SELECT * FROM ano_letivo";
+																$sql = "SELECT * FROM ano_letivo 
+                                                                ORDER BY id_ano_letivo DESC";
 																$stmt = $conn->prepare($sql);
 																$stmt->execute();
 																$resultado = $stmt->get_result();
@@ -161,10 +267,10 @@
 																		<td id="nome_ano_letivo_<?= $linha['id_ano_letivo'] ?>"><?= $linha['nome_ano_letivo'] ?></td>
                                                                         <td id="enc_ano_letivo"><?= $linha["enc_ano_letivo"] ?></td>
 																		<td>
-                                                                            <button class="primary small" onclick="editar(<?= $linha['id_ano_letivo'] ?>)">Editar</button>
-                                                                            <button class="secondary small" onclick="fecharAno(<?= $linha['id_ano_letivo'] ?>)">Fechar ano letivo</button>
                                                                             <?php 
                                                                             if($linha["ano_letivo_ativo"] == 1){?>
+                                                                                <button class="primary small" onclick="editar(<?= $linha['id_ano_letivo'] ?>)">Editar</button>
+                                                                                <button class="secondary small" onclick="fecharAno(<?= $linha['id_ano_letivo'] ?>)">Fechar ano letivo</button>
                                                                                 <strong style="color: green;">Ativo</strong>
                                                                             <?php }
                                                                             ?>

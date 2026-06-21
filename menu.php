@@ -59,6 +59,7 @@
                                     <li><a href="gestao_editora.php">Editora</a></li>
                                     <li><a href="gestao_agrupamento.php">Agrupamento</a></li>
                                     <li><a href="gestao_ano_escolar.php">Ano Escolar</a></li>
+                                    <li><a href="gestao_ano_letivo.php">Ano letivo</a></li>
                                     <li><a href="gestao_manual.php">Manual</a></li>
                                 </ul>
                             </li>

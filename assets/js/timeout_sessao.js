@@ -9,8 +9,8 @@ function iniciarContagem(){
     }, tempo_limite);   
 }
 
-document.addEventListener("mousemove", iniciarContagem);
-document.addEventListener("keypress", iniciarContagem);
-document.addEventListener("click", iniciarContagem);
+// document.addEventListener("mousemove", iniciarContagem);
+// document.addEventListener("keypress", iniciarContagem);
+// document.addEventListener("click", iniciarContagem);
 
 // iniciarContagem();
