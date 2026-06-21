@@ -22,8 +22,10 @@ function filtrar_num_encomenda(mysqli $conn, array $request){
     $num_encomenda = $request["filtro"];
 
     $stmt = $conn->prepare(
-        "SELECT * FROM encomenda
-        WHERE num_encomenda = ?"
+        "SELECT encomenda.*, ano_escolar.nome_ano_escolar FROM encomenda
+        JOIN ano_escolar ON encomenda.id_ano_encomenda = ano_escolar.id_ano_escolar
+        WHERE num_encomenda = ?
+        ORDER BY nome_ano_escolar ASC"
     );
     $stmt->bind_param("i", $num_encomenda);
     $stmt->execute();
@@ -36,8 +38,10 @@ function filtrar_nome_aluno(mysqli $conn, array $request){
     $nome_aluno = '%' . $request["filtro"] . '%';
 
     $stmt = $conn->prepare(
-        "SELECT * FROM encomenda
-        WHERE nome_aluno_encomenda LIKE ?"
+        "SELECT encomenda.* , ano_escolar.nome_ano_escolar FROM encomenda
+        JOIN ano_escolar ON encomenda.id_ano_encomenda = ano_escolar.id_ano_escolar
+        WHERE nome_aluno_encomenda LIKE ?
+        ORDER BY nome_ano_escolar ASC"
     );
     $stmt->bind_param("s", $nome_aluno);
     $stmt->execute();
@@ -83,7 +87,7 @@ function filtrar_nome_aluno(mysqli $conn, array $request){
                                         <h4>Pesquisar por:</h4>
                                         <div class="row">
                                             <div class="col-12">
-                                                <input type="radio" name="filtro" value="num_encomenda" id="filtro_num">
+                                                <input type="radio" name="filtro" value="num_encomenda" id="filtro_num" checked>
                                                 <label for="filtro_num">Num. encomenda</label>
                                                 <input type="radio" name="filtro" value="nome_aluno" id="nome_aluno">
                                                 <label for="nome_aluno">Nome aluno</label>
@@ -108,7 +112,9 @@ function filtrar_nome_aluno(mysqli $conn, array $request){
                                                         <tr>
                                                             <th>ID</th>
                                                             <th>Num. Encomenda</th>
+                                                            <th>Ano escolar</th>
                                                             <th>Nome aluno</th>
+                                                            <th>Estado da encomenda</th>
                                                             <th> </th>
                                                         </tr>
                                                     </thead>

@@ -12,7 +12,7 @@ btnFiltrar.addEventListener('click', async function (){
         return;
     }
 
-    const response = await fetch('pesquisar_manuais.php',{
+    const response = await fetch('pesquisar_encomendas.php',{
         method:"post",
         headers: { 'Content-Type': 'application/json' },
         body:JSON.stringify({
@@ -44,9 +44,17 @@ function renderTabela(encomendas){
         num_encomenda.innerText = encomenda.num_encomenda;
         linha.appendChild(num_encomenda);
         
+        const nome_ano_escolar = document.createElement('td');
+        nome_ano_escolar.innerText = encomenda.nome_ano_escolar;
+        linha.appendChild(nome_ano_escolar);
+
         const nome_aluno_encomenda = document.createElement('td');
         nome_aluno_encomenda.innerText = encomenda.nome_aluno_encomenda;
         linha.appendChild(nome_aluno_encomenda);
+
+        const estado_encomenda = document.createElement('td');
+        estado_encomenda.innerText = encomenda.estado_encomenda;
+        linha.appendChild(estado_encomenda);
 
         const detalhes_encomenda = document.createElement('td');
         const link_encomenda = document.createElement('a');

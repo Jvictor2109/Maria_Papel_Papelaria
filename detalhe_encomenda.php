@@ -5,7 +5,7 @@ include('db_connect.php');
 
 if($_SERVER["REQUEST_METHOD"] == "POST"){
 	$request = json_decode(file_get_contents('php://input'),true);
-	$data = date("Y-m-d");
+	$data = date("Y-m-d H:i:s");
 
 	$stmt = $conn->prepare(
 		"INSERT INTO observacao_encomenda (id_encomenda, observacao_encomenda, data_observacao, id_utilizador)
@@ -181,7 +181,6 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                                             <th>Código</th>
                                             <th>Utiliza voucher</th>
                                             <th>Manual separado</th>
-                                            <th>Manual pedido</th>
                                         </tr>
                                     </thead>
 
@@ -217,19 +216,6 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                                                     <?php
                                                     }
                                                     ?>
-                                                </td>
-                                                <td>
-                                                    <?php 
-                                                    if(isset($manual["data_pedido"])){?>
-                                                        <span>Sim</span>
-                                                        <?php 
-                                                    }
-                                                    else{?>
-														<span>Não</span>
-                                                    <?php
-                                                    }
-                                                    ?>
-                                                    
                                                 </td>
                                             </tr>
                                         <?php }

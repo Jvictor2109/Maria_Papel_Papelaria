@@ -11,7 +11,7 @@
 
 			$sql = "INSERT INTO ano_escolar (nome_ano_escolar, encomendas_inicial, encomendas_ano) VALUES (?, ?, ?)";
 			$stmt = $conn->prepare($sql);
-			$stmt->bind_param("si", $nome_ano_escolar, $encomendas_inicial, $encomendas_inicial);
+			$stmt->bind_param("sii", $nome_ano_escolar, $encomendas_inicial, $encomendas_inicial);
 			$resultado = $stmt->execute();
 
 			if($resultado == false){

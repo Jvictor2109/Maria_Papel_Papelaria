@@ -42,7 +42,7 @@
                                 <ul>
                                     <li><a href="encomendar_manuais.php">Encomendar manuais escolares</a></li>
                                     <li><a href="tratar_encomendas.php">Encomendas a tratar</a></li>
-                                    <li><a href="pesquisar_manuais.php">Pesquisar manuais</a></li>
+                                    <li><a href="pesquisar_encomendas.php">Pesquisar encomendas</a></li>
                                 </ul>
                             </li>
                         ';

@@ -141,9 +141,17 @@ function gerarPdf(mysqli $conn, array $encomenda, $num_encomenda){
 	// Extrai as informações
 	$nome_aluno_encomenda = $encomenda["nome_aluno"];
 	$nome_aluno_encomenda = $encomenda["nome_aluno"];
+
 	$nif_encomenda = $encomenda["nif"];
+	$nif_encomenda = str_split($nif_encomenda, 3);
+	$nif_encomenda = implode(' ', $nif_encomenda);
+
 	$ee_encomenda = $encomenda["nome_ee"];
+
 	$telefone_encomenda = $encomenda["telemovel"];
+	$telefone_encomenda = str_split($telefone_encomenda, 3);
+	$telefone_encomenda = implode(' ', $telefone_encomenda);
+
 	$email_encomenda = $encomenda["email"];
 	$plast_manuais = $encomenda["plast_manuais"];
 	$plast_livro_fichas = $encomenda["plast_livro_fichas"];
@@ -170,7 +178,18 @@ function gerarPdf(mysqli $conn, array $encomenda, $num_encomenda){
 	$pdf->Cell(180, 7, 'MARIA PAPEL PAPELARIA', 0, 1, 'C');
 	$pdf->SetFont('helvetica', 'B', 12);
 	$pdf->Cell(0, 6, 'Encomenda de Manuais Escolares', 0, 1, 'C');
-	$pdf->Cell(0, 6, 'Ano Letivo 2026/2027', 0, 1, 'C');
+
+	$stmt = $conn->prepare(
+		"SELECT nome_ano_letivo FROM ano_letivo
+		WHERE ano_letivo_ativo = 1"
+	);
+	$stmt->execute();
+	$result = $stmt->get_result();
+	$ano_letivo = $result->fetch_assoc();
+	$nome_ano_letivo = $ano_letivo["nome_ano_letivo"];
+	$stmt->close();
+
+	$pdf->Cell(0, 6, "Ano Letivo $nome_ano_letivo", 0, 1, 'C');
 	$pdf->Ln(8);
 
 	// Informações do aluno
@@ -199,9 +218,9 @@ function gerarPdf(mysqli $conn, array $encomenda, $num_encomenda){
 
 	// Cabeçalho da tabela
 	$pdf->Cell(25, 7, 'ISBN',        1, 0, 'L', true);
-	$pdf->Cell(75, 7, 'Nome',        1, 0, 'L', true);
+	$pdf->Cell(78, 7, 'Nome',        1, 0, 'L', true);
 	$pdf->Cell(28, 7, 'Disciplina',  1, 0, 'L', true);
-	$pdf->Cell(25, 7, 'Tipo',        1, 0, 'C', true);
+	$pdf->Cell(22, 7, 'Tipo',        1, 0, 'C', true);
 	$pdf->Cell(16, 7, 'Voucher',     1, 0, 'C', true);
 	$pdf->Cell(11,  7, 'Preço',       1, 1, 'R', true);
 
@@ -209,12 +228,13 @@ function gerarPdf(mysqli $conn, array $encomenda, $num_encomenda){
 	$pdf->SetFont('helvetica', '', 8);
 	foreach ($encomenda["manuais"] as $manual) {
 		$pdf->Cell(25, 6, $manual['isbn'], 1, 0, 'L');
-		$pdf->Cell(75, 6, $manual['nome'], 1, 0, 'L');
+		$pdf->Cell(78, 6, $manual['nome'], 1, 0, 'L');
 		$pdf->Cell(28, 6, $manual['disciplina'], 1, 0, 'L');
-		$pdf->Cell(25, 6, $manual['tipo_manual'], 1, 0, 'C');
+		$pdf->Cell(22, 6, $manual['tipo_manual'], 1, 0, 'C');
 		$pdf->Cell(16, 6, $manual['voucher'], 1, 0, 'C');
-		$pdf->Cell(11, 6, round(floatval($manual["preco"])), 1, 1, 'R');
+		$pdf->Cell(11, 6, round(floatval($manual["preco"]), 2), 1, 1, 'R');
 	}
+	$pdf->Cell(0, 5, 'Aviso: Os preços apresentados poderão ser atualizados em caso de alterações por parte das editoras ou distribuidores.',0,1);
 	$pdf->Ln(8);
 
 	// Informações da encomenda
@@ -254,8 +274,9 @@ function gerarPdf(mysqli $conn, array $encomenda, $num_encomenda){
 	$row = $result->fetch_assoc();
 	$utilizador = $row["username"];
 
-	$pdf->setY(-30);
-	$pdf->SetFont('helvetica', '', 10);
+	$pdf->setY(-40);
+	$pdf->SetFont('helvetica', '', 8);
+	$pdf->Cell(0, 5, 'Ao efetuar a encomenda, autoriza o tratamento dos dados pessoais fornecidos para efeitos de gestão e faturação da mesma, nos termos do RGPD.',0,1, 'C');
 	$texto_rodape = 'Documento gerado no dia ' . date("d/m/Y") . ' às ' . date("H:i:s") . ' | Utilizador: ' . $utilizador;
 	$pdf->Cell(180, 5, $texto_rodape, 0, 1, 'C');
 
@@ -489,10 +510,10 @@ function getIdEncomenda(mysqli $conn, array $request){
 
 									<!-- Botões de ação -->
 									<div class="row">
-										<div class="col-3">
+										<div class="col-4 col-12-small" style="margin-bottom: 10px;">
 											<button id="btnConfirmarEncomenda" class="primary">Confirmar encomenda</button>
 										</div>
-										<div class="col-3">
+										<div class="col-4 col-12-small">
 											<button id="btnCancelarEncomenda">Voltar atrás</button>
 										</div>
 									</div>
@@ -503,7 +524,7 @@ function getIdEncomenda(mysqli $conn, array $request){
 						<!-- Modal de sucesso -->
 						<div id="modal-sucesso" class="modal-overlay" style="display: none;">
 							<div class="box modal-content" style="max-width: 500px;">
-								<h3>Encomenda criada com sucesso</h3>
+								<h3>Alerta</h3>
 								
 								<p><strong>A encomenda Nº<span id="num_encomenda_sucesso"></span> foi criada com sucesso.</strong></p>
 								<p><strong>Link para o documento pdf:</strong> <a id="caminho_pdf_sucesso" target="_blank"></a></p> 
