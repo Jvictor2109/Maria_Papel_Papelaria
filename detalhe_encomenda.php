@@ -50,7 +50,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                     <?php
                     // Verificar se já está autenticado
                     if (isset($_SESSION['user_id'])) { ?>
-                        <h2>Editar encomenda ID: <?= $_GET["id"] ?></h2>
+                        <h2>Encomenda ID: <?= $_GET["id"] ?></h2>
 
                         <!-- Detalhes da encomenda -->
                         <?php 
@@ -150,6 +150,27 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                                     <p><strong>Doc. Encomenda: </strong><a href="<?= $encomenda["doc_encomenda"] ?>" target="_blank">Ver documento</a></p>
                                 </div>
                             </div>
+
+                            <div class="row aln-middle" style="margin-top: 10px;">
+                                <div class="col-4 col-12-small">
+                                    <?php 
+                                    $cores_estados = [
+                                        'registada'=>'darkred',
+                                        'pedida'=>'orange',
+                                        'concluida'=>'goldenrod',
+                                        'entregue'=>'green',
+                                        'cancelada'=>'red'
+                                    ]
+                                    ?>
+                                    <h4><strong>Estado da encomenda: <span style="color:<?= $cores_estados[$encomenda['estado_encomenda']] ?>"><?= $encomenda["estado_encomenda"] ?></span></strong></h4>
+                                </div>
+                                <div class="col-4 col-12-small" style="margin-bottom: 10px;">
+                                    <button class="primary small">Marcar como entregue</button>
+                                </div>
+                                <div class="col-4">
+                                    <button class="secondary small">Cancelar encomenda</button>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Manuais da encomenda -->
@@ -229,18 +250,25 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 						<div class="box">
 							<h3>Observações adicionais</h2>
 
-							<h4>Adicionar observação</h4>
-							<div class="row aln-middle">
-								<div class="col-4">
-									<textarea name="obs" id="obs" data-id_encomenda="<?= $_GET["id"] ?>"></textarea>
-								</div>
-								<div class="col-4">
-									<button id="btnObs" >Adicionar observação</button>
-								</div>
-								<div class="col-12">
-									<p id="msgErro"></p>
-								</div>
-							</div>
+                            <!-- Somente quando tiver registada/pedida que pode se fazer observações -->
+                            <?php 
+                            $estado_encomenda = $encomenda["estado_encomenda"];
+                            if($estado_encomenda == 'registada' || $estado_encomenda == 'pedida'){?>
+                                <h4>Adicionar observação</h4>
+                                <div class="row aln-middle">
+                                    <div class="col-4">
+                                        <textarea name="obs" id="obs" data-id_encomenda="<?= $_GET["id"] ?>"></textarea>
+                                    </div>
+                                    <div class="col-4">
+                                        <button id="btnObs" >Adicionar observação</button>
+                                    </div>
+                                    <div class="col-12">
+                                        <p id="msgErro"></p>
+                                    </div>
+                                </div>
+                            <?php }
+                            ?>
+
 							
 							<div class="row" style="margin-top: 10px;">
 								<div class="col-12">
@@ -248,7 +276,8 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 									$stmt = $conn->prepare(
 										"SELECT * FROM observacao_encomenda
 										JOIN utilizador ON observacao_encomenda.id_utilizador = utilizador.id_utilizador
-										WHERE id_encomenda = ?"
+										WHERE id_encomenda = ?
+                                        ORDER BY data_observacao DESC"
 									);
 									$stmt->bind_param("i", $_GET["id"]);
 									$stmt->execute();

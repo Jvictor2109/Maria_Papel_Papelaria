@@ -45,6 +45,16 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
             $stmtSeparado->bind_param("sii", $data, $id_utilizador, $id_encomenda);
             $stmtSeparado->execute();
             $stmtSeparado->close();
+
+            $obs_concluida = "A encomenda passou ao estado de concluída.";
+            $data_concluida = date("Y-m-d H:i:s");
+            $stmt_concluida = $conn->prepare(
+                "INSERT INTO observacao_encomenda (id_encomenda, observacao_encomenda, data_observacao, id_utilizador)
+                VALUES (?,?,?,?)"
+            );
+            $stmt_concluida->bind_param("issi", $id_encomenda, $obs_concluida, $data_concluida, $id_utilizador);
+            $stmt_concluida->execute();
+            $stmt_concluida->close();
         }
 
         $stmt->close();
@@ -188,6 +198,32 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                                     <p><strong>Doc. Encomenda: </strong><a href="<?= $encomenda["doc_encomenda"] ?>" target="_blank">Ver documento</a></p>
                                 </div>
                             </div>
+                        </div>
+
+                        <!-- Observações da encomenda -->
+                        <div class="box" style="max-height: 300px; overflow:auto;">
+                            <h3 style="color: red;">Observações da encomenda</h3>
+
+                            <?php 
+                            $stmt = $conn->prepare(
+                                "SELECT * FROM observacao_encomenda
+                                JOIN utilizador ON observacao_encomenda.id_utilizador = utilizador.id_utilizador
+                                WHERE id_encomenda = ?
+                                ORDER BY data_observacao DESC"
+                            );
+                            $stmt->bind_param("i", $_GET["id"]);
+                            $stmt->execute();
+                            $result = $stmt->get_result();
+                            $rows = $result->fetch_all(MYSQLI_ASSOC);
+
+                            foreach($rows as $obs){?>
+                                <dl>
+                                    <dt><?= $obs["username"] ?> : <?= $obs["data_observacao"] ?></dt>
+                                    <dd><strong><?= $obs["observacao_encomenda"] ?></strong></dd>
+                                </dl>
+                            <?php
+                            }
+							?>
                         </div>
 
                         <!-- Manuais da encomenda -->

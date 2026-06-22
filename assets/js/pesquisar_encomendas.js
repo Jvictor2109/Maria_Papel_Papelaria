@@ -54,7 +54,16 @@ function renderTabela(encomendas){
 
         const estado_encomenda = document.createElement('td');
         estado_encomenda.innerText = encomenda.estado_encomenda;
+        const cores_estados = {
+                'registada':'darkred',
+                'pedida':'orange',
+                'concluida':'goldenrod',
+                'entregue':'green',
+                'cancelada':'red'
+        };
+        estado_encomenda.style.color = cores_estados[encomenda.estado_encomenda];
         linha.appendChild(estado_encomenda);
+
 
         const detalhes_encomenda = document.createElement('td');
         const link_encomenda = document.createElement('a');
