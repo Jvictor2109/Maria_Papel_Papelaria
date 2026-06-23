@@ -68,6 +68,7 @@
                 $conn->query("DELETE FROM encomenda_manual");
                 $conn->query("DELETE FROM encomenda");
 				$conn->query("DELETE FROM encomenda_editora");
+				$conn->query("UPDATE manual SET quant_manuais_pedir = 0, quant_manuais_enc = 0");
 
                 // Volta os IDs pra 1
                 $conn->query("ALTER TABLE encomenda_editora AUTO_INCREMENT = 1");
@@ -200,7 +201,7 @@
 														<h3>Fechar ano letivo</h3>
 
                                                         <div id="confirmar-fechar">
-                                                            <p>Tem a certeza que quer fechar o ano letivo? Terá que criar outro ano em seguida</p>
+                                                            <p>Tem a certeza de que quer fechar o ano letivo? Terá que criar outro ano em seguida</p>
                                                             <button name="btnFechar" onclick="confirmarFecharAno()">Sim</button>
                                                             <button name="btnFechar" onclick="fecharModal()">Não</button>
                                                         </div>

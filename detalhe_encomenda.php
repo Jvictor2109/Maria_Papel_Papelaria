@@ -23,9 +23,49 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
             }
             exit();
         
-            case "entregar_encomenda":
-                
+        case "entregar_encomenda":
+            entregar_encomenda($conn, $request);
+            exit();
     }
+}
+
+function entregar_encomenda(mysqli $conn, array $request){
+    $id_encomenda = $request["id_encomenda"];
+    $data = date("Y-m-d");
+
+    $conn->begin_transaction();
+    try{
+        // Marcar a encomenda como entregue
+        $stmt_entregue = $conn->prepare(
+            "UPDATE encomenda 
+            SET estado_encomenda = 'entregue', id_concluida = ?, data_concluida = ?
+            WHERE id_encomenda = ?"
+        );
+        $stmt_entregue->bind_param("isi", $_SESSION["user_id"], $data, $id_encomenda);
+        $stmt_entregue->execute();
+    
+        // Adicionar observação
+        $stmt_obs = $conn->prepare(
+            "INSERT INTO observacao_encomenda (id_encomenda, observacao_encomenda, data_observacao, id_utilizador)
+            VALUES (?,?,?,?)"
+        );
+        $data_obs = date("Y-m-d H:i:s");
+        $obs = "A encomenda passou ao estado de entregue.";
+        $stmt_obs->bind_param("issi", $id_encomenda, $obs, $data_obs, $_SESSION["user_id"]);
+        $stmt_obs->execute();
+
+        $stmt_obs->close();
+        $stmt_entregue->close();
+        $conn->commit();
+    }
+    catch(Exception $e){
+        $conn->rollback();
+        echo json_encode(['resultado'=>'erro', 'msg'=>$e]);
+        return;
+    }
+
+    echo json_encode(['resultado'=>'sucesso', 'msg'=>'Encomenda entregue com sucesso!']);
+    return;
 }
 ?>
 
@@ -58,29 +98,29 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                         <h2>Encomenda ID: <?= $_GET["id"] ?></h2>
 
                         <!-- Detalhes da encomenda -->
-                        <?php 
-                            $stmt = $conn->prepare(
-                                "SELECT * FROM encomenda
-                                JOIN utilizador ON utilizador.id_utilizador = encomenda.id_utilizador
-                                WHERE id_encomenda = ?"
-                            );
-
-                            $stmt->bind_param("i", $_GET["id"]);
-
-                            $stmt->execute();
-
-                            $result = $stmt->get_result();
-
-                            if($result->num_rows != 1){
-                                $stmt->close();
-                                header("Location: tratar_encomendas.php");
-                                exit();
-                            }
-
-                            $encomenda = $result->fetch_assoc();
-                            $stmt->close();
-                        ?>
                         <div class="box">
+                            <?php 
+                                $stmt = $conn->prepare(
+                                    "SELECT * FROM encomenda
+                                    JOIN utilizador ON utilizador.id_utilizador = encomenda.id_utilizador
+                                    WHERE id_encomenda = ?"
+                                );
+
+                                $stmt->bind_param("i", $_GET["id"]);
+
+                                $stmt->execute();
+
+                                $result = $stmt->get_result();
+
+                                if($result->num_rows != 1){
+                                    $stmt->close();
+                                    header("Location: tratar_encomendas.php");
+                                    exit();
+                                }
+
+                                $encomenda = $result->fetch_assoc();
+                                $stmt->close();
+                            ?>
                             <h3>Detalhes da encomenda</h3>
 
                             <div class="row">
@@ -185,21 +225,21 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                         </div>
 
                         <!-- Manuais da encomenda -->
-                        <?php 
-                            $stmt = $conn->prepare(
-                                "SELECT encomenda_manual.*, manual.*, disciplina.nome_disciplina, utilizador.username FROM encomenda_manual
-                                JOIN manual ON manual.id_manual = encomenda_manual.id_manual
-                                JOIN disciplina ON disciplina.id_disciplina = manual.id_disciplina
-                                LEFT JOIN utilizador ON utilizador.id_utilizador = encomenda_manual.id_separado
-                                WHERE id_encomenda = ?"
-                            );
-
-                            $stmt->bind_param("i", $_GET["id"]);
-                            $stmt->execute();
-                            $result = $stmt->get_result();
-                            $manuais = $result->fetch_all(MYSQLI_ASSOC);
-                        ?>
                         <div class="box">
+                            <?php 
+                                $stmt = $conn->prepare(
+                                    "SELECT encomenda_manual.*, manual.*, disciplina.nome_disciplina, utilizador.username FROM encomenda_manual
+                                    JOIN manual ON manual.id_manual = encomenda_manual.id_manual
+                                    JOIN disciplina ON disciplina.id_disciplina = manual.id_disciplina
+                                    LEFT JOIN utilizador ON utilizador.id_utilizador = encomenda_manual.id_separado
+                                    WHERE id_encomenda = ?"
+                                );
+
+                                $stmt->bind_param("i", $_GET["id"]);
+                                $stmt->execute();
+                                $result = $stmt->get_result();
+                                $manuais = $result->fetch_all(MYSQLI_ASSOC);
+                            ?>
                             <h3>Manuais da encomenda</h3>
 
                             <div class="table-wrapper">
@@ -306,6 +346,20 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 								</div>
 							</div>
 						</div>
+
+                        <!-- Modal confirmar encomenda -->
+                        <div id="modalEntregar" class="modal-overlay" style="display: none;">
+                            <div class="box modal-content">
+                                <span id="close-modal" class="modal-close">&times;</span>
+                                <h3>Entregar encomenda</h3>
+
+                                <div>
+                                    <p>Marcar a encomenda como entregue?</p>
+                                    <button id="confirmarEntregar" class="primary" data-id_encomenda="<?= $encomenda["id_encomenda"] ?>">Sim</button>
+                                    <button id="fecharConfirmar">Não</button>
+                                </div>
+                            </div>
+                        </div>
 
                         
 

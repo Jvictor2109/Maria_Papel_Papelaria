@@ -117,11 +117,15 @@ function att_manuais_pedido(mysqli $conn){
 	}
 
 	// Atualiza pra pedida todas as encomendas registadas
-	$conn->query(
-		"UPDATE encomenda 
-		SET estado_encomenda = 'pedida'
+	$stmt_pedido = $conn->prepare(
+		"UPDATE encomenda
+		SET estado_encomenda = 'pedida', data_pedido = ?
 		WHERE estado_encomenda = 'registada'"
 	);
+	$data_encomenda = date("Y-m-d");
+	$stmt_pedido->bind_param("s", $data_encomenda);
+	$stmt_pedido->execute();
+	$stmt_pedido->close();
 }
 
 ?>
