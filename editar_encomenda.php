@@ -145,8 +145,6 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                                     </ul>
                                 </div>
 
-                                <br>
-
                                 <div class="col-4 col-12-small">
                                     <ul class="alt">
                                         <li>
@@ -196,6 +194,21 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                                 </div>
                                 <div class="col-4 col-12-small">
                                     <p><strong>Doc. Encomenda: </strong><a href="<?= $encomenda["doc_encomenda"] ?>" target="_blank">Ver documento</a></p>
+                                </div>
+                            </div>
+
+                            <div class="row aln-middle" style="margin-top: 10px;">
+                                <div class="col-4 col-12-small">
+                                    <?php 
+                                    $cores_estados = [
+                                        'registada'=>'darkred',
+                                        'pedida'=>'orange',
+                                        'concluida'=>'goldenrod',
+                                        'entregue'=>'green',
+                                        'cancelada'=>'red'
+                                    ]
+                                    ?>
+                                    <h4><strong>Estado da encomenda: <span style="color:<?= $cores_estados[$encomenda['estado_encomenda']] ?>"><?= $encomenda["estado_encomenda"] ?></span></strong></h4>
                                 </div>
                             </div>
                         </div>

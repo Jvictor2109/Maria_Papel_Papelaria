@@ -67,8 +67,10 @@
                 $conn->query("DELETE FROM observacao_encomenda");
                 $conn->query("DELETE FROM encomenda_manual");
                 $conn->query("DELETE FROM encomenda");
+				$conn->query("DELETE FROM encomenda_editora");
 
                 // Volta os IDs pra 1
+                $conn->query("ALTER TABLE encomenda_editora AUTO_INCREMENT = 1");
                 $conn->query("ALTER TABLE observacao_encomenda AUTO_INCREMENT = 1");
                 $conn->query("ALTER TABLE encomenda_manual AUTO_INCREMENT = 1");
                 $conn->query("ALTER TABLE encomenda AUTO_INCREMENT = 1");
@@ -95,7 +97,7 @@
                 );
 
                 foreach($iterator as $item){
-                    if($item->isFile() && $item->getExtension() == 'pdf'){
+                    if($item->isFile() && $item->getExtension() == 'xlsx'){
                         unlink($item->getPathName());
                     }
                 }

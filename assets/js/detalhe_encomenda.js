@@ -1,3 +1,4 @@
+// Adicionar observação
 const btnObs = document.getElementById('btnObs');
 btnObs.addEventListener('click', async function () {
     const obs = document.getElementById('obs');
@@ -12,6 +13,7 @@ btnObs.addEventListener('click', async function () {
         method:"post",
         headers:{ 'Content-Type': 'application/json' },
         body:JSON.stringify({
+            acao:"add_obs",
             id_encomenda:id_encomenda,
             obs:obs.value
         })

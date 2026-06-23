@@ -16,7 +16,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 function getEncomendas(mysqli $conn){
     $stmt = $conn->prepare(
         "SELECT *, DATEDIFF(NOW(), encomenda.data_encomenda) AS 'datediff' FROM encomenda
-        WHERE estado_encomenda = 'registada'"
+        WHERE estado_encomenda = 'registada' OR estado_encomenda = 'pedida'"
     );
 
     $stmt->execute();

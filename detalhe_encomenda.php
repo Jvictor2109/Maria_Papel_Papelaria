@@ -7,20 +7,25 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 	$request = json_decode(file_get_contents('php://input'),true);
 	$data = date("Y-m-d H:i:s");
 
-	$stmt = $conn->prepare(
-		"INSERT INTO observacao_encomenda (id_encomenda, observacao_encomenda, data_observacao, id_utilizador)
-		VALUES (?,?,?,?)"
-	);
-
-	$stmt->bind_param("issi", $request["id_encomenda"], $request["obs"], $data, $_SESSION["user_id"]);
-	if($stmt->execute()){
-		echo json_encode(['resultado'=>'Observação adicionada com sucesso']);
-		}
-	else{
-		echo json_encode(['resultado'=>'Falha ao adicionar observação']);
-	}
-
-	exit();
+    switch($request["acao"]){
+        case "add_obs":
+            $stmt = $conn->prepare(
+                "INSERT INTO observacao_encomenda (id_encomenda, observacao_encomenda, data_observacao, id_utilizador)
+                VALUES (?,?,?,?)"
+            );
+        
+            $stmt->bind_param("issi", $request["id_encomenda"], $request["obs"], $data, $_SESSION["user_id"]);
+            if($stmt->execute()){
+                echo json_encode(['resultado'=>'Observação adicionada com sucesso']);
+                }
+            else{
+                echo json_encode(['resultado'=>'Falha ao adicionar observação']);
+            }
+            exit();
+        
+            case "entregar_encomenda":
+                
+    }
 }
 ?>
 
@@ -165,7 +170,13 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                                     <h4><strong>Estado da encomenda: <span style="color:<?= $cores_estados[$encomenda['estado_encomenda']] ?>"><?= $encomenda["estado_encomenda"] ?></span></strong></h4>
                                 </div>
                                 <div class="col-4 col-12-small" style="margin-bottom: 10px;">
-                                    <button class="primary small">Marcar como entregue</button>
+                                    <?php
+                                    $estado_encomenda = $encomenda["estado_encomenda"];
+                                    if($estado_encomenda == "concluida" && $estado_encomenda != "cancelada") {?>
+                                        <button class="primary small" id="btnEntregar">Marcar como entregue</button>
+
+                                    <?php }
+                                     ?>
                                 </div>
                                 <div class="col-4">
                                     <button class="secondary small">Cancelar encomenda</button>

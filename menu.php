@@ -61,6 +61,8 @@
                                     <li><a href="gestao_ano_escolar.php">Ano Escolar</a></li>
                                     <li><a href="gestao_ano_letivo.php">Ano letivo</a></li>
                                     <li><a href="gestao_manual.php">Manual</a></li>
+                                    <li><a href="manuais_a_encomendar.php">Manuais a encomendar</a></li>
+                                    <li><a href="encomendas_editora.php">Encomendas editora</a></li>
                                 </ul>
                             </li>
                         ';
