@@ -26,6 +26,9 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
         case "entregar_encomenda":
             entregar_encomenda($conn, $request);
             exit();
+        case "cancelar_encomenda":
+            cancelar_encomenda($conn, $request);
+            exit();
     }
 }
 
@@ -65,6 +68,66 @@ function entregar_encomenda(mysqli $conn, array $request){
     }
 
     echo json_encode(['resultado'=>'sucesso', 'msg'=>'Encomenda entregue com sucesso!']);
+    return;
+}
+function cancelar_encomenda(mysqli $conn, array $request){
+    $id_encomenda = $request["id_encomenda"];
+    $data = date("Y-m-d");
+
+    $conn->begin_transaction();
+    try{
+        // Marcar a encomenda como canelada
+        $stmt_entregue = $conn->prepare(
+            "UPDATE encomenda 
+            SET estado_encomenda = 'cancelada', id_cancelado = ?, data_cancelado = ?
+            WHERE id_encomenda = ?"
+        );
+        $stmt_entregue->bind_param("isi", $_SESSION["user_id"], $data, $id_encomenda);
+        $stmt_entregue->execute();
+    
+        // Adicionar observação
+        $stmt_obs = $conn->prepare(
+            "INSERT INTO observacao_encomenda (id_encomenda, observacao_encomenda, data_observacao, id_utilizador)
+            VALUES (?,?,?,?)"
+        );
+        $data_obs = date("Y-m-d H:i:s");
+        $obs = "A encomenda passou ao estado de cancelada.";
+        $stmt_obs->bind_param("issi", $id_encomenda, $obs, $data_obs, $_SESSION["user_id"]);
+        $stmt_obs->execute();
+
+        // Subtrair os manuais a encomendar
+        $stmt_manuais = $conn->prepare(
+            "SELECT id_manual FROM encomenda_manual
+            WHERE id_encomenda = ?"
+        );
+        $stmt_manuais->bind_param("i", $id_encomenda);
+        $stmt_manuais->execute();
+        $result = $stmt_manuais->get_result();
+        $manuais = $result->fetch_all(MYSQLI_ASSOC);
+
+        $stmt_quant_pedir = $conn->prepare(
+            "UPDATE manual
+            SET quant_manuais_pedir = quant_manuais_pedir - 1, quant_manuais_enc = quant_manuais_enc - 1
+            WHERE id_manual = ?"
+        );
+        foreach($manuais as $manual){
+            $stmt_quant_pedir->bind_param("i",$manual["id_manual"]);
+            $stmt_quant_pedir->execute();
+        }
+
+        $stmt_quant_pedir->close();
+        $stmt_obs->close();
+        $stmt_manuais->close();
+        $stmt_entregue->close();
+        $conn->commit();
+    }
+    catch(Exception $e){
+        $conn->rollback();
+        echo json_encode(['resultado'=>'erro', 'msg'=>$e]);
+        return;
+    }
+
+    echo json_encode(['resultado'=>'sucesso', 'msg'=>'Encomenda cancelada com sucesso!']);
     return;
 }
 ?>
@@ -219,7 +282,13 @@ function entregar_encomenda(mysqli $conn, array $request){
                                      ?>
                                 </div>
                                 <div class="col-4">
-                                    <button class="secondary small">Cancelar encomenda</button>
+                                    <?php
+                                    $estado_encomenda = $encomenda["estado_encomenda"];
+                                    if($estado_encomenda != "entregue" && $estado_encomenda != "cancelada") {?>
+                                        <button class="secondary small" id="btnCancelar">Cancelar encomenda</button>
+
+                                    <?php }
+                                     ?>
                                 </div>
                             </div>
                         </div>
@@ -357,6 +426,20 @@ function entregar_encomenda(mysqli $conn, array $request){
                                     <p>Marcar a encomenda como entregue?</p>
                                     <button id="confirmarEntregar" class="primary" data-id_encomenda="<?= $encomenda["id_encomenda"] ?>">Sim</button>
                                     <button id="fecharConfirmar">Não</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Modal cancelar encomenda -->
+                        <div id="modalCancelar" class="modal-overlay" style="display: none;">
+                            <div class="box modal-content">
+                                <span id="close-modal" class="modal-close">&times;</span>
+                                <h3>Cancelar encomenda</h3>
+
+                                <div>
+                                    <p>Tem a certeza de que quer cancelar a encomenda??</p>
+                                    <button id="confirmarCancelar" class="primary" data-id_encomenda="<?= $encomenda["id_encomenda"] ?>">Sim</button>
+                                    <button id="fecharCancelar">Não</button>
                                 </div>
                             </div>
                         </div>

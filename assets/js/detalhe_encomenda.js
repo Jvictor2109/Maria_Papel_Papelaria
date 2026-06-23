@@ -69,8 +69,55 @@ if(btnConfirmarEntregar){
         }
     });
 }
+
+
+// Botao de entregar
+const btnCancelar = document.getElementById('btnCancelar');
+if(btnCancelar){
+    btnCancelar.addEventListener('click', ()=>{
+        document.getElementById('modalCancelar').style.display = "flex";
+    });
+}
+
+// Fechar modal de entregar
+const btnFecharCancelar = document.getElementById('fecharCancelar');
+if(btnFecharCancelar){
+    btnFecharCancelar.addEventListener('click', ()=>{
+        document.getElementById('modalCancelar').style.display = "none";
+    });
+}
+
+// Confirmar entrega
+const btnConfirmarCancelar = document.getElementById('confirmarCancelar');
+if(btnConfirmarCancelar){
+    btnConfirmarCancelar.addEventListener('click', async function (){
+        const response = await fetch('detalhe_encomenda.php', {
+            method:"post",
+            headers:{ 'Content-Type': 'application/json' },
+            body:JSON.stringify({
+                "acao":"cancelar_encomenda",
+                "id_encomenda":btnConfirmarEntregar.dataset.id_encomenda
+            })
+        })
+
+        const data = await response.json();
+
+        if(data["resultado"] == "sucesso"){
+            alert(data["msg"]);
+            window.location.href = "index.php";
+        }
+        else{
+            alert(data["msg"]);
+            location.reload();
+        }
+    });
+}
  
  
+
+
+
+
  const msg = document.getElementById('msgErro');
  function mostrarMsg(cor, conteudo) {
     msg.style.color = cor;

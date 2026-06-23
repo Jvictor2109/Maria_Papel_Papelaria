@@ -1,6 +1,47 @@
 <?php
 // Verificação de sessão em todas as páginas protegidas
 session_start();
+include("db_connect.php");
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $request = json_decode(file_get_contents('php://input'), true);
+
+    switch ($request["acao"]) {
+        case "get_encomendas_ano":
+            $stmt = $conn->prepare(
+                "SELECT nome_ano_escolar, (encomendas_ano - encomendas_inicial) AS quantidade
+                 FROM ano_escolar
+                 ORDER BY id_ano_escolar ASC"
+            );
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $dados = [];
+            while ($row = $result->fetch_assoc()) {
+                $dados[] = $row;
+            }
+            $stmt->close();
+            echo json_encode($dados);
+            exit();
+
+        case "get_encomendas_estado":
+            $stmt = $conn->prepare(
+                "SELECT estado_encomenda, COUNT(*) AS quantidade
+                 FROM encomenda
+                 GROUP BY estado_encomenda
+                 ORDER BY FIELD(estado_encomenda, 'registada', 'pedida', 'concluida', 'entregue', 'cancelada')"
+            );
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $dados = [];
+            while ($row = $result->fetch_assoc()) {
+                $dados[] = $row;
+            }
+            $stmt->close();
+            echo json_encode($dados);
+            exit();
+    }
+}
+
 ?>
 
 <!DOCTYPE HTML>
@@ -15,6 +56,36 @@ session_start();
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 		<link rel="stylesheet" href="assets/css/main.css" />
+		<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+		<style>
+			.estado-cards-wrapper {
+				display: flex;
+				flex-direction: column;
+				gap: 8px;
+				margin-top: 8px;
+			}
+			.estado-card {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				padding: 8px 16px;
+				border-radius: 6px;
+				border-left: 4px solid;
+				background: rgba(255,255,255,0.05);
+				width: 220px;
+				margin: 0 auto;
+			}
+			.estado-card .estado-nome {
+				font-weight: 600;
+				text-transform: capitalize;
+				margin: 0;
+			}
+			.estado-card .estado-count {
+				font-size: 1.3em;
+				font-weight: 700;
+				margin: 0;
+			}
+		</style>
 	</head>
 	<body class="is-preload">
 
@@ -32,9 +103,33 @@ session_start();
 										<?php
 										// Verificar se já está autenticado
 										if (isset($_SESSION['user_id'])) {
-											// Se já estiver autenticado, redirecionar para index.php
-											echo "sim";
-										}
+											$result = $conn->query(
+												"SELECT COUNT(*) AS total_encomendas FROM encomenda GROUP BY id_encomenda"
+											);
+											$result = $result->fetch_assoc();
+											$total_encomendas = $result["total_encomendas"];
+											
+											?>
+										<div class="row">
+											<div class="col-12" style="text-align:center">
+												<h2>Total de encomendas: <?= $total_encomendas ?></h2>
+											</div>
+										</div>
+										<div class="row">
+											<div class="col-6 col-12-small" style="text-align:center">
+												<h2>Nº de encomendas por ano escolar</h2>
+
+												<div>
+													<canvas id="grafico" width="5"></canvas>
+												</div>
+
+											</div>
+											<div class="col-6 col-12-small" style="text-align:center">
+												<h2>Nº de encomendas por estado</h2>
+												<div id="estado-cards" class="estado-cards-wrapper"></div>
+											</div>
+										</div>
+										<?php }
 											else{
 												echo <<<HTML
 													<section id="banner">
@@ -72,11 +167,12 @@ session_start();
 			</div>
 
 		<!-- Scripts -->
-			<script src="assets/js/jquery.min.js"></script>
-			<script src="assets/js/browser.min.js"></script>
-			<script src="assets/js/breakpoints.min.js"></script>
-			<script src="assets/js/util.js"></script>
-			<script src="assets/js/main.js"></script>
+		<script src="assets/js/index.js"></script>
+		<script src="assets/js/jquery.min.js"></script>
+		<script src="assets/js/browser.min.js"></script>
+		<script src="assets/js/breakpoints.min.js"></script>
+		<script src="assets/js/util.js"></script>
+		<script src="assets/js/main.js"></script>
 
 	</body>
 </html>
