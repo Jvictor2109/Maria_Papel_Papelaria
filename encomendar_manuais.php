@@ -3,6 +3,10 @@
 session_start();
 include('db_connect.php');
 require_once("vendor/autoload.php");
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
+$dotenv->load();
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
 
 if($_SERVER["REQUEST_METHOD"] == "POST"){
 	$request = json_decode(file_get_contents('php://input'), true);
@@ -128,6 +132,14 @@ function adcEncomenda(mysqli $conn, array $request){
 		$stmtPdf->bind_param("si", $caminho,$id_encomenda);
 		$stmtPdf->execute();
 
+		// Manda o email
+		if($email_encomenda){
+			if(!enviar_email($caminho, $email_encomenda, $nome_aluno_encomenda, $num_encomenda)){
+				echo json_encode(['resultado'=>'Falha ao enviar email']);
+				exit();
+			}
+		}
+
 
 		$stmtPdf->close();
 		$stmt_registada->close();
@@ -145,6 +157,40 @@ function adcEncomenda(mysqli $conn, array $request){
 	
 	// Retorna sucesso e o caminho do PDF
 	echo json_encode(['resultado'=>'sucesso', 'caminho_pdf'=>$caminho, 'num_encomenda'=>$num_encomenda]);
+}
+
+function enviar_email(string $caminho, string $email, string $nome, string $num_encomenda){
+	try {
+		$mail = new PHPMailer(true);
+
+		// Configuração do servidor SMTP
+		$mail->isSMTP();
+		$mail->Host       = 'smtp.gmail.com';
+		$mail->SMTPAuth   = true;
+		$mail->Username   = $_ENV["SMTP_USER"];
+		$mail->Password   = $_ENV["SMTP_PASS"];
+		$mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+		$mail->Port       = 587;
+
+		// Remetente e destinatário
+		$mail->setFrom('joaobrasil2109@gmail.com', 'Maria Papel');
+		$mail->addAddress($email, $nome);
+
+		// Caminho absoluto do PDF no servidor
+		$caminhoPdf = $_SERVER["DOCUMENT_ROOT"] . $caminho;
+		$mail->addAttachment($caminhoPdf);
+
+		// Conteúdo do email
+		$mail->isHTML(true);
+		$mail->Subject = 'Encomenda N' . $num_encomenda;
+		$mail->Body    = "A encomenda Nº$num_encomenda foi realizada com sucesso.";
+
+		$mail->send();
+		return true;
+	} catch (Exception $e) {
+		var_dump($e);
+		return false;
+	}
 }
 
 
