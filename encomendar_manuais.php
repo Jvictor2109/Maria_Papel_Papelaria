@@ -132,17 +132,6 @@ function adcEncomenda(mysqli $conn, array $request){
 		$stmtPdf->bind_param("si", $caminho,$id_encomenda);
 		$stmtPdf->execute();
 		
-		echo json_encode(['resultado'=>'sucesso', 'caminho_pdf'=>$caminho, 'num_encomenda'=>$num_encomenda]);
-
-		// Manda o email
-		if($email_encomenda){
-			if(!enviar_email($caminho, $email_encomenda, $nome_aluno_encomenda, $num_encomenda)){
-				echo json_encode(['resultado'=>'Falha ao enviar email']);
-				exit();
-			}
-		}
-
-
 		$stmtPdf->close();
 		$stmt_registada->close();
 		$stmtEncomenda->close();
@@ -156,9 +145,35 @@ function adcEncomenda(mysqli $conn, array $request){
 		echo json_encode(['resultado'=> 'Não foi possível adicionar a encomenda à base de dados.']);
 		return;
 	}
+
+	// Manda a resposta pro browser, e envia o email depois
+	echo json_encode(['resultado'=>'sucesso', 'caminho_pdf'=>$caminho, 'num_encomenda'=>$num_encomenda]);
+	ignore_user_abort(true);
+	ob_end_flush();
+	flush();
+
+
+	// Manda o email
+	if($email_encomenda){
+		if(!enviar_email($conn, $caminho, $email_encomenda, $nome_aluno_encomenda, $num_encomenda)){
+			echo json_encode(['resultado'=>'Falha ao enviar email']);
+			exit();
+		}
+	}
 }
 
-function enviar_email(string $caminho, string $email, string $nome, string $num_encomenda){
+function enviar_email(mysqli $conn, string $caminho, string $email, string $nome, string $num_encomenda){
+
+	$stmt = $conn->prepare(
+	"SELECT nome_ano_letivo FROM ano_letivo
+	WHERE ano_letivo_ativo = 1"
+	);
+	$stmt->execute();
+	$result = $stmt->get_result();
+	$ano_letivo = $result->fetch_assoc();
+	$nome_ano_letivo = $ano_letivo["nome_ano_letivo"];
+	$stmt->close();
+
 	try {
 		$mail = new PHPMailer(true);
 
@@ -172,7 +187,7 @@ function enviar_email(string $caminho, string $email, string $nome, string $num_
 		$mail->Port       = 587;
 
 		// Remetente e destinatário
-		$mail->setFrom($_ENV["SMTP_USER"], 'Maria Papel');
+		$mail->setFrom($_ENV["SMTP_USER"], 'Maria Papel Papelaria');
 		$mail->addAddress($email, $nome);
 
 		// Caminho absoluto do PDF no servidor
@@ -181,13 +196,15 @@ function enviar_email(string $caminho, string $email, string $nome, string $num_
 
 		// Conteúdo do email
 		$mail->isHTML(true);
-		$mail->Subject = 'Encomenda N' . $num_encomenda;
-		$mail->Body    = "A encomenda Nº$num_encomenda foi realizada com sucesso.";
+		$mail->Subject = "Manuais Escolares $nome_ano_letivo - Encomenda N$num_encomenda";
+		$mail->Body = "Segue em anexo o comprovativo da encomenda N$num_encomenda. <br>
+						Será contactado novamente por este meio assim que estiver tudo pronto. <br>
+						Os melhores cumprimentos, <br>
+						Maria Papel Papelaria";
 
 		$mail->send();
 		return true;
 	} catch (Exception $e) {
-		var_dump($e);
 		return false;
 	}
 }
@@ -452,7 +469,7 @@ function getIdEncomenda(mysqli $conn, array $request){
 					// Verificar se já está autenticado
 					if (isset($_SESSION['user_id'])) {?>
 
-                        <!-- Modal de confirmação de encomenda -->
+						<!-- Modal de confirmação de encomenda -->
 						<div id="modal-confirmar" class="modal-overlay" style="display: none;">
 							<div class="box modal-content">
 								<span id="close-modal-confirmar" class="modal-close">&times;</span>
@@ -822,7 +839,7 @@ function getIdEncomenda(mysqli $conn, array $request){
 		</div>
 
 		<!-- Scripts -->
-        <script src="assets/js/encomendar_manuais.js"></script>
+		<script src="assets/js/encomendar_manuais.js"></script>
 			<script src="assets/js/gestao.js"></script>
 			<script src="assets/js/jquery.min.js"></script>
 			<script src="assets/js/browser.min.js"></script>

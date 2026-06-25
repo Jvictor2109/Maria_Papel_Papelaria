@@ -321,7 +321,8 @@ function cancelar_encomenda(mysqli $conn, array $request){
                                             <th>Preço</th>
                                             <th>Código</th>
                                             <th>Utiliza voucher</th>
-                                            <th>Manual separado</th>
+                                            <th>Data separação</th>
+                                            <th>Utilizador</th>
                                         </tr>
                                     </thead>
 
@@ -348,14 +349,22 @@ function cancelar_encomenda(mysqli $conn, array $request){
 												</td>
                                                 <td>
                                                     <?php 
-                                                    if($manual["manual_separado"] == 1){?>
-                                                        <span>Sim</span>
-                                                        <?php 
-                                                    }
-                                                    else{?>
-														<span>Não</span>
-                                                    <?php
-                                                    }
+                                                        if(!isset($manual["data_separacao"])){
+                                                            echo "-";
+                                                        }
+                                                        else{
+                                                            echo date('d/m/Y', strtotime($manual["data_separacao"])); 
+                                                        }
+                                                    ?>
+                                                </td>
+                                                <td>
+                                                    <?php 
+                                                        if(!isset($manual["id_separado"])){
+                                                            echo "-";
+                                                        }
+                                                        else{
+                                                            echo $manual["username"]; 
+                                                        }
                                                     ?>
                                                 </td>
                                             </tr>

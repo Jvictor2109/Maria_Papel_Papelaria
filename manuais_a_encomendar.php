@@ -175,10 +175,10 @@ function att_manuais_pedido(mysqli $conn){
 								</div>
 
 								<div class="row aln-middle">
-									<div class="col-3">
+									<div class="col-3 col-12-small">
 										<button class="primary" id="btnConfirmarSenha">Confirmar</button>
 									</div>
-									<div class="col-6">
+									<div class="col-6 col-12-small">
 										<p id="msgErro"></p>
 									</div>
 								</div>

@@ -66,7 +66,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
         exit();
     }
 
-    echo json_encode(['resultado'=>'sucesso', 'msg'=>'Manuais atualizados com sucesso!']);
+    echo json_encode(['resultado'=>'sucesso', 'msg'=>'Encomenda atualizada com sucesso!']);
     exit();
 }
 
