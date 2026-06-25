@@ -180,7 +180,6 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                                             }
                                             ?>
                                         </li>
-                                        <li><strong>Observações: </strong><?= $encomenda["obs_encomenda"] ?></li>
                                     </ul>
                                 </div>
                             </div>

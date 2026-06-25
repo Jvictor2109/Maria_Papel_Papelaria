@@ -242,7 +242,6 @@ function cancelar_encomenda(mysqli $conn, array $request){
                                             }
                                             ?>
                                         </li>
-                                        <li><strong>Observações: </strong><?= $encomenda["obs_encomenda"] ?></li>
                                     </ul>
                                 </div>
                             </div>

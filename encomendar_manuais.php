@@ -39,8 +39,8 @@ function adcEncomenda(mysqli $conn, array $request){
 		$stmtEncomenda = $conn->prepare(
 			"INSERT INTO encomenda (data_encomenda, nome_aluno_encomenda, nif_encomenda, ee_encomenda,
 			telefone_encomenda, email_encomenda, num_encomenda, plast_manuais, plast_livro_fichas, etiquetas,
-			obs_etiquetas, obs_encomenda, total_encomenda, valor_caucao, id_utilizador, codigo_mega, id_ano_encomenda)
-			VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+			obs_etiquetas,total_encomenda, valor_caucao, id_utilizador, codigo_mega, id_ano_encomenda)
+			VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
 		);
 
 		$data_encomenda = date("Y-m-d");
@@ -61,9 +61,9 @@ function adcEncomenda(mysqli $conn, array $request){
 		$codigoMega = $encomenda["codigoMega"];
 		$id_ano_encomenda = $encomenda["id_ano_escolar"];
 
-		$stmtEncomenda->bind_param("ssssssiiiissddisi", $data_encomenda, $nome_aluno_encomenda, $nif_encomenda, $ee_encomenda,
+		$stmtEncomenda->bind_param("ssssssiiiisddisi", $data_encomenda, $nome_aluno_encomenda, $nif_encomenda, $ee_encomenda,
 		$telefone_encomenda, $email_encomenda, $num_encomenda, $plast_manuais, $plast_livro_fichas, $etiquetas, $obs_etiquetas,
-		$obs_encomenda, $total_encomenda, $caucao_paga, $id_utilizador, $codigoMega, $id_ano_encomenda);
+		$total_encomenda, $caucao_paga, $id_utilizador, $codigoMega, $id_ano_encomenda);
 
 		$stmtEncomenda->execute();
 		
@@ -110,7 +110,7 @@ function adcEncomenda(mysqli $conn, array $request){
 		$stmtAnoEscolar->execute();
 
 		// Adiciona observação na encomenda, dizendo que foi registada.
-		$observacao_registada = "A encomenda foi registada.";
+		$observacao_registada = "A encomenda foi registada.\n" . $obs_encomenda;
 		$data_registada = date("Y-m-d H:i:s");
 		$stmt_registada = $conn->prepare(
 			"INSERT INTO observacao_encomenda (id_encomenda, observacao_encomenda, data_observacao, id_utilizador)
