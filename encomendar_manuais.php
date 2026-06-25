@@ -131,6 +131,8 @@ function adcEncomenda(mysqli $conn, array $request){
 
 		$stmtPdf->bind_param("si", $caminho,$id_encomenda);
 		$stmtPdf->execute();
+		
+		echo json_encode(['resultado'=>'sucesso', 'caminho_pdf'=>$caminho, 'num_encomenda'=>$num_encomenda]);
 
 		// Manda o email
 		if($email_encomenda){
@@ -154,9 +156,6 @@ function adcEncomenda(mysqli $conn, array $request){
 		echo json_encode(['resultado'=> 'Não foi possível adicionar a encomenda à base de dados.']);
 		return;
 	}
-	
-	// Retorna sucesso e o caminho do PDF
-	echo json_encode(['resultado'=>'sucesso', 'caminho_pdf'=>$caminho, 'num_encomenda'=>$num_encomenda]);
 }
 
 function enviar_email(string $caminho, string $email, string $nome, string $num_encomenda){
@@ -173,7 +172,7 @@ function enviar_email(string $caminho, string $email, string $nome, string $num_
 		$mail->Port       = 587;
 
 		// Remetente e destinatário
-		$mail->setFrom('joaobrasil2109@gmail.com', 'Maria Papel');
+		$mail->setFrom($_ENV["SMTP_USER"], 'Maria Papel');
 		$mail->addAddress($email, $nome);
 
 		// Caminho absoluto do PDF no servidor

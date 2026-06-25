@@ -54,12 +54,20 @@ async function renderCardsEstado() {
     const dados = await get_encomendas_estado();
     const container = document.getElementById('estado-cards');
 
-    container.innerHTML = dados.map(d => {
-        const cor = CORES_ESTADOS[d.estado_encomenda] || '#888';
+    const quantidades = {};
+    dados.forEach(d => {
+        quantidades[d.estado_encomenda] = parseInt(d.quantidade);
+    });
+
+    const estados = Object.keys(CORES_ESTADOS);
+
+    container.innerHTML = estados.map(estado => {
+        const cor = CORES_ESTADOS[estado];
+        const quantidade = quantidades[estado] ?? 0;
         return `
             <div class="estado-card" style="border-color: ${cor}; color: ${cor};">
-                <span class="estado-nome">${d.estado_encomenda}</span>
-                <span class="estado-count">${d.quantidade}</span>
+                <span class="estado-nome">${estado}</span>
+                <span class="estado-count">${quantidade}</span>
             </div>`;
     }).join('');
 }

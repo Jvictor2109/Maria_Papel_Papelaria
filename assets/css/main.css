@@ -4110,28 +4110,31 @@ button.btn-cancelar:active,
 .input-contato input{
   margin: 0;
 }
-.estado-cards-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 8px;
-}
-.estado-card {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 16px;
-  border-radius: 6px;
-  border-left: 4px solid;
-  background: rgba(255,255,255,0.05);
-}
-.estado-card .estado-nome {
-  font-weight: 600;
-  text-transform: capitalize;
-  margin: 0;
-}
-.estado-card .estado-count {
-  font-size: 1.3em;
-  font-weight: 700;
-  margin: 0;
-}
+
+			.estado-cards-wrapper {
+				display: flex;
+				flex-direction: column;
+				gap: 8px;
+				margin-top: 8px;
+			}
+			.estado-card {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				padding: 8px 16px;
+				border-radius: 6px;
+				border-left: 4px solid;
+				background: rgba(255,255,255,0.05);
+				width: 220px;
+				margin: 0 auto;
+			}
+			.estado-card .estado-nome {
+				font-weight: 600;
+				text-transform: capitalize;
+				margin: 0;
+			}
+			.estado-card .estado-count {
+				font-size: 1.3em;
+				font-weight: 700;
+				margin: 0;
+			}

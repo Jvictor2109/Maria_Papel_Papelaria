@@ -57,35 +57,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 		<link rel="stylesheet" href="assets/css/main.css" />
 		<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-		<style>
-			.estado-cards-wrapper {
-				display: flex;
-				flex-direction: column;
-				gap: 8px;
-				margin-top: 8px;
-			}
-			.estado-card {
-				display: flex;
-				align-items: center;
-				gap: 8px;
-				padding: 8px 16px;
-				border-radius: 6px;
-				border-left: 4px solid;
-				background: rgba(255,255,255,0.05);
-				width: 220px;
-				margin: 0 auto;
-			}
-			.estado-card .estado-nome {
-				font-weight: 600;
-				text-transform: capitalize;
-				margin: 0;
-			}
-			.estado-card .estado-count {
-				font-size: 1.3em;
-				font-weight: 700;
-				margin: 0;
-			}
-		</style>
 	</head>
 	<body class="is-preload">
 
@@ -104,7 +75,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 										// Verificar se já está autenticado
 										if (isset($_SESSION['user_id'])) {
 											$result = $conn->query(
-												"SELECT COUNT(*) AS total_encomendas FROM encomenda GROUP BY id_encomenda"
+												"SELECT SUM(encomendas_ano - encomendas_inicial) AS total_encomendas FROM ano_escolar"
 											);
 											$result = $result->fetch_assoc();
 											$total_encomendas = $result["total_encomendas"];
