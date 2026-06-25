@@ -1,4 +1,25 @@
-filtrar_encomendas();
+// busca todas as encomendas somente 1x na base de dados
+// Coloca a tabela de encomendas a tratar como ativa
+
+let encomendas = [];
+let tabela_ativa = "a_tratar";
+
+(async ()=>{
+    encomendas = await getEncomendas();
+    filtrar_encomendas();
+})();
+
+// Event listener pros botoes de tipo de tabela
+document.getElementById('btn_a_tratar').addEventListener('click', ()=>{
+    tabela_ativa = "a_tratar";
+    filtrar_encomendas();
+});
+
+document.getElementById('btn_tratadas').addEventListener('click', ()=>{
+    tabela_ativa = "tratadas";
+    filtrar_encomendas();
+});
+
 
 // Event listener pra todos os botões de filtro
 const btnsFiltro = document.querySelectorAll('.filtroAno');
@@ -66,19 +87,30 @@ async function renderTabela(encomendas){
 
 // Filtrar encomendas
 async function filtrar_encomendas(){
-    const encomendas = await getEncomendas();
+    const ids_anos_selecionados = [...document.querySelectorAll('.filtroAno:checked')].map(check => Number(check.value));    
 
-    const ids_anos_selecionados = [...document.querySelectorAll('.filtroAno:checked')].map(check => Number(check.value));
+    let encomendas_selecionadas = encomendas;
 
-    let encomendas_selecionadas;
-    if(ids_anos_selecionados.length == 0){
-        encomendas_selecionadas = encomendas;
+    // Filtro por tabela ativa
+    if(tabela_ativa == "a_tratar"){
+        encomendas_selecionadas = encomendas_selecionadas.filter(encomenda=> 
+            encomenda.estado_encomenda != "concluida" &&
+            encomenda.estado_encomenda != "entregue" &&
+            encomenda.estado_encomenda != "cancelada"
+        );
     }
-    else{
-        // Pra cada encomenda, verifica se o id do ano escolar dela está dentre os ids selecionados
-        // Filtra somente as que estão
-        encomendas_selecionadas = encomendas.filter(encomenda => ids_anos_selecionados.includes(encomenda.id_ano_encomenda));
+    else if(tabela_ativa == "tratadas"){        
+        encomendas_selecionadas  =encomendas_selecionadas.filter(encomenda=>
+            encomenda.estado_encomenda == "concluida" ||
+            encomenda.estado_encomenda == "entregue"
+        )
+
+        
     }
 
+    if(ids_anos_selecionados.length > 0){
+        encomendas_selecionadas = encomendas_selecionadas.filter(encomenda=>ids_anos_selecionados.includes(encomenda.id_ano_encomenda));
+    }
+    
     renderTabela(encomendas_selecionadas);
 }

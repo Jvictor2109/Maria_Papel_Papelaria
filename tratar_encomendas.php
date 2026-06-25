@@ -15,8 +15,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 
 function getEncomendas(mysqli $conn){
     $stmt = $conn->prepare(
-        "SELECT *, DATEDIFF(NOW(), encomenda.data_encomenda) AS 'datediff' FROM encomenda
-        WHERE estado_encomenda = 'registada' OR estado_encomenda = 'pedida'"
+        "SELECT *, DATEDIFF(NOW(), encomenda.data_encomenda) AS 'datediff' FROM encomenda"
     );
 
     $stmt->execute();
@@ -60,7 +59,16 @@ function getEncomendas(mysqli $conn){
 										<h2>Tratar encomendas</h2>
 
 										<div class="box">
-											<h4>Encomendas por tratar: <span id="num_encomendas_tratar"></span></h5>
+											
+											<div class="row" style="margin-bottom: 10px;">
+												<div class="col-12">
+													<button class="primary" id="btn_a_tratar" style="margin-bottom: 10px;">Encomendas a tratar</button>
+													<button class="primary" id="btn_tratadas" style="margin-bottom: 10px;">Encomendas tratadas</button>
+													<button class="secondary" style="display: none;">Avisar encomendas concluídas</button>
+												</div>
+											</div>
+											
+
 
 											<!-- Filtro de ano escolar -->
 											<h4>Filtrar por ano escolar</h4>
@@ -77,12 +85,14 @@ function getEncomendas(mysqli $conn){
 													foreach($anos as $ano){?>
 														<input type="checkbox" class="filtroAno" id="<?= $ano["id_ano_escolar"] ?>" value="<?= $ano["id_ano_escolar"] ?>">
 														<label for="<?= $ano["id_ano_escolar"] ?>"><?= $ano["nome_ano_escolar"] ?></label>
-
-													<?php
+														
+														<?php
 													}
 												?>
 												</div>
 											</div>
+											
+											<h4>Encomendas por tratar: <span id="num_encomendas_tratar"></span></h5>
 
 											<!-- Tabela -->
 											<div class="table-wrapper">
