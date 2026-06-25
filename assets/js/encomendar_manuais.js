@@ -235,6 +235,21 @@ btnConfirmarEncomenda.addEventListener('click', async function(){
         link_pdf.href = data["caminho_pdf"];
 
         document.getElementById('modal-sucesso').style.display = "flex";
+        console.log("Chegou antes do email");
+        console.log(encomenda);
+        
+        encomenda.num_encomenda = data["num_encomenda"];
+
+        // TODO: Fetch silencioso pro envio do email
+        fetch('enviar_email.php', {
+            method:"post",
+            headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({
+                "tipo_email":"registada",
+                "encomenda":encomenda,
+                "caminho_pdf":data["caminho_pdf"]
+            })
+        });
     }
 });
 

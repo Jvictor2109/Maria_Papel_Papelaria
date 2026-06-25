@@ -146,20 +146,9 @@ function adcEncomenda(mysqli $conn, array $request){
 		return;
 	}
 
-	// Manda a resposta pro browser, e envia o email depois
+	// // Manda a resposta pro browser, e envia o email depois
 	echo json_encode(['resultado'=>'sucesso', 'caminho_pdf'=>$caminho, 'num_encomenda'=>$num_encomenda]);
-	ignore_user_abort(true);
-	ob_end_flush();
-	flush();
-
-
-	// Manda o email
-	if($email_encomenda){
-		if(!enviar_email($conn, $caminho, $email_encomenda, $nome_aluno_encomenda, $num_encomenda)){
-			echo json_encode(['resultado'=>'Falha ao enviar email']);
-			exit();
-		}
-	}
+	exit();
 }
 
 function enviar_email(mysqli $conn, string $caminho, string $email, string $nome, string $num_encomenda){
