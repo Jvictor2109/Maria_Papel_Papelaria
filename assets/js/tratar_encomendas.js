@@ -12,14 +12,53 @@ let tabela_ativa = "a_tratar";
 // Event listener pros botoes de tipo de tabela
 document.getElementById('btn_a_tratar').addEventListener('click', ()=>{
     tabela_ativa = "a_tratar";
+    document.getElementById('btnAvisar').style.display = "none";
     filtrar_encomendas();
 });
 
 document.getElementById('btn_tratadas').addEventListener('click', ()=>{
     tabela_ativa = "tratadas";
+    document.getElementById('btnAvisar').style.display = "flex";
     filtrar_encomendas();
 });
 
+// Event listener pro botao de avisar
+document.getElementById('btnAvisar').addEventListener('click', async function(){
+    try{
+        const response = await fetch('tratar_encomendas.php', {
+            method:"post",
+            headers:{'Content-type':'application/json'},
+            body:JSON.stringify({
+                "acao":"avisar"
+            })
+        });
+
+        if(!response.ok){        
+            throw new Error('Erro ao gerar pdf');
+        }
+
+        const blob = await response.blob();
+
+        const url = window.URL.createObjectURL(blob);
+        
+        const download = document.createElement('a');
+        download.href = url;
+        download.download = 'encomendas_a_avisar.pdf';
+        document.body.appendChild(download);
+        download.click();
+
+        document.body.removeChild(download);
+        window.URL.revokeObjectURL(url);
+
+    }
+    catch(erro){
+        console.log("Erro - " + erro)
+        alert("Não foi possível gerar o pdf");
+        return;
+    }
+
+    alert("Encomendas avisadas com sucesso");
+});
 
 // Event listener pra todos os botões de filtro
 const btnsFiltro = document.querySelectorAll('.filtroAno');
@@ -84,6 +123,7 @@ async function renderTabela(encomendas){
         tbody.appendChild(linha);
     });
 }
+
 
 // Filtrar encomendas
 async function filtrar_encomendas(){

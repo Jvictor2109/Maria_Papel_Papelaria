@@ -99,7 +99,7 @@ btnEncomendar.addEventListener('click', async function (){
         return;
     }
 
-    encomenda.nome_aluno = nomeAluno;
+    encomenda.nome_aluno_encomenda = nomeAluno;
     encomenda.nome_ee = nomeEnc;
     
     // Verificar se tem email ou telefone
@@ -119,7 +119,7 @@ btnEncomendar.addEventListener('click', async function (){
         }
     }
 
-    encomenda.email = email ?? null;
+    encomenda.email_encomenda = email ?? null;
     encomenda.telemovel = telemovel ?? null;
 
     // Verificar se existe etiquetas: tem que ter observações

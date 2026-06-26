@@ -8,12 +8,13 @@ use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
 if($_SERVER["REQUEST_METHOD"] == "POST"){
-    $request = json_decode(file_get_contents("php://input"), true);
+	$jsonRecebido = file_get_contents('php://input');
+	$request = json_decode($jsonRecebido, true);
 
-    $encomenda = $request["encomenda"];
-
+	
     switch($request["tipo_email"]){
-        case "registada":
+		case "registada":
+			$encomenda = $request["encomenda"];
             $caminho = $request["caminho_pdf"];
             $num_encomenda = $encomenda["num_encomenda"];
             $corpo_email = "Segue em anexo o comprovativo da encomenda N$num_encomenda. <br>
@@ -21,13 +22,31 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 						Os melhores cumprimentos, <br>
 						Maria Papel Papelaria";
             enviar_email($conn, $encomenda, $corpo_email, $caminho);
+			exit();
+		
+		case "novo_aviso":
+			$stmt = $conn->prepare(
+				"SELECT * FROM encomenda
+				WHERE id_encomenda = ?"
+			);
+			$stmt->bind_param("i", $request["id_encomenda"]);
+			$stmt->execute();
+			$result = $stmt->get_result();
+			$encomenda = $result->fetch_assoc();
+
+			$num_encomenda = $encomenda["num_encomenda"];
+			$corpo_email = "Pode vir levantar a sua encomenda N$num_encomenda \n <br>
+							Os melhores cumprimentos, <br>
+							Maria Papel Papelaria";
+			enviar_email($conn, $encomenda, $corpo_email);
+			exit();
     }
 }
 
 function enviar_email(mysqli $conn, array $encomenda, string $corpo_email, string $caminho = null){
     // Pega as informações necessárias da encomenda
-    $nome = $encomenda["nome_aluno"];
-    $email = $encomenda["email"];
+    $nome = $encomenda["nome_aluno_encomenda"];
+    $email = $encomenda["email_encomenda"];
     $num_encomenda = $encomenda["num_encomenda"];
 
 

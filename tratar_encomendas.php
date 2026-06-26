@@ -2,6 +2,11 @@
 // Verificação de sessão em todas as páginas protegidas
 session_start();
 include('db_connect.php');
+require_once("vendor/autoload.php");
+error_reporting(E_ALL);
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
+ini_set('error_log', __DIR__ . '/php_errors.log');
 
 if($_SERVER["REQUEST_METHOD"] == "POST"){
 	$request = json_decode(file_get_contents('php://input'), true);
@@ -10,19 +15,132 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 		case "get_encomendas":
 			echo json_encode(['encomendas'=>getEncomendas($conn)]);
 			exit();
+		
+		case "avisar":
+			// Pegar todas as encomendas concluidas
+			$result = $conn->query(
+				"SELECT * FROM encomenda
+				WHERE estado_encomenda = 'concluida'
+				AND avisado = 0
+				ORDER BY num_encomenda ASC"
+			);
+			$encomendas = $result->fetch_all(MYSQLI_ASSOC);
+
+			// Gera pdf e encerra a conexao com a base de dados
+			gerar_pdf_aviso($conn, $encomendas);
+			header('Connection: close');
+			ob_end_flush();
+			flush();
+
+			// Manda os emails
+			require_once("enviar_email.php");
+
+			foreach($encomendas as $encomenda){
+				if(!empty($encomenda["email_encomenda"])){
+					$num_encomenda = $encomenda["num_encomenda"];
+					$corpo_email = "Pode vir levantar a sua encomenda N$num_encomenda \n <br>
+									Os melhores cumprimentos, <br>
+									Maria Papel Papelaria";
+					enviar_email($conn, $encomenda, $corpo_email);
+				}
+			}
+
+			// Marca as encomendas como avisadas
+			$data_aviso = date("Y-m-d H:i:s");
+
+			$stmt = $conn->prepare(
+				"UPDATE encomenda
+				SET avisado = 1, id_avisado = ?, data_aviso = ?
+				WHERE estado_encomenda = 'concluida'"
+			);
+			$stmt->bind_param("is", $_SESSION["user_id"], $data_aviso);
+			$stmt->execute();
+			$stmt->close();
+
+			exit();
 	}
 }
 
-function getEncomendas(mysqli $conn){
-    $stmt = $conn->prepare(
-        "SELECT *, DATEDIFF(NOW(), encomenda.data_encomenda) AS 'datediff' FROM encomenda"
-    );
 
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $encomendas = $result->fetch_all(MYSQLI_ASSOC);
+function gerar_pdf_aviso(mysqli $conn, array $encomendas){
+	// Pega o ano letivo	
+	$result = $conn->query(
+		"SELECT nome_ano_letivo FROM ano_letivo
+		WHERE ano_letivo_ativo = 1"
+	);
+	$ano_letivo = $result->fetch_assoc();
+	$nome_ano_letivo = $ano_letivo["nome_ano_letivo"];
+
+
+	// Gera o pdf
+	$pdf = new \TCPDF('P', 'mm', 'A4', true, 'UTF-8', false);
+
+	$pdf->SetCreator('Maria Papel'); 
+	$pdf->setPrintHeader(false);      
+	$pdf->setPrintFooter(false);       
+	$pdf->SetMargins(15, 15, 15);      
+	$pdf->AddPage();
+
+	$pdf->SetFont('helvetica', 'B', 14);
+	$pdf->Cell(180, 7, 'MARIA PAPEL PAPELARIA', 0, 1, 'C');
+	$pdf->Cell(0, 6, "Ano Letivo $nome_ano_letivo", 0, 1, 'C');
+	$pdf->Ln(8);
+
+	$pdf->Cell(0, 6, "Encomendas a avisar", 0, 1, 'C');
+	$pdf->Ln(8);
+
+	// Tabela
+	$pdf->SetFont('helvetica', 'B', 9);
+	$pdf->SetFillColor(220, 220, 220);
+
+	// Cabeçalho da tabela
+	$pdf->Cell(25, 7, 'Nº Encomenda', 1, 0, 'C', true);
+	$pdf->Cell(78, 7, 'Telemóvel', 1, 1, 'C', true);
+	
+	$pdf->SetFont('helvetica', '', 8);
+	
+	foreach($encomendas as $encomenda){
+		if(!empty($encomenda["telefone_encomenda"])){
+			$pdf->Cell(25, 7, $encomenda["num_encomenda"], 1, 0, 'C');
+			$pdf->Cell(78, 7, $encomenda["telefone_encomenda"], 1, 1, 'C');
+		}
+	}
+
+	$stmtUtilizador = $conn->prepare("SELECT username FROM utilizador WHERE id_utilizador = ?");
+	$stmtUtilizador->bind_param("i", $_SESSION["user_id"]);
+	$stmtUtilizador->execute();
+	$result = $stmtUtilizador->get_result();
+	$row = $result->fetch_assoc();
+	$utilizador = $row["username"];
+	$stmtUtilizador->close();
+
+	$pdf->setY(-30);
+	$pdf->SetFont('helvetica', '', 8);
+	$texto_rodape = 'Documento gerado no dia ' . date("d/m/Y") . ' às ' . date("H:i:s") . ' | Utilizador: ' . $utilizador;
+	$pdf->Cell(180, 5, $texto_rodape, 0, 1, 'C');
+
+	// Envia para o frontend como string
+	$pdf_pronto = $pdf->Output('encomendas_a_avisar.pdf', 'S');
+
+	header('Content-Type: application/pdf');
+	header('Content-Disposition: attachment; filename="encomendas_a_avisar.pdf"');
+	header('Content-Length: ' . strlen($pdf_pronto));
+
+	echo $pdf_pronto;
+}
+
+
+function getEncomendas(mysqli $conn){
+	$stmt = $conn->prepare(
+		"SELECT *, DATEDIFF(NOW(), encomenda.data_encomenda) AS 'datediff' FROM encomenda
+		WHERE estado_encomenda <> 'entregue'"
+	);
+
+	$stmt->execute();
+	$result = $stmt->get_result();
+	$encomendas = $result->fetch_all(MYSQLI_ASSOC);
 	$stmt->close();
-    return $encomendas;
+	return $encomendas;
 }
 
 ?>
@@ -64,7 +182,7 @@ function getEncomendas(mysqli $conn){
 												<div class="col-12">
 													<button class="primary" id="btn_a_tratar" style="margin-bottom: 10px;">Encomendas a tratar</button>
 													<button class="primary" id="btn_tratadas" style="margin-bottom: 10px;">Encomendas tratadas</button>
-													<button class="secondary" style="display: none;">Avisar encomendas concluídas</button>
+													<button class="secondary" id="btnAvisar" style="display: none;">Avisar encomendas concluídas</button>
 												</div>
 											</div>
 											
@@ -92,7 +210,7 @@ function getEncomendas(mysqli $conn){
 												</div>
 											</div>
 											
-											<h4>Encomendas por tratar: <span id="num_encomendas_tratar"></span></h5>
+											<h4>Encomendas: <span id="num_encomendas_tratar"></span></h5>
 
 											<!-- Tabela -->
 											<div class="table-wrapper">

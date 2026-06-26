@@ -44,11 +44,11 @@ function adcEncomenda(mysqli $conn, array $request){
 		);
 
 		$data_encomenda = date("Y-m-d");
-		$nome_aluno_encomenda = $encomenda["nome_aluno"];
+		$nome_aluno_encomenda = $encomenda["nome_aluno_encomenda"];
 		$nif_encomenda = $encomenda["nif"];
 		$ee_encomenda = $encomenda["nome_ee"];
 		$telefone_encomenda = $encomenda["telemovel"];
-		$email_encomenda = $encomenda["email"];
+		$email_encomenda = $encomenda["email_encomenda"];
 		$num_encomenda = getIdEncomenda($conn, $encomenda);
 		$plast_manuais = $encomenda["plast_manuais"];
 		$plast_livro_fichas = $encomenda["plast_livro_fichas"];
@@ -151,58 +151,9 @@ function adcEncomenda(mysqli $conn, array $request){
 	exit();
 }
 
-function enviar_email(mysqli $conn, string $caminho, string $email, string $nome, string $num_encomenda){
-
-	$stmt = $conn->prepare(
-	"SELECT nome_ano_letivo FROM ano_letivo
-	WHERE ano_letivo_ativo = 1"
-	);
-	$stmt->execute();
-	$result = $stmt->get_result();
-	$ano_letivo = $result->fetch_assoc();
-	$nome_ano_letivo = $ano_letivo["nome_ano_letivo"];
-	$stmt->close();
-
-	try {
-		$mail = new PHPMailer(true);
-
-		// Configuração do servidor SMTP
-		$mail->isSMTP();
-		$mail->Host       = 'smtp.gmail.com';
-		$mail->SMTPAuth   = true;
-		$mail->Username   = $_ENV["SMTP_USER"];
-		$mail->Password   = $_ENV["SMTP_PASS"];
-		$mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-		$mail->Port       = 587;
-
-		// Remetente e destinatário
-		$mail->setFrom($_ENV["SMTP_USER"], 'Maria Papel Papelaria');
-		$mail->addAddress($email, $nome);
-
-		// Caminho absoluto do PDF no servidor
-		$caminhoPdf = $_SERVER["DOCUMENT_ROOT"] . $caminho;
-		$mail->addAttachment($caminhoPdf);
-
-		// Conteúdo do email
-		$mail->isHTML(true);
-		$mail->Subject = "Manuais Escolares $nome_ano_letivo - Encomenda N$num_encomenda";
-		$mail->Body = "Segue em anexo o comprovativo da encomenda N$num_encomenda. <br>
-						Será contactado novamente por este meio assim que estiver tudo pronto. <br>
-						Os melhores cumprimentos, <br>
-						Maria Papel Papelaria";
-
-		$mail->send();
-		return true;
-	} catch (Exception $e) {
-		return false;
-	}
-}
-
-
 function gerarPdf(mysqli $conn, array $encomenda, $num_encomenda){
 	// Extrai as informações
-	$nome_aluno_encomenda = $encomenda["nome_aluno"];
-	$nome_aluno_encomenda = $encomenda["nome_aluno"];
+	$nome_aluno_encomenda = $encomenda["nome_aluno_encomenda"];
 
 	$nif_encomenda = $encomenda["nif"];
 	$nif_encomenda = str_split($nif_encomenda, 3);
@@ -214,7 +165,7 @@ function gerarPdf(mysqli $conn, array $encomenda, $num_encomenda){
 	$telefone_encomenda = str_split($telefone_encomenda, 3);
 	$telefone_encomenda = implode(' ', $telefone_encomenda);
 
-	$email_encomenda = $encomenda["email"];
+	$email_encomenda = $encomenda["email_encomenda"];
 	$plast_manuais = $encomenda["plast_manuais"];
 	$plast_livro_fichas = $encomenda["plast_livro_fichas"];
 	$etiquetas = $encomenda["etiqueta"];

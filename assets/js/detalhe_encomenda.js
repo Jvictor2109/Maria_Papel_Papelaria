@@ -113,9 +113,36 @@ if(btnConfirmarCancelar){
     });
 }
  
- 
+// Event listener novo aviso
+const btnNovoAviso = document.getElementById('btnNovoAviso');
+if(btnNovoAviso){
+    btnNovoAviso.addEventListener('click', async ()=>{
+        const response = await fetch('detalhe_encomenda.php', {
+            method:"post",
+            headers:{'Content-type':'application/json'},
+            body:JSON.stringify({
+                acao:"add_obs",
+                id_encomenda:btnNovoAviso.dataset.id_encomenda,
+                obs: "O cliente foi avisado novamente para vir levantar a encomenda."
+            })
+        });
 
+        if(response.ok){
+            alert("Novo aviso enviado com sucesso!");
+        }
 
+        fetch('enviar_email.php', {
+            method:"post",
+            headers:{'Content-type':'application/json'},
+            body:JSON.stringify({
+                "tipo_email":"novo_aviso",
+                "id_encomenda":btnNovoAviso.dataset.id_encomenda
+            })
+        });
+
+        location.reload();
+    });
+}
 
 
  const msg = document.getElementById('msgErro');

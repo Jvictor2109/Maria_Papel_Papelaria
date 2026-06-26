@@ -290,6 +290,30 @@ function cancelar_encomenda(mysqli $conn, array $request){
                                      ?>
                                 </div>
                             </div>
+
+                            <!-- Informação acerca do aviso da encomenda -->
+                            <div class="row aln-middle" style="margin-top: 10px;">
+                                <?php 
+                                if($encomenda["avisado"] == 1){?>
+                                <div class="col-4 col-12-small">
+                                    <p><strong>Encomenda avisada: Sim - <?= $encomenda["data_aviso"] ?></strong></p>
+                                </div>
+                                <div class="col-4 co-12-small">
+                                    <?php 
+                                    if($encomenda["estado_encomenda"] == "concluida" && !empty($encomenda["email_encomenda"])){?>
+                                        <button class="primary small" data-id_encomenda="<?= $encomenda["id_encomenda"] ?>" id="btnNovoAviso">Novo aviso</button>
+                                    <?php }
+                                    ?>
+                                </div>
+
+                                <?php 
+                                }
+                                else{?>
+                                    <h4><strong>Encomenda avisada: Não</strong></h4>
+                                <?php }
+                                
+                                ?>
+                            </div>
                         </div>
 
                         <!-- Manuais da encomenda -->
