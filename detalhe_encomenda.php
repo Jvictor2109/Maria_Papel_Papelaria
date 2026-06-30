@@ -41,7 +41,7 @@ function entregar_encomenda(mysqli $conn, array $request){
         // Marcar a encomenda como entregue
         $stmt_entregue = $conn->prepare(
             "UPDATE encomenda 
-            SET estado_encomenda = 'entregue', id_concluida = ?, data_concluida = ?
+            SET estado_encomenda = 'entregue', id_entregue = ?, data_entregue = ?
             WHERE id_encomenda = ?"
         );
         $stmt_entregue->bind_param("isi", $_SESSION["user_id"], $data, $id_encomenda);

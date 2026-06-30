@@ -3,10 +3,7 @@
 session_start();
 include('db_connect.php');
 require_once("vendor/autoload.php");
-error_reporting(E_ALL);
-ini_set('display_errors', 0);
-ini_set('log_errors', 1);
-ini_set('error_log', __DIR__ . '/php_errors.log');
+
 
 if($_SERVER["REQUEST_METHOD"] == "POST"){
 	$request = json_decode(file_get_contents('php://input'), true);
