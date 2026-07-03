@@ -276,17 +276,14 @@ function renderTabelaConfirmar(){
         const linha = document.createElement('tr');
         const celulas = tr.querySelectorAll('td');
 
-        let isbn = document.createElement('td');
-        isbn.innerText = celulas[0].innerText;        
-        linha.appendChild(isbn);
-
+        
         let nome = document.createElement('td');
         nome.innerText = celulas[1].innerText;        
         linha.appendChild(nome);
 
-        let preco = document.createElement('td');
-        preco.innerText = celulas[2].innerText;        
-        linha.appendChild(preco);
+        let disciplina = document.createElement('td');
+        disciplina.innerText = celulas[3].innerText;        
+        linha.appendChild(disciplina);
 
         let voucher = document.createElement('td');
         let checkvoucher = celulas[6].querySelector('input[type="checkbox"]');

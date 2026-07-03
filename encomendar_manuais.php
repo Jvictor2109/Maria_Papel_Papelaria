@@ -442,9 +442,8 @@ function getIdEncomenda(mysqli $conn, array $request){
 											<table class="alt">
 												<thead>
 													<tr>
-														<th>ISBN</th>
 														<th>Nome</th>
-														<th>Preço</th>
+														<th>Disciplina</th>
 														<th>Voucher</th>
 													</tr>
 												</thead>
