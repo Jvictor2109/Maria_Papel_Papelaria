@@ -405,7 +405,7 @@ function cancelar_encomenda(mysqli $conn, array $request){
                             <!-- Somente quando tiver registada/pedida que pode se fazer observações -->
                             <?php 
                             $estado_encomenda = $encomenda["estado_encomenda"];
-                            if($estado_encomenda == 'registada' || $estado_encomenda == 'pedida'){?>
+                            if($estado_encomenda != 'entregue' && $estado_encomenda != 'cancelada'){?>
                                 <h4>Adicionar observação</h4>
                                 <div class="row aln-middle">
                                     <div class="col-4">

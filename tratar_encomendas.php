@@ -83,19 +83,37 @@ function gerar_pdf_aviso(mysqli $conn, array $encomendas){
 	$pdf->Cell(0, 6, "Ano Letivo $nome_ano_letivo", 0, 1, 'C');
 	$pdf->Ln(8);
 
-	$pdf->Cell(0, 6, "Encomendas a avisar", 0, 1, 'C');
-	$pdf->Ln(8);
+	// ===== Secção 1: Avisadas por email =====
+	$pdf->SetFont('helvetica', 'B', 10);
+	$pdf->Cell(0, 6, "Foram avisadas por email as seguintes encomendas:", 0, 1, 'L');
+	$pdf->Ln(2);
 
-	// Tabela
 	$pdf->SetFont('helvetica', 'B', 9);
 	$pdf->SetFillColor(220, 220, 220);
+	$pdf->Cell(25, 7, 'Nº Encomenda', 1, 0, 'C', true);
+	$pdf->Cell(78, 7, 'Email', 1, 1, 'C', true);
 
-	// Cabeçalho da tabela
+	$pdf->SetFont('helvetica', '', 8);
+	foreach($encomendas as $encomenda){
+		if(!empty($encomenda["email_encomenda"])){
+			$pdf->Cell(25, 7, $encomenda["num_encomenda"], 1, 0, 'C');
+			$pdf->Cell(78, 7, $encomenda["email_encomenda"], 1, 1, 'C');
+		}
+	}
+
+	$pdf->Ln(8);
+
+	// ===== Secção 2: Falta avisar por telefone =====
+	$pdf->SetFont('helvetica', 'B', 10);
+	$pdf->Cell(0, 6, "Falta avisar por telefone as seguintes encomendas:", 0, 1, 'L');
+	$pdf->Ln(2);
+
+	$pdf->SetFont('helvetica', 'B', 9);
+	$pdf->SetFillColor(220, 220, 220);
 	$pdf->Cell(25, 7, 'Nº Encomenda', 1, 0, 'C', true);
 	$pdf->Cell(78, 7, 'Telemóvel', 1, 1, 'C', true);
-	
+
 	$pdf->SetFont('helvetica', '', 8);
-	
 	foreach($encomendas as $encomenda){
 		if(!empty($encomenda["telefone_encomenda"])){
 			$pdf->Cell(25, 7, $encomenda["num_encomenda"], 1, 0, 'C');
@@ -126,10 +144,10 @@ function gerar_pdf_aviso(mysqli $conn, array $encomendas){
 	echo $pdf_pronto;
 }
 
-
 function getEncomendas(mysqli $conn){
 	$stmt = $conn->prepare(
 		"SELECT *, DATEDIFF(NOW(), encomenda.data_encomenda) AS 'datediff' FROM encomenda
+		LEFT JOIN utilizador ON encomenda.id_avisado=utilizador.id_utilizador
 		WHERE estado_encomenda <> 'entregue'"
 	);
 
@@ -178,7 +196,8 @@ function getEncomendas(mysqli $conn){
 											<div class="row" style="margin-bottom: 10px;">
 												<div class="col-12">
 													<button class="primary" id="btn_a_tratar" style="margin-bottom: 10px;">Encomendas a tratar</button>
-													<button class="primary" id="btn_tratadas" style="margin-bottom: 10px;">Encomendas tratadas</button>
+													<button class="secondary" id="btn_tratadas_por_avisar" style="margin-bottom: 10px;">Encomendas tratadas por avisar</button>
+													<button class="secondary" id="btn_tratadas_avisadas" style="margin-bottom: 10px;">Encomendas avisadas</button>
 													<button class="secondary" id="btnAvisar" style="display: none;">Avisar encomendas concluídas</button>
 												</div>
 											</div>
