@@ -110,7 +110,7 @@ function adcEncomenda(mysqli $conn, array $request){
 		$stmtAnoEscolar->execute();
 
 		// Adiciona observação na encomenda, dizendo que foi registada.
-		$observacao_registada = "A encomenda foi registada.\n" . $obs_encomenda;
+		$observacao_registada = "MPP3: A encomenda foi registada.\n" . $obs_encomenda;
 		$data_registada = date("Y-m-d H:i:s");
 		$stmt_registada = $conn->prepare(
 			"INSERT INTO observacao_encomenda (id_encomenda, observacao_encomenda, data_observacao, id_utilizador)

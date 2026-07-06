@@ -46,7 +46,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
             $stmtSeparado->execute();
             $stmtSeparado->close();
 
-            $obs_concluida = "A encomenda passou ao estado de concluída.";
+            $obs_concluida = "MPP3: A encomenda passou ao estado de concluída.";
             $data_concluida = date("Y-m-d H:i:s");
             $stmt_concluida = $conn->prepare(
                 "INSERT INTO observacao_encomenda (id_encomenda, observacao_encomenda, data_observacao, id_utilizador)
@@ -213,8 +213,8 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                         </div>
 
                         <!-- Observações da encomenda -->
-                        <div class="box" style="max-height: 300px; overflow:auto;">
-                            <h3 style="color: red;">Observações da encomenda</h3>
+                        <div class="box">
+                            <h3>Observações da encomenda</h3>
 
                             <?php 
                             $stmt = $conn->prepare(
@@ -228,10 +228,26 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                             $result = $stmt->get_result();
                             $rows = $result->fetch_all(MYSQLI_ASSOC);
 
-                            foreach($rows as $obs){?>
+                            foreach($rows as $obs){
+                                // Verifica se é uma observação automatica
+                                if(str_starts_with($obs["observacao_encomenda"],"MPP3:")){
+                                    $obs_automatica = true;
+                                }
+                                else{
+                                    $obs_automatica = false;
+                                }
+                                ?>
                                 <dl>
                                     <dt><?= $obs["username"] ?> : <?= $obs["data_observacao"] ?></dt>
-                                    <dd><strong><?= $obs["observacao_encomenda"] ?></strong></dd>
+                                    
+                                    <?php
+                                    if($obs_automatica){?>
+                                        <dd><strong><?= $obs["observacao_encomenda"] ?></strong></dd>
+                                        <?php 
+                                    }
+                                    else{?>
+                                    <dd><strong style="color: red;"><?= $obs["observacao_encomenda"] ?></strong></dd>
+                                    <?php } ?>
                                 </dl>
                             <?php
                             }

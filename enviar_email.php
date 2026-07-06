@@ -18,7 +18,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
             $caminho = $request["caminho_pdf"];
             $num_encomenda = $encomenda["num_encomenda"];
             $corpo_email = "Segue em anexo o comprovativo da encomenda N$num_encomenda. <br>
-						Será contactado novamente por este meio assim que estiver tudo pronto. <br>
+						Será contactado(a) novamente por este meio, assim que estiver tudo pronto. <br><br>
 						Os melhores cumprimentos, <br>
 						Maria Papel Papelaria";
             enviar_email($conn, $encomenda, $corpo_email, $caminho);
@@ -35,7 +35,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 			$encomenda = $result->fetch_assoc();
 
 			$num_encomenda = $encomenda["num_encomenda"];
-			$corpo_email = "Pode vir levantar a sua encomenda N$num_encomenda \n <br>
+			$corpo_email = "Pode vir levantar a sua encomenda N$num_encomenda \n <br><br>
 							Os melhores cumprimentos, <br>
 							Maria Papel Papelaria";
 			enviar_email($conn, $encomenda, $corpo_email);

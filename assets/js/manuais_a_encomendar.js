@@ -30,7 +30,7 @@ btnModal.addEventListener('click', async function () {
 
    if(data["resultado"] == "sucesso"){
         alert(msg);
-        window.location.href = "index.php";
+        window.location.href = "encomendas_editora.php";
    }
    else{
         mostrarMsg("red", data["msg"]);

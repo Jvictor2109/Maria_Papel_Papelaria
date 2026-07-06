@@ -109,7 +109,7 @@ function att_manuais_pedido(mysqli $conn){
 		VALUES (?,?,?,?)"
 	);
 	$data_obs = date("Y-m-d H:i:s");
-	$obs = "A encomenda passou ao estado de pedida.";
+	$obs = "MPP3: A encomenda passou ao estado de pedida.";
 
 	foreach($id_registadas as $id){
 		$stmt_obs->bind_param("issi", $id["id_encomenda"], $obs, $data_obs, $_SESSION["user_id"]);

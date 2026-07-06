@@ -35,7 +35,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 			foreach($encomendas as $encomenda){
 				if(!empty($encomenda["email_encomenda"])){
 					$num_encomenda = $encomenda["num_encomenda"];
-					$corpo_email = "Pode vir levantar a sua encomenda N$num_encomenda \n <br>
+					$corpo_email = "Pode vir levantar a sua encomenda N$num_encomenda \n <br><br>
 									Os melhores cumprimentos, <br>
 									Maria Papel Papelaria";
 					enviar_email($conn, $encomenda, $corpo_email);

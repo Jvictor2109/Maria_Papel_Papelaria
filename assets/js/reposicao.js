@@ -352,6 +352,29 @@ function renderTabela(dados) {
         let linha = document.createElement('tr');
 
         // Cria cada célula da linha
+        
+        let estado;
+        if(element.pedido == 0 && element.cancelado == 0){
+            estado = "Registado";
+        }
+        else if(element.concluido == 1){
+            estado = "Concluído";
+        }
+        else if(element.cancelado == 1){
+            console.log("cancelado");
+            
+            estado = "Cancelado"
+        }
+        else if(element.pedido == 1){
+            estado = "Pedido";
+        }
+
+        let estado_artigo = document.createElement('td');
+        estado_artigo.innerText = estado;
+        linha.appendChild(estado_artigo);
+
+
+
         let artigo = document.createElement('td');
         artigo.innerText = element.artigo;
         linha.appendChild(artigo);
@@ -397,9 +420,6 @@ function renderTabela(dados) {
         qntd.innerText = element.quantidade;
         linha.appendChild(qntd);
 
-        let data_criacao = document.createElement('td');
-        data_criacao.innerText = element.data_criacao;
-        linha.appendChild(data_criacao);
 
         // Botões de ação: Mostra o botão correspondente ao estado atual do pedido
         // Se o item já tiver estado de concluído, mostra somente um texto

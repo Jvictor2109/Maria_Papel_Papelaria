@@ -418,13 +418,13 @@ function attItem(mysqli $conn, array $request)
 							<table>
 								<thead>
 									<tr>
+										<th>Estado</th>
 										<th>Artigo</th>
 										<th>Referência</th>
 										<th>Tipo</th>
 										<th>Urgência</th>
 										<th>Obs</th>
 										<th>Qntd</th>
-										<th>Data criação</th>
 										<th style="min-width: 14em; text-align: center;">Ações</th>
 									</tr>
 								</thead>

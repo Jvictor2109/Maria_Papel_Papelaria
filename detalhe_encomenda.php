@@ -53,7 +53,7 @@ function entregar_encomenda(mysqli $conn, array $request){
             VALUES (?,?,?,?)"
         );
         $data_obs = date("Y-m-d H:i:s");
-        $obs = "A encomenda passou ao estado de entregue.";
+        $obs = "MPP3: A encomenda passou ao estado de entregue.";
         $stmt_obs->bind_param("issi", $id_encomenda, $obs, $data_obs, $_SESSION["user_id"]);
         $stmt_obs->execute();
 
@@ -91,7 +91,7 @@ function cancelar_encomenda(mysqli $conn, array $request){
             VALUES (?,?,?,?)"
         );
         $data_obs = date("Y-m-d H:i:s");
-        $obs = "A encomenda passou ao estado de cancelada.";
+        $obs = "MPP3: A encomenda passou ao estado de cancelada.";
         $stmt_obs->bind_param("issi", $id_encomenda, $obs, $data_obs, $_SESSION["user_id"]);
         $stmt_obs->execute();
 
