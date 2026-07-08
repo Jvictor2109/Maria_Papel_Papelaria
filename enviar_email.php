@@ -1,6 +1,5 @@
 <?php
-session_start();
-include("db_connect.php");
+require_once("db_connect.php");
 require_once("vendor/autoload.php");
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->load();
@@ -12,7 +11,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 	$request = json_decode($jsonRecebido, true);
 
 	
-    switch($request["tipo_email"]){
+    switch($request["tipo_email"] ?? null){
 		case "registada":
 			$encomenda = $request["encomenda"];
             $caminho = $request["caminho_pdf"];

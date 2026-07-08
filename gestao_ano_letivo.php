@@ -80,10 +80,22 @@
                 // apagar ficheiros de /encomenda e /encomendas_a_editora
                 $pastaPDF = __DIR__ . '/encomendas/';
                 $pastaExcel = __DIR__ . '/encomendas_a_editora/';
+				$pastaAvisos = __DIR__ . '/avisos/';
                 
-                // PDF
+                // PDF encomendas
                 $iterator = new RecursiveIteratorIterator(
                     new RecursiveDirectoryIterator($pastaPDF, RecursiveDirectoryIterator::SKIP_DOTS)
+                );
+
+                foreach($iterator as $item){
+                    if($item->isFile() && $item->getExtension() == 'pdf'){
+                        unlink($item->getPathName());
+                    }
+                }
+
+				// pdf avisos
+                $iterator = new RecursiveIteratorIterator(
+                    new RecursiveDirectoryIterator($pastaAvisos, RecursiveDirectoryIterator::SKIP_DOTS)
                 );
 
                 foreach($iterator as $item){

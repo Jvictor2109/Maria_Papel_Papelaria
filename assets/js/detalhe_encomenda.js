@@ -123,7 +123,7 @@ if(btnNovoAviso){
             body:JSON.stringify({
                 acao:"add_obs",
                 id_encomenda:btnNovoAviso.dataset.id_encomenda,
-                obs: "O cliente foi avisado novamente para vir levantar a encomenda."
+                obs: "MPP3: O cliente foi avisado novamente para vir levantar a encomenda."
             })
         });
 

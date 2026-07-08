@@ -30,40 +30,22 @@ document.getElementById('btn_tratadas_avisadas').addEventListener('click', ()=>{
 // Event listener pro botao de avisar
 const btnAvisar = document.getElementById('btnAvisar');
 btnAvisar.addEventListener('click', async function(){
-    try{
-        const response = await fetch('tratar_encomendas.php', {
-            method:"post",
-            headers:{'Content-type':'application/json'},
-            body:JSON.stringify({
-                "acao":"avisar"
-            })
-        });
+    const response = await fetch('tratar_encomendas.php', {
+        method:"post",
+        headers:{'Content-type':'application/json'},
+        body:JSON.stringify({
+            "acao":"avisar"
+        })
+    });
 
-        if(!response.ok){        
-            throw new Error('Erro ao gerar pdf');
-        }
-
-        const blob = await response.blob();
-
-        const url = window.URL.createObjectURL(blob);
-        
-        const download = document.createElement('a');
-        download.href = url;
-        download.download = 'encomendas_a_avisar.pdf';
-        document.body.appendChild(download);
-        download.click();
-
-        document.body.removeChild(download);
-        window.URL.revokeObjectURL(url);
-
+    const data = await response.json()
+    if(data["resultado"] == "sucesso"){
+        document.getElementById('caminho_pdf_aviso').href = data["caminho_pdf"];
+        document.getElementById('modal-sucesso').style.display = "flex";
     }
-    catch(erro){
-        console.log("Erro - " + erro)
-        alert("Não foi possível gerar o pdf");
-        return;
+    else{
+        alert("Ocorreu um erro ao avisar as encomendas.");
     }
-
-    alert("Encomendas avisadas com sucesso");
 });
 
 // Event listener pra todos os botões de filtro
@@ -281,7 +263,6 @@ async function filtrar_encomendas(){
         encomendas_selecionadas = encomendas_selecionadas.filter(encomenda=>ids_anos_selecionados.includes(encomenda.id_ano_encomenda));
     }
 
-    console.log(encomendas_selecionadas);
     // Filtro por tabela ativa
     if(tabela_ativa == "a_tratar"){
         encomendas_selecionadas = encomendas_selecionadas.filter(encomenda=> 
@@ -296,7 +277,6 @@ async function filtrar_encomendas(){
             encomenda.estado_encomenda == "concluida" && encomenda.avisado == 0
         );        
         renderTabela_por_avisar(encomendas_selecionadas);
-        console.log(encomendas_selecionadas);
         
     }
     else if(tabela_ativa == "tratadas_avisadas"){

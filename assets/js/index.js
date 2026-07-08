@@ -6,6 +6,13 @@ const CORES_ESTADOS = {
     'cancelada': 'red'
 };
 
+const CORES_REPOSICAO = {
+    'por pedir': '#c0392b',
+    'pedido':    '#e67e22',
+    'concluído': '#27ae60',
+    'cancelado': '#7f8c8d'
+};
+
 async function get_encomendas_ano() {
     const response = await fetch('index.php', {
         method: "post",
@@ -20,6 +27,15 @@ async function get_encomendas_estado() {
         method: "post",
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ "acao": "get_encomendas_estado" })
+    });
+    return await response.json();
+}
+
+async function get_reposicao_estado() {
+    const response = await fetch('index.php', {
+        method: "post",
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ "acao": "get_reposicao_estado" })
     });
     return await response.json();
 }
@@ -72,6 +88,29 @@ async function renderCardsEstado() {
     }).join('');
 }
 
+async function renderCardsReposicao() {
+    const dados = await get_reposicao_estado();
+    const container = document.getElementById('reposicao-cards');
+    if (!container) return;
+
+    const mapeamento = [
+        { label: 'Por pedir', chave: 'por_pedir', cor: CORES_REPOSICAO['por pedir'] },
+        { label: 'Pedido',    chave: 'pedido',    cor: CORES_REPOSICAO['pedido']    },
+        { label: 'Concluído', chave: 'concluido', cor: CORES_REPOSICAO['concluído'] },
+        { label: 'Cancelado', chave: 'cancelado', cor: CORES_REPOSICAO['cancelado'] }
+    ];
+
+    container.innerHTML = mapeamento.map(({ label, chave, cor }) => {
+        const quantidade = parseInt(dados[chave]) || 0;
+        return `
+            <div class="estado-card" style="border-color: ${cor}; color: ${cor};">
+                <span class="estado-nome">${label}</span>
+                <span class="estado-count">${quantidade}</span>
+            </div>`;
+    }).join('');
+}
+
 renderGrafico();
 renderCardsEstado();
+renderCardsReposicao();
 

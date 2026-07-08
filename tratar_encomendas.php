@@ -24,7 +24,8 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 			$encomendas = $result->fetch_all(MYSQLI_ASSOC);
 
 			// Gera pdf e encerra a conexao com a base de dados
-			gerar_pdf_aviso($conn, $encomendas);
+			$caminho = gerar_pdf_aviso($conn, $encomendas);
+			echo json_encode(["resultado"=>"sucesso", "caminho_pdf"=>$caminho]);
 			header('Connection: close');
 			ob_end_flush();
 			flush();
@@ -41,6 +42,20 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 					enviar_email($conn, $encomenda, $corpo_email);
 				}
 			}
+
+			// Adiciona observações em todas as encomendas
+			$stmt_obs = $conn->prepare(
+				"INSERT INTO observacao_encomenda (id_encomenda, observacao_encomenda, data_observacao, id_utilizador)
+				VALUES (?,?,?,?)"
+			);
+			foreach($encomendas as $encomenda){
+				$data = date("Y-m-d H:i:s");
+				$obs_encomenda = "MPP3: O(a) cliente foi avisado(a) pela primeira vez";
+				$stmt_obs->bind_param("issi", $encomenda["id_encomenda"], $obs_encomenda, $data, $_SESSION["user_id"]);
+				$stmt_obs->execute();
+			}
+
+			$stmt_obs->close();
 
 			// Marca as encomendas como avisadas
 			$data_aviso = date("Y-m-d H:i:s");
@@ -134,14 +149,19 @@ function gerar_pdf_aviso(mysqli $conn, array $encomendas){
 	$texto_rodape = 'Documento gerado no dia ' . date("d/m/Y") . ' às ' . date("H:i:s") . ' | Utilizador: ' . $utilizador;
 	$pdf->Cell(180, 5, $texto_rodape, 0, 1, 'C');
 
-	// Envia para o frontend como string
-	$pdf_pronto = $pdf->Output('encomendas_a_avisar.pdf', 'S');
+	$pasta_relativa = '/MPP_3/avisos/';
+	$arquivo = 'aviso_' . date("Y-m-d") . '.pdf';
 
-	header('Content-Type: application/pdf');
-	header('Content-Disposition: attachment; filename="encomendas_a_avisar.pdf"');
-	header('Content-Length: ' . strlen($pdf_pronto));
+	$pasta_absoluta = __DIR__ . '/avisos/';
 
-	echo $pdf_pronto;
+	if (!is_dir($pasta_absoluta)) {
+		mkdir($pasta_absoluta, 0755, true);
+	}
+
+	// Salva o PDF no disco com caminho absoluto
+	$pdf->Output($pasta_absoluta . $arquivo, 'F');
+	// Retorna o caminho pra ser salvo na base de dados
+	return $pasta_relativa . $arquivo;
 }
 
 function getEncomendas(mysqli $conn){
@@ -189,6 +209,20 @@ function getEncomendas(mysqli $conn){
 									<?php
 									// Verificar se já está autenticado
 									if (isset($_SESSION['user_id'])) {?>
+
+									<!-- Modal de sucesso -->
+									<div id="modal-sucesso" class="modal-overlay" style="display: none;">
+										<div class="box modal-content" style="max-width: 500px;">
+											<h3>Alerta</h3>
+											
+											<p><strong>As encomendas foram avisadas com sucesso</strong></p>
+											<p><strong>Link para o documento pdf:</strong> <a id="caminho_pdf_aviso" target="_blank">Ver documento</a></p> 
+											
+
+											<button class="primary" onclick="location.reload()">Concluído</button>
+										</div>
+									</div>
+
 										<h2>Tratar encomendas</h2>
 
 										<div class="box">

@@ -39,6 +39,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $stmt->close();
             echo json_encode($dados);
             exit();
+
+        case "get_reposicao_estado":
+            $stmt = $conn->prepare(
+                "SELECT
+                    SUM(CASE WHEN cancelado = 0 AND pedido = 0 AND concluido = 0 THEN 1 ELSE 0 END) AS por_pedir,
+                    SUM(CASE WHEN pedido = 1 AND concluido = 0 AND cancelado = 0 THEN 1 ELSE 0 END) AS pedido,
+                    SUM(CASE WHEN concluido = 1 AND cancelado = 0 THEN 1 ELSE 0 END) AS concluido,
+                    SUM(CASE WHEN cancelado = 1 THEN 1 ELSE 0 END) AS cancelado
+                 FROM reposicao"
+            );
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $dados = $result->fetch_assoc();
+            $stmt->close();
+            echo json_encode($dados);
+            exit();
     }
 }
 
@@ -87,19 +103,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 											</div>
 										</div>
 										<div class="row">
-											<div class="col-6 col-12-small" style="text-align:center">
-												<h2>Nº de encomendas por ano escolar</h2>
+								<div class="col-6 col-12-small" style="text-align:center">
+									<h2>Nº de encomendas por ano escolar</h2>
 
-												<div>
-													<canvas id="grafico" width="5"></canvas>
-												</div>
+									<div>
+										<canvas id="grafico" width="5"></canvas>
+									</div>
 
-											</div>
-											<div class="col-6 col-12-small" style="text-align:center">
-												<h2>Nº de encomendas por estado</h2>
-												<div id="estado-cards" class="estado-cards-wrapper"></div>
-											</div>
-										</div>
+								</div>
+								<div class="col-6 col-12-small" style="text-align:center">
+									<h2>Nº de encomendas por estado</h2>
+									<div id="estado-cards" class="estado-cards-wrapper"></div>
+								</div>
+							</div>
+							<div class="row" style="margin-top: 2em;">
+								<div class="col-12" style="text-align:center">
+									<h2>Material a pedir &mdash; por estado</h2>
+									<div id="reposicao-cards" class="estado-cards-wrapper"></div>
+								</div>
+							</div>
 										<?php }
 											else{
 												echo <<<HTML
