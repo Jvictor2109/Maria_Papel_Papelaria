@@ -43,6 +43,7 @@
                                     <li><a href="tratar_encomendas.php">Encomendas a tratar</a></li>
                                     <li><a href="pesquisar_encomendas.php">Pesquisar encomendas</a></li>
                                     <li><a href="verificar_caucoes.php">Verificar cauções</a></li>
+                                    <li><a href="avisos_encomendas.php">Aviso encomendas</a></li>
                                 </ul>
                             </li>
                         ';

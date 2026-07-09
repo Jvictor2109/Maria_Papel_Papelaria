@@ -25,6 +25,15 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 
 			// Gera pdf e encerra a conexao com a base de dados
 			$caminho = gerar_pdf_aviso($conn, $encomendas);
+
+			$stmt_pdf_aviso = $conn->prepare(
+				"INSERT INTO aviso_encomendas (id_utilizador, doc_aviso)
+				VALUES (?,?)"
+			);
+			$stmt_pdf_aviso->bind_param("is", $_SESSION["user_id"], $caminho);
+			$stmt_pdf_aviso->execute();
+			$stmt_pdf_aviso->close();
+
 			echo json_encode(["resultado"=>"sucesso", "caminho_pdf"=>$caminho]);
 			header('Connection: close');
 			ob_end_flush();
@@ -131,8 +140,11 @@ function gerar_pdf_aviso(mysqli $conn, array $encomendas){
 	$pdf->SetFont('helvetica', '', 8);
 	foreach($encomendas as $encomenda){
 		if(!empty($encomenda["telefone_encomenda"])){
+			$telefone_encomenda = $encomenda["telefone_encomenda"];
+			$telefone_encomenda = str_split($telefone_encomenda, 3);
+			$telefone_encomenda = implode(' ', $telefone_encomenda);
 			$pdf->Cell(25, 7, $encomenda["num_encomenda"], 1, 0, 'C');
-			$pdf->Cell(78, 7, $encomenda["telefone_encomenda"], 1, 1, 'C');
+			$pdf->Cell(78, 7, $telefone_encomenda, 1, 1, 'C');
 		}
 	}
 
