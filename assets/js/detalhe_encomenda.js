@@ -48,11 +48,14 @@ if(btnFecharConfirmar){
 const btnConfirmarEntregar = document.getElementById('confirmarEntregar');
 if(btnConfirmarEntregar){
     btnConfirmarEntregar.addEventListener('click', async function (){
+        const caucaoLevantamento = document.getElementById('caucaoLevantamento').value ?? 0;
+
         const response = await fetch('detalhe_encomenda.php', {
             method:"post",
             headers:{ 'Content-Type': 'application/json' },
             body:JSON.stringify({
                 "acao":"entregar_encomenda",
+                "caucaoLevantamento":caucaoLevantamento,
                 "id_encomenda":btnConfirmarEntregar.dataset.id_encomenda
             })
         })

@@ -35,16 +35,19 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 function entregar_encomenda(mysqli $conn, array $request){
     $id_encomenda = $request["id_encomenda"];
     $data = date("Y-m-d");
+    $caucao_levantamento = floatval($request["caucaoLevantamento"]);
 
     $conn->begin_transaction();
     try{
         // Marcar a encomenda como entregue
+        // Adiciona valor da caução de levantamento
+
         $stmt_entregue = $conn->prepare(
             "UPDATE encomenda 
-            SET estado_encomenda = 'entregue', id_entregue = ?, data_entregue = ?
+            SET estado_encomenda = 'entregue', id_entregue = ?, data_entregue = ?, caucao_levantamento = ?
             WHERE id_encomenda = ?"
         );
-        $stmt_entregue->bind_param("isi", $_SESSION["user_id"], $data, $id_encomenda);
+        $stmt_entregue->bind_param("isdi", $_SESSION["user_id"], $data, $caucao_levantamento, $id_encomenda);
         $stmt_entregue->execute();
     
         // Adicionar observação
@@ -56,6 +59,7 @@ function entregar_encomenda(mysqli $conn, array $request){
         $obs = "MPP3: A encomenda passou ao estado de entregue.";
         $stmt_obs->bind_param("issi", $id_encomenda, $obs, $data_obs, $_SESSION["user_id"]);
         $stmt_obs->execute();
+        
 
         $stmt_obs->close();
         $stmt_entregue->close();
@@ -136,7 +140,7 @@ function cancelar_encomenda(mysqli $conn, array $request){
 <html>
 
 <head>
-    <title>MPP - Editar Encomenda</title>
+    <title>MPP - Detalhe Encomenda</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
     <link rel="stylesheet" href="assets/css/main.css" />
@@ -242,19 +246,25 @@ function cancelar_encomenda(mysqli $conn, array $request){
                                             }
                                             ?>
                                         </li>
+                                        <li><strong>Email: </strong> <?= $encomenda["email_encomenda"] ?></li>
                                     </ul>
                                 </div>
                             </div>
 
                             <div class="row">
-                                <div class="col-4 col-12-small">
+                                <div class="col-3 col-12-small">
                                     <p><strong>Total encomenda: </strong><?= $encomenda["total_encomenda"] ?>€</p>
                                 </div>
-                                <div class="col-4 col-12-small">
-                                    <p><strong>Caução paga: </strong><?= $encomenda["valor_caucao"] ?>€</p>
-                                </div>
-                                <div class="col-4 col-12-small">
+                                <div class="col-3 col-12-small">
                                     <p><strong>Doc. Encomenda: </strong><a href="<?= $encomenda["doc_encomenda"] ?>" target="_blank">Ver documento</a></p>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-3 col-12-small">
+                                    <p><strong>Caução paga ao encomendar: </strong><?= $encomenda["valor_caucao"] ?>€</p>
+                                </div>
+                                <div class="col-3 col-12-small">
+                                    <p><strong>Caução paga ao levantar: </strong><?= $encomenda["caucao_levantamento"] ?>€</p>
                                 </div>
                             </div>
 
@@ -296,7 +306,7 @@ function cancelar_encomenda(mysqli $conn, array $request){
                                 <?php 
                                 if($encomenda["avisado"] == 1){?>
                                 <div class="col-4 col-12-small">
-                                    <p><strong>Encomenda avisada: Sim - <?= $encomenda["data_aviso"] ?></strong></p>
+                                    <p><strong>Encomenda avisada pela primeira vez: Sim - <?= $encomenda["data_aviso"] ?></strong></p>
                                 </div>
                                 <div class="col-4 co-12-small">
                                     <?php 
@@ -309,7 +319,7 @@ function cancelar_encomenda(mysqli $conn, array $request){
                                 <?php 
                                 }
                                 else{?>
-                                    <h4><strong>Encomenda avisada: Não</strong></h4>
+                                    <h4><strong>Encomenda avisada pela primeira vez: Não</strong></h4>
                                 <?php }
                                 
                                 ?>
@@ -454,8 +464,13 @@ function cancelar_encomenda(mysqli $conn, array $request){
                                 <span id="close-modal" class="modal-close">&times;</span>
                                 <h3>Entregar encomenda</h3>
 
+                                <div style="margin-bottom: 10px;">
+                                    <strong>Introduza o valor da caução de levantamento:</strong>
+                                    <input type="number" id="caucaoLevantamento">
+                                </div>
+
                                 <div>
-                                    <p>Marcar a encomenda como entregue?</p>
+                                    <p><strong>Marcar a encomenda como entregue?</strong></p>
                                     <button id="confirmarEntregar" class="primary" data-id_encomenda="<?= $encomenda["id_encomenda"] ?>">Sim</button>
                                     <button id="fecharConfirmar">Não</button>
                                 </div>

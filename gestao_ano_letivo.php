@@ -68,6 +68,7 @@
                 $conn->query("DELETE FROM encomenda_manual");
                 $conn->query("DELETE FROM encomenda");
 				$conn->query("DELETE FROM encomenda_editora");
+				$conn->query("DELETE FROM aviso_encomendas");
 				$conn->query("UPDATE manual SET quant_manuais_pedir = 0, quant_manuais_enc = 0");
 
                 // Volta os IDs pra 1

@@ -168,8 +168,8 @@ function renderTabela_por_avisar(encomendas){
         linha.appendChild(data_encomenda);
 
         const email = document.createElement('td');
-        if(encomenda.email){
-            email.innerText = encomenda.email;
+        if(encomenda.email_encomenda){
+            email.innerText = encomenda.email_encomenda;
         }
         else{
             email.innerText = "-";
@@ -231,9 +231,9 @@ function renderTabela_avisadas(encomendas){
         num_encomenda.innerText = encomenda.num_encomenda;
         linha.appendChild(num_encomenda);
 
-        const data_encomenda = document.createElement('td');
-        data_encomenda.innerText = encomenda.data_encomenda;
-        linha.appendChild(data_encomenda);
+        const data_aviso = document.createElement('td');
+        data_aviso.innerText = encomenda.data_aviso;
+        linha.appendChild(data_aviso);
 
        const user_avisado = document.createElement('td');
        user_avisado.innerText = encomenda.username;

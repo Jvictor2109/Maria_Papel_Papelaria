@@ -57,7 +57,7 @@
                                                     <div class="row">
                                                         <div class="col-12">
                                                             <div style="display: flex; gap:8px; align-items:center">
-                                                                <label for="dataCaucao">Selecione uma data: </label>
+                                                                <strong>Selecione uma data: </stro>
                                                                 <input type="date" id="dataCaucao" value="<?= date('Y-m-d') ?>">
                                                                 <button class="primary" id="btnCaucao">Verificar</button>
                                                             </div>
@@ -129,7 +129,7 @@
                         const data = await response.json();
                         const total_caucao = data["total_caucao"];
 
-                        document.getElementById('valorTotalCaucao').innerText = total_caucao;
+                        document.getElementById('valorTotalCaucao').innerText = total_caucao ?? "0.00";
                         document.getElementById('resultadoCaucao').style.display = "flex"; 
                     });
 
