@@ -72,9 +72,6 @@
                             <span class="opener">Painel de Controlo</span>
                             <ul>
                                 <li><a href="gestao_utilizadores.php">Utilizador</a></li>
-                                <li><a href="#">Ipsum Adipiscing</a></li>
-                                <li><a href="#">Tempus Magna</a></li>
-                                <li><a href="#">Feugiat Veroeros</a></li>
                             </ul>
                         </li>';
 

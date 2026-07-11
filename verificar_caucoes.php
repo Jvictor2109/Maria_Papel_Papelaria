@@ -9,7 +9,7 @@
         $data_caucao = $request["data_caucao"];
 
         $stmt = $conn->prepare(
-            "SELECT SUM(valor_caucao) AS total_caucao FROM encomenda
+            "SELECT SUM(valor_caucao) AS total_caucao, SUM(caucao_levantamento) AS total_levantamento FROM encomenda
             WHERE data_encomenda = ?"
         );
         $stmt->bind_param("s", $data_caucao);
@@ -17,7 +17,11 @@
         $result = $stmt->get_result();
         $row = $result->fetch_assoc();
 
-        echo json_encode(['total_caucao'=>$row["total_caucao"]]);
+		$caucao = floatval($row["total_caucao"]);
+		$levantamento = floatval($row["total_levantamento"]);
+		$total = $caucao + $levantamento;
+
+        echo json_encode(['caucao'=>$caucao, 'levantamento' => $levantamento, 'total'=>$total]);
         exit();
 	}
 	?>
@@ -65,7 +69,9 @@
                                                     </div>
                                                     <div class="row" style="margin-top: 10px; display: none;" id="resultadoCaucao">
                                                         <div class="col-12">
-                                                            <strong>Valor total recebido de caução: <span id="valorTotalCaucao"></span>€</strong>
+                                                            <p><strong>Caução de encomendas realizadas: <span id="valorTotalCaucao"></span>€</strong></p>
+                                                            <p><strong>Caução de encomendas levantadas: <span id="levantamento"></span>€</strong></p>
+                                                            <p><strong>Valor total: <span id="total"></span>€</strong></p>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -127,9 +133,13 @@
                         });
 
                         const data = await response.json();
-                        const total_caucao = data["total_caucao"];
+                        const caucao = data["caucao"];
+                        const levantamento = data["levantamento"];
+                        const total = data["total"];
 
-                        document.getElementById('valorTotalCaucao').innerText = total_caucao ?? "0.00";
+                        document.getElementById('valorTotalCaucao').innerText = caucao ?? "0.00";
+                        document.getElementById('levantamento').innerText = levantamento ?? "0.00";
+                        document.getElementById('total').innerText = total ?? "0.00";
                         document.getElementById('resultadoCaucao').style.display = "flex"; 
                     });
 

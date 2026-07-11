@@ -109,7 +109,8 @@ function gerar_pdf_aviso(mysqli $conn, array $encomendas){
 
 	// ===== Secção 1: Avisadas por email =====
 	$pdf->SetFont('helvetica', 'B', 10);
-	$pdf->Cell(0, 6, "Foram avisadas por email as seguintes encomendas:", 0, 1, 'L');
+	$texto = "Foram avisadas por email no dia" . date("d/m/Y") . " às " . date("H:i:s") ." as seguintes encomendas:";
+	$pdf->Cell(0, 6, $texto, 0, 1, 'L');
 	$pdf->Ln(2);
 
 	$pdf->SetFont('helvetica', 'B', 9);

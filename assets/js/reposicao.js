@@ -352,7 +352,12 @@ function renderTabela(dados) {
         let linha = document.createElement('tr');
 
         // Cria cada célula da linha
-        
+        let cores = {
+            Registado : "red",
+            Pedido : "goldenrod",
+            Concluído : "green",
+            Cancelado : "darkred" 
+        }
         let estado;
         if(element.pedido == 0 && element.cancelado == 0){
             estado = "Registado";
@@ -371,6 +376,8 @@ function renderTabela(dados) {
 
         let estado_artigo = document.createElement('td');
         estado_artigo.innerText = estado;
+        estado_artigo.style.color = cores[estado];
+        estado_artigo.style.fontWeight = "bold";
         linha.appendChild(estado_artigo);
 
 

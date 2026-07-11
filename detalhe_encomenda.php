@@ -252,18 +252,18 @@ function cancelar_encomenda(mysqli $conn, array $request){
                             </div>
 
                             <div class="row">
-                                <div class="col-3 col-12-small">
+                                <div class="col-4 col-12-small">
                                     <p><strong>Total encomenda: </strong><?= $encomenda["total_encomenda"] ?>€</p>
                                 </div>
-                                <div class="col-3 col-12-small">
+                                <div class="col-4 col-12-small">
                                     <p><strong>Doc. Encomenda: </strong><a href="<?= $encomenda["doc_encomenda"] ?>" target="_blank">Ver documento</a></p>
                                 </div>
                             </div>
                             <div class="row">
-                                <div class="col-3 col-12-small">
+                                <div class="col-4 col-12-small">
                                     <p><strong>Caução paga ao encomendar: </strong><?= $encomenda["valor_caucao"] ?>€</p>
                                 </div>
-                                <div class="col-3 col-12-small">
+                                <div class="col-4 col-12-small">
                                     <p><strong>Caução paga ao levantar: </strong><?= $encomenda["caucao_levantamento"] ?>€</p>
                                 </div>
                             </div>
