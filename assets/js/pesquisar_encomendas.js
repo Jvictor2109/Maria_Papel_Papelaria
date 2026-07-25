@@ -57,6 +57,7 @@ function renderTabela(encomendas){
         const cores_estados = {
                 'registada':'darkred',
                 'pedida':'orange',
+                'separada':'teal',
                 'concluida':'goldenrod',
                 'entregue':'green',
                 'cancelada':'red'

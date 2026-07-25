@@ -245,6 +245,7 @@ function getEncomendas(mysqli $conn){
 													<button class="primary" id="btn_a_tratar" style="margin-bottom: 10px;">Encomendas a tratar</button>
 													<button class="secondary" id="btn_tratadas_por_avisar" style="margin-bottom: 10px;">Encomendas tratadas por avisar</button>
 													<button class="secondary" id="btn_tratadas_avisadas" style="margin-bottom: 10px;">Encomendas avisadas</button>
+													<button class="secondary" id="btn_separadas" style="margin-bottom: 10px;">Encomendas separadas</button>
 													<button class="secondary" id="btnAvisar" style="display: none;">Avisar encomendas concluídas</button>
 												</div>
 											</div>

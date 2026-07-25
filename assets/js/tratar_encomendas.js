@@ -26,6 +26,11 @@ document.getElementById('btn_tratadas_avisadas').addEventListener('click', ()=>{
     document.getElementById('btnAvisar').style.display = "none";
     filtrar_encomendas();
 });
+document.getElementById('btn_separadas').addEventListener('click', ()=>{
+    tabela_ativa = "separadas";
+    document.getElementById('btnAvisar').style.display = "none";
+    filtrar_encomendas();
+});
 
 // Event listener pro botao de avisar
 const btnAvisar = document.getElementById('btnAvisar');
@@ -251,6 +256,56 @@ function renderTabela_avisadas(encomendas){
     });
 
 }
+function renderTabela_separadas(encomendas){
+    // Altera o cabeçalho
+    const thead = document.querySelector('thead');
+    const headers = ["Id", "Num. encomenda", "Data separada", " "];
+
+    thead.innerHTML = '';
+    const linha_cabecalho = document.createElement('tr');
+
+    headers.forEach(header=>{
+        const th = document.createElement('th');
+        th.innerText = header
+        linha_cabecalho.appendChild(th);
+    })
+
+    thead.appendChild(linha_cabecalho);
+
+    // Limpa o tbody e constroi a tabela
+    const tbody = document.querySelector('tbody');
+    tbody.innerHTML = '';
+
+    const num_encomendas_tratar = document.getElementById('num_encomendas_tratar');
+    num_encomendas_tratar.innerText = encomendas.length;
+
+    encomendas.forEach(encomenda=>{
+        const linha = document.createElement('tr');
+
+        const id = document.createElement('td');
+        id.innerText = encomenda.id_encomenda;
+        linha.appendChild(id);
+
+        const num_encomenda = document.createElement('td');
+        num_encomenda.innerText = encomenda.num_encomenda;
+        linha.appendChild(num_encomenda);
+
+        const data_separado = document.createElement('td');
+        data_separado.innerText = encomenda.data_separado ?? '-';
+        linha.appendChild(data_separado);
+
+        const detalhes_encomenda = document.createElement('td');
+        const link_encomenda = document.createElement('a');
+        
+        link_encomenda.href = `detalhe_encomenda.php?id=${encomenda.id_encomenda}`;
+        link_encomenda.innerText = 'Ver encomenda';
+        detalhes_encomenda.appendChild(link_encomenda);
+        linha.appendChild(detalhes_encomenda);
+
+        tbody.appendChild(linha);
+    });
+
+}
 
 // Filtrar encomendas
 async function filtrar_encomendas(){
@@ -284,5 +339,11 @@ async function filtrar_encomendas(){
             encomenda.estado_encomenda == "concluida" && encomenda.avisado == 1
         );        
         renderTabela_avisadas(encomendas_selecionadas);
+    }
+    else if(tabela_ativa == "separadas"){
+        encomendas_selecionadas = encomendas_selecionadas.filter(encomenda=>
+            encomenda.estado_encomenda == "separada"
+        );        
+        renderTabela_separadas(encomendas_selecionadas);
     }
 }

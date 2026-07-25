@@ -38,7 +38,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
         if($result->num_rows == 0){
             $stmtSeparado = $conn->prepare(
                 "UPDATE encomenda
-                SET estado_encomenda = 'concluida', data_concluida = ?, id_concluida = ?
+                SET estado_encomenda = 'separada', data_separado = ?, id_separado = ?
                 WHERE id_encomenda = ?"
             );
 
@@ -46,15 +46,15 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
             $stmtSeparado->execute();
             $stmtSeparado->close();
 
-            $obs_concluida = "MPP3: A encomenda passou ao estado de concluída.";
-            $data_concluida = date("Y-m-d H:i:s");
-            $stmt_concluida = $conn->prepare(
+            $obs_separada = "MPP3: A encomenda passou ao estado de separada.";
+            $data_separada = date("Y-m-d H:i:s");
+            $stmt_separada = $conn->prepare(
                 "INSERT INTO observacao_encomenda (id_encomenda, observacao_encomenda, data_observacao, id_utilizador)
                 VALUES (?,?,?,?)"
             );
-            $stmt_concluida->bind_param("issi", $id_encomenda, $obs_concluida, $data_concluida, $id_utilizador);
-            $stmt_concluida->execute();
-            $stmt_concluida->close();
+            $stmt_separada->bind_param("issi", $id_encomenda, $obs_separada, $data_separada, $id_utilizador);
+            $stmt_separada->execute();
+            $stmt_separada->close();
         }
 
         $stmt->close();
@@ -202,6 +202,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                                     $cores_estados = [
                                         'registada'=>'darkred',
                                         'pedida'=>'orange',
+                                        'separada'=>'teal',
                                         'concluida'=>'goldenrod',
                                         'entregue'=>'green',
                                         'cancelada'=>'red'

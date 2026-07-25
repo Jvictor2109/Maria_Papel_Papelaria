@@ -17,8 +17,8 @@ if($_SERVER['REQUEST_METHOD'] == "POST"){
         $pvp = floatval($dados[$id]['pvp']);
         $preco_com_iva = floatval($dados[$id]['preco_com_iva']);
         $iva = floatval($info['iva']);
-        $pvp_sIva = number_format($pvp/(1+$iva), 2);
-        $preco_sIva = number_format($preco_com_iva/(1+$iva), 2);
+        $pvp_sIva = number_format($pvp/(1+$iva), 5);
+        $preco_sIva = number_format($preco_com_iva/(1+$iva), 5);
 
         $dadosProcessados[] = [
             "titulo"=> $dados[$id]['descricao'],

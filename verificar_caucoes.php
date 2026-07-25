@@ -9,17 +9,29 @@
         $data_caucao = $request["data_caucao"];
 
         $stmt = $conn->prepare(
-            "SELECT SUM(valor_caucao) AS total_caucao, SUM(caucao_levantamento) AS total_levantamento FROM encomenda
+            "SELECT SUM(valor_caucao) AS total_caucao FROM encomenda
             WHERE data_encomenda = ?"
         );
         $stmt->bind_param("s", $data_caucao);
         $stmt->execute();
         $result = $stmt->get_result();
         $row = $result->fetch_assoc();
-
 		$caucao = floatval($row["total_caucao"]);
+		$stmt->close();
+		
+		$stmt = $conn->prepare(
+			"SELECT SUM(caucao_levantamento) AS total_levantamento 
+			FROM encomenda
+			WHERE data_entregue = ?"
+		);
+		$stmt->bind_param("s", $data_caucao);
+		
+		$stmt->execute();
+		$result = $stmt->get_result();
+		$row = $result->fetch_assoc();
+		$stmt->close();
 		$levantamento = floatval($row["total_levantamento"]);
-		$total = $caucao + $levantamento;
+		$total = $caucao+$levantamento;
 
         echo json_encode(['caucao'=>$caucao, 'levantamento' => $levantamento, 'total'=>$total]);
         exit();

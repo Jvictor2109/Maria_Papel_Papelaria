@@ -1,6 +1,7 @@
 <?php
 require_once 'vendor/autoload.php';
 session_start();
+
 // Verifica se o arquivo recebido é um pdf
 if($_FILES['pdf_file']['type'] != "application/pdf"){
     $_SESSION['erro'] = "O arquivo enviado não é um PDF";
@@ -8,28 +9,41 @@ if($_FILES['pdf_file']['type'] != "application/pdf"){
     exit();
 }
 
-
-// Extrai o conteúdo do PDF recebido
+$origem = $_POST['origem'] ?? 'email';
 $parser = new \Smalot\PdfParser\Parser();
 $pdf = $parser->parseFile($_FILES["pdf_file"]["tmp_name"]);
-$pageData = $pdf->getPages();
-$pageData = $pageData[0]->getDataTm();
 
 
-// Identificar os limites inferiores e superiores da tabela
-// Redirecionar com erro caso não tenha tabela
-$limitesTabela = limitesTabela($pageData);
-if(empty($limitesTabela)){
-    $_SESSION['erro'] = "Tabela não encontrada";
-    header("Location: expedicao_vasp.php");
-    exit();
+if($origem == 'email'){
+    $pageData = $pdf->getPages();
+    $pageData = $pageData[0]->getDataTm();
+
+    // Identificar os limites inferiores e superiores da tabela
+    // Redirecionar com erro caso não tenha tabela
+    $limitesTabela = limitesTabela($pageData);
+    if(empty($limitesTabela)){
+        $_SESSION['erro'] = "Tabela não encontrada";
+        header("Location: expedicao_vasp.php");
+        exit();
+    }
+
+    // Extrair a tabela do resto do PDF
+    $tabela = extrairTabela($pageData, $limitesTabela);
+
+    // Extrair os dados da tabela
+    $dados = extrairDados($tabela);
+} else {
+    // Da Plataforma
+    $tabelaPorData = extrairTabelaPlataforma($pdf);
+    
+    if(empty($tabelaPorData)){
+        $_SESSION['erro'] = "Tabela não encontrada na Plataforma";
+        header("Location: expedicao_vasp.php");
+        exit();
+    }
+    
+    $dados = extrairDadosPlataforma($tabelaPorData);
 }
-
-// Extrair a tabela do resto do PDF
-$tabela = extrairTabela($pageData, $limitesTabela);
-
-// Extrair os dados da tabela
-$dados = extrairDados($tabela);
 
 // Retorna a tabela pela sessão
 $_SESSION['dados'] = $dados;
@@ -38,7 +52,7 @@ header("Location: expedicao_vasp.php");
 exit();
 
 
-function extrairDados($tabela){
+function extrairDados($tabela, $data_distribuicao = ''){
     $dados = [];
     $i = 1; // Identificador unico de cada item
     // Percorre cada linha da tabela
@@ -56,45 +70,62 @@ function extrairDados($tabela){
         $ean = "";
         $artigo = "";
         $preco = 0;
+        $preco_com_iva = 0;
         $descricao = "";
         $pvp = 0;
+        $pvp_sIva = 0;
         $quantidade = 0;
-
 
         // verifica cada elemento da linha e extrai os dados necessários
         foreach($linha as $elemento){
             $x = floatval($elemento['x']);
-            switch($x){
-                case $x > 30 && $x < 40:
-                    $artigo = $elemento['conteudo'];
-                    break;
+            
+            if ($x >= 25 && $x < 60) {
+                $artigo = trim($elemento['conteudo']);
+            }
+            else if ($x >= 60 && $x < 230) {
+                // Caso a descrição venha partida em 2 blocos, concatenamos
+                $descricao .= " " . trim($elemento['conteudo']);
+                $descricao = trim($descricao);
+            }
+            else if ($x >= 230 && $x < 290) {
+                // Preço Custo
+                $clean_val = str_replace(['€', ' '], '', $elemento['conteudo']);
+                $val = floatval(str_replace(",", ".", $clean_val));
                 
-                case $x == 81.338:
-                    $descricao = $elemento['conteudo'];
-                    break;
-
-                case $x > 260 && $x < 266:
-                    $preco_com_iva = floatval(str_replace(",", ".", $elemento['conteudo']));
-                    $preco = number_format($preco_com_iva/(1+$iva),2);
-                    break;
+                if (is_numeric(str_replace(",", ".", $clean_val))) {
+                    $preco_com_iva = $val;
+                    $preco = number_format($preco_com_iva/(1+$iva), 5, '.', '');
+                }
+            }
+            else if ($x >= 290 && $x < 340) {
+                // PVP
+                $clean_val = str_replace(['€', ' '], '', $elemento['conteudo']);
+                $val = floatval(str_replace(",", ".", $clean_val));
                 
-                case $x > 305 && $x < 311:
-                    $pvp = floatval(str_replace(",", ".", $elemento['conteudo']));
-                    $pvp_sIva = number_format($pvp/(1+$iva), 2);
-                    break;
-
-                case $x == 424.347:
-                    $ean = $elemento['conteudo'];
-                    break;
-                
-                case $x > 540 && $x < 555:
-                    $quantidade = (int) $elemento['conteudo'];
-                    break;
-                
-                default:
-                    break; 
+                if (is_numeric(str_replace(",", ".", $clean_val))) {
+                    $pvp = $val;
+                    $pvp_sIva = number_format($pvp/(1+$iva), 5, '.', '');
+                }
+            }
+            else if ($x >= 400 && $x < 460) {
+                // EAN
+                $clean_val = trim($elemento['conteudo']);
+                if(is_numeric($clean_val) && strlen($clean_val) > 5) {
+                    $ean = $clean_val;
+                }
+            }
+            else if ($x >= 520 && $x < 590) {
+                // Quantidade
+                $val = (int) trim($elemento['conteudo']);
+                if ($val > 0) {
+                    $quantidade = $val;
+                }
             }
         }
+        
+        // Ignorar se a linha não teve um artigo válido extraído (linha em branco/lixo)
+        if(empty($artigo)) continue;
         
         $dados["{$i}"] = ['artigo'=>$artigo,
                     'iva'=> $iva,
@@ -110,11 +141,116 @@ function extrairDados($tabela){
                     'tipo_artigo'=>$tipo_artigo,
                     'inventario_existencia'=>$inventario_existencia,
                     'un_medida'=>$un_medida,
-                    'fornecedor'=>$fornecedor
+                    'fornecedor'=>$fornecedor,
+                    'data_distribuicao' => $data_distribuicao
                 ];
         $i++;
     }
 
+    return $dados;
+}
+
+function extrairTabelaPlataforma($pdf){
+    $tabela_por_data = [];
+    $lendo_tabela = false;
+    $data_atual = "";
+    
+    $pages = $pdf->getPages();
+    foreach($pages as $page){
+        $pageData = $page->getDataTm();
+        
+        $linhas_da_pagina = [];
+        $ultimo_y = 0;
+        
+        // 1. Agrupar os elementos pela coordenada Y (linha)
+        foreach($pageData as $elemento){
+            $y = (float) $elemento[0][5];
+            $x = $elemento[0][4];
+            $conteudo = $elemento[1];
+
+            // Juntar textos com quebra de linha
+            if($ultimo_y - $y < 9 && $ultimo_y != 0 && $ultimo_y - $y > 0){
+                foreach($linhas_da_pagina[(string)$ultimo_y] as &$linha_el){
+                    if($linha_el['x'] == $x){
+                        $linha_el['conteudo'] .= $conteudo;
+                    }
+                }
+                continue;
+            }
+            
+            $y_str = (string)$y;
+            if(!isset($linhas_da_pagina[$y_str])){
+                $linhas_da_pagina[$y_str] = [];
+            }
+            $linhas_da_pagina[$y_str][] = ['x'=>$x, 'conteudo'=>$conteudo];
+            $ultimo_y = $y;
+        }
+
+        // 2. Analisar linha a linha
+        foreach($linhas_da_pagina as $y_str => $elementos){
+            // Criar uma string de texto corrido para verificar a linha toda
+            $linha_texto_completo = "";
+            foreach($elementos as $el){
+                $linha_texto_completo .= trim($el['conteudo']) . " ";
+            }
+            $linha_texto_completo = trim($linha_texto_completo);
+
+            if(str_contains($linha_texto_completo, "Totais por Artigo:")){
+                $lendo_tabela = true;
+                continue;
+            }
+            
+            if(str_contains($linha_texto_completo, "Detalhe por Guia:")){
+                $lendo_tabela = false;
+                break 2; // Para completamente a pesquisa em todas as páginas
+            }
+            
+            if($lendo_tabela){
+                if(str_contains($linha_texto_completo, "Data Distribuição:")){
+                    // Extrair a data (o que estiver à frente dos dois pontos)
+                    $partes = explode("Data Distribuição:", $linha_texto_completo);
+                    $data_bruta = trim($partes[1]);
+                    // Garantir que apanhamos só a data (YYYY-MM-DD)
+                    $tokens = explode(" ", $data_bruta);
+                    $data_atual = trim($tokens[0]);
+                    continue;
+                }
+                
+                // Ignorar cabeçalhos de tabela
+                if(str_contains($linha_texto_completo, "Artigo") && str_contains($linha_texto_completo, "Descrição")){
+                    continue;
+                }
+                
+                // Ignorar rodapés de página (Impressão: Data Hora)
+                if(str_contains($linha_texto_completo, "Impressão:")){
+                    continue;
+                }
+
+                if($data_atual != ""){
+                    if(!isset($tabela_por_data[$data_atual])){
+                        $tabela_por_data[$data_atual] = [];
+                    }
+                    $tabela_por_data[$data_atual][] = $elementos;
+                }
+            }
+        }
+    }
+
+    return $tabela_por_data;
+}
+
+
+function extrairDadosPlataforma($tabelaPorData){
+    $dados = [];
+    $idGeral = 1; 
+    foreach($tabelaPorData as $data_dist => $linhas){
+        // Usar a mesma função extrairDados, que devolve as linhas com id sequencial
+        $dadosData = extrairDados($linhas, $data_dist);
+        foreach($dadosData as $artigoObj){
+            $dados[$idGeral] = $artigoObj;
+            $idGeral++;
+        }
+    }
     return $dados;
 }
 
@@ -126,7 +262,9 @@ function extrairTabela($pageData, $limitesTabela){
     foreach($pageData as $elemento){
         $y = (float) $elemento[0][5];
 
-        if($y <= $limitesTabela['comeco'] && $y >= $limitesTabela['fim']){
+        $limiteFim = $limitesTabela['fim'] ?? 0;
+        
+        if($y <= $limitesTabela['comeco'] && $y >= $limiteFim){
             
             $x = $elemento[0][4];
             $conteudo = $elemento[1];

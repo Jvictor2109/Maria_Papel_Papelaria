@@ -4,9 +4,18 @@ function exportarExcel(){
 
     // Itera sobre cada linha e salva as informações de iva e de manter o item
     for(let i = 1; i < tabela.rows.length; i++){
-        let id = parseInt(tabela.rows[i].cells[0].dataset.id);
-        let manter = tabela.rows[i].cells[8].querySelector('input').checked;
-        let iva = tabela.rows[i].cells[7].querySelector('select').value;
+        let row = tabela.rows[i];
+        if(!row.classList.contains('linha-artigo')) continue; // Ignorar a linha de filtros, se existir
+
+        let id = parseInt(row.cells[0].dataset.id);
+        let manter = row.cells[8].querySelector('input').checked;
+        
+        // Se a linha estiver escondida pelo filtro, não vamos exportá-la
+        if (row.style.display === 'none') {
+            manter = false;
+        }
+
+        let iva = row.cells[7].querySelector('select').value;
         iva = parseFloat(iva);
         
         // Adicionar as alterações no objeto
@@ -47,4 +56,25 @@ function alterarIva(select, preco){
     
     preco_custo_com_iva.innerText = (preco_custo/(1+iva)).toFixed(2)+"€";
     preco_sIva.innerText = (preco_bruto/(1+iva)).toFixed(2)+"€";    
+}
+
+function filtrarPorData() {
+    let checkboxes = document.querySelectorAll('.filtro-data');
+    let datasSelecionadas = [];
+    
+    checkboxes.forEach(cb => {
+        if(cb.checked) {
+            datasSelecionadas.push(cb.value);
+        }
+    });
+
+    let linhas = document.querySelectorAll('.linha-artigo');
+    linhas.forEach(linha => {
+        let dataLinha = linha.dataset.data_distribuicao;
+        if(dataLinha == '' || datasSelecionadas.includes(dataLinha)){
+            linha.style.display = '';
+        } else {
+            linha.style.display = 'none';
+        }
+    });
 }

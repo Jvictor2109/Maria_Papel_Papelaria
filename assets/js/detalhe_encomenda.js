@@ -28,6 +28,48 @@ if(btnObs){
 }
 
 
+// Botao de concluir
+const btnConcluir = document.getElementById('btnConcluir');
+if(btnConcluir){
+    btnConcluir.addEventListener('click', ()=>{
+        document.getElementById('modalConcluir').style.display = "flex";
+    });
+}
+
+// Fechar modal de concluir
+const btnFecharConcluir = document.getElementById('fecharConcluir');
+if(btnFecharConcluir){
+    btnFecharConcluir.addEventListener('click', ()=>{
+        document.getElementById('modalConcluir').style.display = "none";
+    });
+}
+
+// Confirmar concluir
+const btnConfirmarConcluir = document.getElementById('confirmarConcluir');
+if(btnConfirmarConcluir){
+    btnConfirmarConcluir.addEventListener('click', async function (){
+        const response = await fetch('detalhe_encomenda.php', {
+            method:"post",
+            headers:{ 'Content-Type': 'application/json' },
+            body:JSON.stringify({
+                "acao":"concluir_encomenda",
+                "id_encomenda":btnConfirmarConcluir.dataset.id_encomenda
+            })
+        })
+
+        const data = await response.json();
+
+        if(data["resultado"] == "sucesso"){
+            alert(data["msg"]);
+            location.reload();
+        }
+        else{
+            alert(data["msg"]);
+            location.reload();
+        }
+    });
+}
+
 // Botao de entregar
 const btnEntregar = document.getElementById('btnEntregar');
 if(btnEntregar){

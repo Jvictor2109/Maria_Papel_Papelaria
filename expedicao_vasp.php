@@ -54,7 +54,13 @@ else{
 											<form method="post" action="extrairTabela.php" enctype="multipart/form-data">
 												<div class="row gtr-uniform">
 													<div class="col-6 col-12-xsmall">
-														<input type="file" name="pdf_file" id="pdf_file"/>
+														<input type="file" name="pdf_file" id="pdf_file" required/>
+													</div>
+													<div class="col-12">
+														<input type="radio" id="origem_email" name="origem" value="email" checked>
+														<label for="origem_email">Por E-mail</label>
+														<input type="radio" id="origem_plataforma" name="origem" value="plataforma">
+														<label for="origem_plataforma">Da Plataforma</label>
 													</div>
 													<div class="col-12">
 														<input type="submit" value="Enviar PDF" class="primary" />
@@ -73,6 +79,26 @@ else{
 
 											<!-- Tabela mostrando os artigos extraídos -->
 											<h4>Artigos encontrados</h4>
+											<?php
+											if(isset($_SESSION['dados'])){
+												$dados = $_SESSION['dados'];
+												$datas = [];
+												foreach($dados as $artigo){
+													if(!empty($artigo['data_distribuicao']) && !in_array($artigo['data_distribuicao'], $datas)){
+														$datas[] = $artigo['data_distribuicao'];
+													}
+												}
+												
+												if(!empty($datas)){
+													echo '<div style="margin-bottom: 20px;">';
+													foreach($datas as $dt){
+														echo '<input type="checkbox" id="check_'.$dt.'" value="'.$dt.'" class="filtro-data" checked onchange="filtrarPorData()">';
+														echo '<label for="check_'.$dt.'" style="margin-right: 15px;">'.$dt.'</label> ';
+													}
+													echo '</div>';
+												}
+											}
+											?>
 											<div class="table-wrapper">
 												<table class="alt" id="tabela">
 													<thead>
@@ -92,9 +118,12 @@ else{
 														<?php 
 														if(isset($_SESSION['dados'])){
 															$dados = $_SESSION['dados'];
+															
 															$i = 0;
-															foreach($dados as $id => $artigo){?>
-															<tr>
+															foreach($dados as $id => $artigo){
+																$data_dist = isset($artigo['data_distribuicao']) ? $artigo['data_distribuicao'] : '';
+															?>
+															<tr class="linha-artigo" data-data_distribuicao="<?= $data_dist ?>">
 																<td data-id="<?= $id ?>"><?= $artigo['artigo'] ?></td>
 																<td><?= $artigo['descricao'] ?></td>
 																<td data-precocomiva="<?= $artigo['preco_com_iva'] ?>" id="preco_com_iva_<?= $i ?>"><?= $artigo['preco'] ?>€</td>

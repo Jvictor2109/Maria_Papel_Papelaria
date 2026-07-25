@@ -40,7 +40,7 @@ function filtrar_nome_aluno(mysqli $conn, array $request){
     $stmt = $conn->prepare(
         "SELECT encomenda.* , ano_escolar.nome_ano_escolar FROM encomenda
         JOIN ano_escolar ON encomenda.id_ano_encomenda = ano_escolar.id_ano_escolar
-        WHERE nome_aluno_encomenda LIKE ?
+        WHERE nome_aluno_encomenda LIKE CONCAT('%', REPLACE(?, ' ', '%'), '%')
         ORDER BY nome_ano_escolar ASC"
     );
     $stmt->bind_param("s", $nome_aluno);

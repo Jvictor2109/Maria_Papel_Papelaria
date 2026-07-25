@@ -2,8 +2,11 @@
 // Verificação de sessão em todas as páginas protegidas
 session_start();
 include('db_connect.php');
+ini_set('display_errors', '0');
 
 if($_SERVER["REQUEST_METHOD"] == "POST"){
+	header('Content-Type: application/json');
+	if(ob_get_length()) ob_clean();
 	$request = json_decode(file_get_contents('php://input'),true);
 	$data = date("Y-m-d H:i:s");
 
@@ -23,6 +26,9 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
             }
             exit();
         
+        case "concluir_encomenda":
+            concluir_encomenda($conn, $request);
+            exit();
         case "entregar_encomenda":
             entregar_encomenda($conn, $request);
             exit();
@@ -32,10 +38,50 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
     }
 }
 
+function concluir_encomenda(mysqli $conn, array $request){
+    $id_encomenda = $request["id_encomenda"];
+    $data = date("Y-m-d");
+
+    $conn->begin_transaction();
+    try{
+        // Marcar a encomenda como concluida
+        $stmt_concluida = $conn->prepare(
+            "UPDATE encomenda 
+            SET estado_encomenda = 'concluida', id_concluida = ?, data_concluida = ?
+            WHERE id_encomenda = ?"
+        );
+        $stmt_concluida->bind_param("isi", $_SESSION["user_id"], $data, $id_encomenda);
+        $stmt_concluida->execute();
+    
+        // Adicionar observação
+        $stmt_obs = $conn->prepare(
+            "INSERT INTO observacao_encomenda (id_encomenda, observacao_encomenda, data_observacao, id_utilizador)
+            VALUES (?,?,?,?)"
+        );
+        $data_obs = date("Y-m-d H:i:s");
+        $obs = "MPP3: A encomenda passou ao estado de concluída.";
+        $stmt_obs->bind_param("issi", $id_encomenda, $obs, $data_obs, $_SESSION["user_id"]);
+        $stmt_obs->execute();
+
+        $stmt_obs->close();
+        $stmt_concluida->close();
+        $conn->commit();
+    }
+    catch(Exception $e){
+        $conn->rollback();
+        echo json_encode(['resultado'=>'erro', 'msg'=>$e->getMessage()]);
+        return;
+    }
+
+    echo json_encode(['resultado'=>'sucesso', 'msg'=>'Encomenda concluída com sucesso!']);
+    return;
+}
+
 function entregar_encomenda(mysqli $conn, array $request){
     $id_encomenda = $request["id_encomenda"];
     $data = date("Y-m-d");
     $caucao_levantamento = floatval($request["caucaoLevantamento"]);
+    $data = date("Y-m-d");
 
     $conn->begin_transaction();
     try{
@@ -47,7 +93,7 @@ function entregar_encomenda(mysqli $conn, array $request){
             SET estado_encomenda = 'entregue', id_entregue = ?, data_entregue = ?, caucao_levantamento = ?
             WHERE id_encomenda = ?"
         );
-        $stmt_entregue->bind_param("isdi", $_SESSION["user_id"], $data, $caucao_levantamento, $id_encomenda);
+        $stmt_entregue->bind_param("isdi", $_SESSION["user_id"], $data, $caucao_levantamento,$id_encomenda);
         $stmt_entregue->execute();
     
         // Adicionar observação
@@ -67,7 +113,7 @@ function entregar_encomenda(mysqli $conn, array $request){
     }
     catch(Exception $e){
         $conn->rollback();
-        echo json_encode(['resultado'=>'erro', 'msg'=>$e]);
+        echo json_encode(['resultado'=>'erro', 'msg'=>$e->getMessage()]);
         return;
     }
 
@@ -127,7 +173,7 @@ function cancelar_encomenda(mysqli $conn, array $request){
     }
     catch(Exception $e){
         $conn->rollback();
-        echo json_encode(['resultado'=>'erro', 'msg'=>$e]);
+        echo json_encode(['resultado'=>'erro', 'msg'=>$e->getMessage()]);
         return;
     }
 
@@ -274,6 +320,7 @@ function cancelar_encomenda(mysqli $conn, array $request){
                                     $cores_estados = [
                                         'registada'=>'darkred',
                                         'pedida'=>'orange',
+                                        'separada'=>'teal',
                                         'concluida'=>'goldenrod',
                                         'entregue'=>'green',
                                         'cancelada'=>'red'
@@ -284,9 +331,11 @@ function cancelar_encomenda(mysqli $conn, array $request){
                                 <div class="col-4 col-12-small" style="margin-bottom: 10px;">
                                     <?php
                                     $estado_encomenda = $encomenda["estado_encomenda"];
-                                    if($estado_encomenda == "concluida" && $estado_encomenda != "cancelada") {?>
+                                    if($estado_encomenda == "separada") {?>
+                                        <button class="primary small" id="btnConcluir">Concluir encomenda</button>
+                                    <?php }
+                                    if($estado_encomenda == "concluida") {?>
                                         <button class="primary small" id="btnEntregar">Marcar como entregue</button>
-
                                     <?php }
                                      ?>
                                 </div>
@@ -310,7 +359,7 @@ function cancelar_encomenda(mysqli $conn, array $request){
                                 </div>
                                 <div class="col-4 co-12-small">
                                     <?php 
-                                    if($encomenda["estado_encomenda"] == "concluida" && !empty($encomenda["email_encomenda"])){?>
+                                    if(($encomenda["estado_encomenda"] == "concluida" || $encomenda["estado_encomenda"] == "separada") && !empty($encomenda["email_encomenda"])){?>
                                         <button class="primary small" data-id_encomenda="<?= $encomenda["id_encomenda"] ?>" id="btnNovoAviso">Novo aviso</button>
                                     <?php }
                                     ?>
@@ -487,6 +536,20 @@ function cancelar_encomenda(mysqli $conn, array $request){
                                     <p>Tem a certeza de que quer cancelar a encomenda??</p>
                                     <button id="confirmarCancelar" class="primary" data-id_encomenda="<?= $encomenda["id_encomenda"] ?>">Sim</button>
                                     <button id="fecharCancelar">Não</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Modal concluir encomenda -->
+                        <div id="modalConcluir" class="modal-overlay" style="display: none;">
+                            <div class="box modal-content">
+                                <span id="close-modal-concluir" class="modal-close">&times;</span>
+                                <h3>Concluir encomenda</h3>
+
+                                <div>
+                                    <p><strong>Tem a certeza de que quer concluir a encomenda?</strong></p>
+                                    <button id="confirmarConcluir" class="primary" data-id_encomenda="<?= $encomenda["id_encomenda"] ?>">Sim</button>
+                                    <button id="fecharConcluir">Não</button>
                                 </div>
                             </div>
                         </div>

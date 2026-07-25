@@ -153,10 +153,12 @@ CREATE TABLE `encomenda` (
   `valor_caucao` decimal(10,2) DEFAULT 0.00,
   `id_utilizador` int(11) NOT NULL,
   `doc_encomenda` text DEFAULT NULL,
-  `estado_encomenda` enum('registada','pedida','concluida','entregue','cancelada') NOT NULL DEFAULT 'registada',
+  `estado_encomenda` enum('registada','pedida','separada','concluida','entregue','cancelada') NOT NULL DEFAULT 'registada',
   `data_pedido` date DEFAULT NULL,
   `data_concluida` date DEFAULT NULL,
   `id_concluida` int(11) DEFAULT NULL,
+  `data_separada` date DEFAULT NULL,
+  `id_separada` int(11) DEFAULT NULL,
   `data_entregue` date DEFAULT NULL,
   `id_entregue` int(11) DEFAULT NULL,
   `codigo_mega` varchar(255) DEFAULT NULL,
@@ -172,9 +174,9 @@ CREATE TABLE `encomenda` (
 -- Extraindo dados da tabela `encomenda`
 --
 
-INSERT INTO `encomenda` (`id_encomenda`, `data_encomenda`, `nome_aluno_encomenda`, `nif_encomenda`, `ee_encomenda`, `telefone_encomenda`, `email_encomenda`, `num_encomenda`, `plast_manuais`, `plast_livro_fichas`, `etiquetas`, `obs_etiquetas`, `total_encomenda`, `valor_caucao`, `id_utilizador`, `doc_encomenda`, `estado_encomenda`, `data_pedido`, `data_concluida`, `id_concluida`, `data_entregue`, `id_entregue`, `codigo_mega`, `id_ano_encomenda`, `data_cancelado`, `id_cancelado`, `avisado`, `id_avisado`, `data_aviso`) VALUES
-(1, '2026-06-26', 'joao', '', 'libna', '', 'joaobrasil2109@gmail.com', 3001, 0, 0, 0, NULL, '12.23', '0.00', 9, '/MPP_3/encomendas/3 ANO/encomenda_3001.pdf', 'entregue', '2026-06-26', '2026-06-26', 9, NULL, NULL, '', 10, NULL, NULL, 1, 9, '2026-06-26 17:23:28'),
-(2, '2026-06-29', 'joao', '', 'libna', '928396756', '', 1001, 0, 0, 0, NULL, '66.84', '0.00', 9, '/MPP_3/encomendas/1ANO/encomenda_1001.pdf', 'entregue', NULL, '2026-06-29', 9, '2026-06-29', 9, '', 4, NULL, NULL, 1, 9, '2026-06-29 13:22:56');
+INSERT INTO `encomenda` (`id_encomenda`, `data_encomenda`, `nome_aluno_encomenda`, `nif_encomenda`, `ee_encomenda`, `telefone_encomenda`, `email_encomenda`, `num_encomenda`, `plast_manuais`, `plast_livro_fichas`, `etiquetas`, `obs_etiquetas`, `total_encomenda`, `valor_caucao`, `id_utilizador`, `doc_encomenda`, `estado_encomenda`, `data_pedido`, `data_concluida`, `id_concluida`, `data_separado`, `id_separado`, `data_entregue`, `id_entregue`, `codigo_mega`, `id_ano_encomenda`, `data_cancelado`, `id_cancelado`, `avisado`, `id_avisado`, `data_aviso`) VALUES
+(1, '2026-06-26', 'joao', '', 'libna', '', 'joaobrasil2109@gmail.com', 3001, 0, 0, 0, NULL, '12.23', '0.00', 9, '/MPP_3/encomendas/3 ANO/encomenda_3001.pdf', 'entregue', '2026-06-26', '2026-06-26', 9, NULL, NULL, NULL, NULL, '', 10, NULL, NULL, 1, 9, '2026-06-26 17:23:28'),
+(2, '2026-06-29', 'joao', '', 'libna', '928396756', '', 1001, 0, 0, 0, NULL, '66.84', '0.00', 9, '/MPP_3/encomendas/1ANO/encomenda_1001.pdf', 'entregue', NULL, '2026-06-29', 9, NULL, NULL, '2026-06-29', 9, '', 4, NULL, NULL, 1, 9, '2026-06-29 13:22:56');
 
 -- --------------------------------------------------------
 
@@ -470,7 +472,8 @@ ALTER TABLE `encomenda`
   ADD KEY `fk_encomenda_entregue` (`id_entregue`),
   ADD KEY `fk_ano_escolar_encomenda` (`id_ano_encomenda`),
   ADD KEY `fk_user_cancelado` (`id_cancelado`),
-  ADD KEY `fk_id_avisado` (`id_avisado`);
+  ADD KEY `fk_id_avisado` (`id_avisado`),
+  ADD KEY `fk_encomenda_separada` (`id_separada`);
 
 --
 -- Índices para tabela `encomenda_editora`
@@ -618,7 +621,8 @@ ALTER TABLE `encomenda`
   ADD CONSTRAINT `fk_encomenda_entregue` FOREIGN KEY (`id_entregue`) REFERENCES `utilizador` (`id_utilizador`),
   ADD CONSTRAINT `fk_encomenda_utilizador` FOREIGN KEY (`id_utilizador`) REFERENCES `utilizador` (`id_utilizador`),
   ADD CONSTRAINT `fk_id_avisado` FOREIGN KEY (`id_avisado`) REFERENCES `utilizador` (`id_utilizador`),
-  ADD CONSTRAINT `fk_user_cancelado` FOREIGN KEY (`id_cancelado`) REFERENCES `utilizador` (`id_utilizador`);
+  ADD CONSTRAINT `fk_user_cancelado` FOREIGN KEY (`id_cancelado`) REFERENCES `utilizador` (`id_utilizador`),
+  ADD CONSTRAINT `fk_encomenda_separada` FOREIGN KEY (`id_separada`) REFERENCES `utilizador` (`id_utilizador`);
 
 --
 -- Limitadores para a tabela `encomenda_editora`

@@ -28,7 +28,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 "SELECT estado_encomenda, COUNT(*) AS quantidade
                  FROM encomenda
                  GROUP BY estado_encomenda
-                 ORDER BY FIELD(estado_encomenda, 'registada', 'pedida', 'concluida', 'entregue', 'cancelada')"
+                 ORDER BY FIELD(estado_encomenda, 'registada', 'separada', 'pedida', 'concluida', 'entregue', 'cancelada')"
             );
             $stmt->execute();
             $result = $stmt->get_result();
