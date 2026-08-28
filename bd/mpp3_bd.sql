@@ -174,7 +174,7 @@ CREATE TABLE `encomenda` (
 -- Extraindo dados da tabela `encomenda`
 --
 
-INSERT INTO `encomenda` (`id_encomenda`, `data_encomenda`, `nome_aluno_encomenda`, `nif_encomenda`, `ee_encomenda`, `telefone_encomenda`, `email_encomenda`, `num_encomenda`, `plast_manuais`, `plast_livro_fichas`, `etiquetas`, `obs_etiquetas`, `total_encomenda`, `valor_caucao`, `id_utilizador`, `doc_encomenda`, `estado_encomenda`, `data_pedido`, `data_concluida`, `id_concluida`, `data_separado`, `id_separado`, `data_entregue`, `id_entregue`, `codigo_mega`, `id_ano_encomenda`, `data_cancelado`, `id_cancelado`, `avisado`, `id_avisado`, `data_aviso`) VALUES
+INSERT INTO `encomenda` (`id_encomenda`, `data_encomenda`, `nome_aluno_encomenda`, `nif_encomenda`, `ee_encomenda`, `telefone_encomenda`, `email_encomenda`, `num_encomenda`, `plast_manuais`, `plast_livro_fichas`, `etiquetas`, `obs_etiquetas`, `total_encomenda`, `valor_caucao`, `id_utilizador`, `doc_encomenda`, `estado_encomenda`, `data_pedido`, `data_concluida`, `id_concluida`, `data_separada`, `id_separada`, `data_entregue`, `id_entregue`, `codigo_mega`, `id_ano_encomenda`, `data_cancelado`, `id_cancelado`, `avisado`, `id_avisado`, `data_aviso`) VALUES
 (1, '2026-06-26', 'joao', '', 'libna', '', 'joaobrasil2109@gmail.com', 3001, 0, 0, 0, NULL, '12.23', '0.00', 9, '/MPP_3/encomendas/3 ANO/encomenda_3001.pdf', 'entregue', '2026-06-26', '2026-06-26', 9, NULL, NULL, NULL, NULL, '', 10, NULL, NULL, 1, 9, '2026-06-26 17:23:28'),
 (2, '2026-06-29', 'joao', '', 'libna', '928396756', '', 1001, 0, 0, 0, NULL, '66.84', '0.00', 9, '/MPP_3/encomendas/1ANO/encomenda_1001.pdf', 'entregue', NULL, '2026-06-29', 9, NULL, NULL, '2026-06-29', 9, '', 4, NULL, NULL, 1, 9, '2026-06-29 13:22:56');
 

@@ -567,7 +567,7 @@ function getIdEncomenda(mysqli $conn, array $request){
 
 									<div class="filtro-grupo">
 										<label for="filtroAgrupamento">Agrupamento: </label>
-										<select id="filtroAgrupamento">
+										<select id="filtroAgrupamento" class="filtros_manuais">
 											<option value="" selected>Selecionar agrupamento</option>
 											<?php 
 											$sql = "SELECT * FROM agrupamento";
@@ -582,7 +582,7 @@ function getIdEncomenda(mysqli $conn, array $request){
 									
 									<div class="filtro-grupo">
 										<label for="filtroAnoEscolar">Ano Escolar: </label>
-										<select id="filtroAnoEscolar">
+										<select id="filtroAnoEscolar" class="filtros_manuais">
 											<option value="" selected>Selecionar ano escolar</option>
 											<?php 
 											$sql = "SELECT * FROM ano_escolar";
@@ -597,7 +597,7 @@ function getIdEncomenda(mysqli $conn, array $request){
 
 									<div class="filtro-grupo">
 										<label for="filtroTipoManual">Tipo de manual: </label>
-										<select id="filtroTipoManual">
+										<select id="filtroTipoManual" class="filtros_manuais">
 											<option value="" selected>Selecionar tipo de manual</option>
 											<option value="Manual">Manual</option>
 											<option value="Livro de Fichas">Livro de fichas</option>

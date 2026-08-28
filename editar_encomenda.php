@@ -243,7 +243,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                                     
                                     <?php
                                     if($obs_automatica){?>
-                                        <dd><strong><?= $obs["observacao_encomenda"] ?></strong></dd>
+                                        <dd><strong style="color: green;"><?= $obs["observacao_encomenda"] ?></strong></dd>
                                         <?php 
                                     }
                                     else{?>

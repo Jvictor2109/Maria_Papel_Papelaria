@@ -1,24 +1,32 @@
 let manuais = [];
 
-// Botão de filtrar
-const btnFiltrar = document.getElementById('btnFiltrar');
-btnFiltrar.addEventListener('click', async ()=>{
-    // Verifica se pelo menos uma combobox está preenchida
-    const agrupamento = document.getElementById('filtroAgrupamento').value;
-    if(!agrupamento){
-        mostrarMsg("red", "Selecione um agrupamento", "erroFiltrar");
-        return;
-    }
-    const ano_escolar = document.getElementById('filtroAnoEscolar').value;
-    if(!ano_escolar){
-        mostrarMsg("red", "Selecione um ano escolar", "erroFiltrar");
-        return;
-    }
-    const tipo_manual = document.getElementById('filtroTipoManual').value;
+// Filtra a cada alteracao nos comboboxes
+const filtros_manuais = document.querySelectorAll(".filtros_manuais");
 
-    manuais = await filtrarManuais(agrupamento, ano_escolar, tipo_manual);
-    renderTabela(manuais);
+filtros_manuais.forEach(filtro =>{    
+    filtro.addEventListener('change', async ()=>{
+        console.log("mudou");
+        
+        // Verifica se pelo menos uma combobox está preenchida
+        const agrupamento = document.getElementById('filtroAgrupamento').value;
+        // if(!agrupamento){
+        //     mostrarMsg("red", "Selecione um agrupamento", "erroFiltrar");
+        //     return;
+        // }
+        const ano_escolar = document.getElementById('filtroAnoEscolar').value;
+        // if(!ano_escolar){
+        //     mostrarMsg("red", "Selecione um ano escolar", "erroFiltrar");
+        //     return;
+        // }
+        const tipo_manual = document.getElementById('filtroTipoManual').value;
+    
+        manuais = await filtrarManuais(agrupamento, ano_escolar, tipo_manual);
+        renderTabela(manuais);
+    })
+
 })
+
+
 
 // Selecionadores da tabela (campos selecionar e voucher)
 const selecionarAll = document.getElementById('selecionarAll');
