@@ -9,15 +9,15 @@ filtros_manuais.forEach(filtro =>{
         
         // Verifica se pelo menos uma combobox está preenchida
         const agrupamento = document.getElementById('filtroAgrupamento').value;
-        // if(!agrupamento){
-        //     mostrarMsg("red", "Selecione um agrupamento", "erroFiltrar");
-        //     return;
-        // }
+        if(!agrupamento){
+            mostrarMsg("red", "Selecione um agrupamento", "erroFiltrar");
+            return;
+        }
         const ano_escolar = document.getElementById('filtroAnoEscolar').value;
-        // if(!ano_escolar){
-        //     mostrarMsg("red", "Selecione um ano escolar", "erroFiltrar");
-        //     return;
-        // }
+        if(!ano_escolar){
+            mostrarMsg("red", "Selecione um ano escolar", "erroFiltrar");
+            return;
+        }
         const tipo_manual = document.getElementById('filtroTipoManual').value;
     
         manuais = await filtrarManuais(agrupamento, ano_escolar, tipo_manual);
@@ -151,7 +151,6 @@ btnEncomendar.addEventListener('click', async function (){
     // Popular o modal com as informações
 
     const id_encomenda = await getIdEncomenda();
-    document.getElementById('idEncomenda').innerText = id_encomenda;
 
     const agrupamentos = document.getElementById('filtroAgrupamento');
     const agrupamento = agrupamentos.selectedOptions[0].text;

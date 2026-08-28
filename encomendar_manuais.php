@@ -374,7 +374,7 @@ function getIdEncomenda(mysqli $conn, array $request){
 	$stmt->execute();
 	$resultado = $stmt->get_result();
 	$resultado = $resultado->fetch_assoc();
-	return $resultado["encomendas_ano"] +1;
+	return ($resultado["encomendas_ano"] ?? 0) +1;
 }
 
 ?>
@@ -419,8 +419,6 @@ function getIdEncomenda(mysqli $conn, array $request){
 								<div id="confirmar-content">
 									<!-- Informações da encomenda -->
 									<div class="box">
-										<h4>Encomenda Nº<span id="idEncomenda"></span></h4>
-
 										<div class="row">
 											<div class="col-6">
 												<strong>Agrupamento: </strong>
@@ -603,8 +601,6 @@ function getIdEncomenda(mysqli $conn, array $request){
 											<option value="Livro de Fichas">Livro de fichas</option>
 										</select>
 									</div>
-
-									<button type="submit" id="btnFiltrar" class="small">Filtrar</button>
 								</div>
 							</div>
 
