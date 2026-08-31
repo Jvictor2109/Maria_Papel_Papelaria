@@ -110,7 +110,7 @@ function adcEncomenda(mysqli $conn, array $request){
 		$stmtAnoEscolar->execute();
 
 		// Adiciona observação na encomenda, dizendo que foi registada.
-		$observacao_registada = "MPP3: A encomenda foi registada.\n" . $obs_encomenda;
+		$observacao_registada = "MPP3: A encomenda foi registada.";
 		$data_registada = date("Y-m-d H:i:s");
 		$stmt_registada = $conn->prepare(
 			"INSERT INTO observacao_encomenda (id_encomenda, observacao_encomenda, data_observacao, id_utilizador)
@@ -118,6 +118,17 @@ function adcEncomenda(mysqli $conn, array $request){
 		);
 		$stmt_registada->bind_param("issi", $id_encomenda, $observacao_registada, $data_registada, $id_utilizador);
 		$stmt_registada->execute();
+		
+		// Se tiver observacao, colocar ela separadamente
+		if(!empty($obs_encomenda)){
+			$stmt_obs = $conn->prepare(
+				"INSERT INTO observacao_encomenda (id_encomenda, observacao_encomenda, data_observacao, id_utilizador)
+				VALUES (?,?,?,?)"
+			);
+			$stmt_obs->bind_param("issi", $id_encomenda, $obs_encomenda, $data_registada, $id_utilizador);
+			$stmt_obs->execute();
+
+		}
 
 		
 		// Cria o pdf e salva o caminho na base de dados
