@@ -28,6 +28,7 @@ btnSalvar.addEventListener('click', async function(){
 
     const data = await response.json();
     alert(data["msg"]);
+    
     location.href = 'tratar_encomendas.php';
 });
 

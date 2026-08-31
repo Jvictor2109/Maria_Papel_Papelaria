@@ -375,6 +375,71 @@ function cancelar_encomenda(mysqli $conn, array $request){
                             </div>
                         </div>
 
+                        <!-- Observações -->
+						<div class="box">
+							<h3>Observações adicionais</h2>
+
+                            <!-- Somente quando tiver registada/pedida que pode se fazer observações -->
+                            <?php 
+                            $estado_encomenda = $encomenda["estado_encomenda"];
+                            if($estado_encomenda != 'entregue' && $estado_encomenda != 'cancelada'){?>
+                                <h4>Adicionar observação</h4>
+                                <div class="row aln-middle">
+                                    <div class="col-4">
+                                        <textarea name="obs" id="obs" data-id_encomenda="<?= $_GET["id"] ?>"></textarea>
+                                    </div>
+                                    <div class="col-4">
+                                        <button id="btnObs" >Adicionar observação</button>
+                                    </div>
+                                    <div class="col-12">
+                                        <p id="msgErro"></p>
+                                    </div>
+                                </div>
+                            <?php }
+                            ?>
+
+							
+							<div class="row" style="margin-top: 10px;">
+								<div class="col-12">
+								<?php 
+									$stmt = $conn->prepare(
+										"SELECT * FROM observacao_encomenda
+										JOIN utilizador ON observacao_encomenda.id_utilizador = utilizador.id_utilizador
+										WHERE id_encomenda = ?
+                                        ORDER BY data_observacao DESC"
+									);
+									$stmt->bind_param("i", $_GET["id"]);
+									$stmt->execute();
+									$result = $stmt->get_result();
+									$rows = $result->fetch_all(MYSQLI_ASSOC);
+
+									foreach($rows as $obs){
+                                        // Verifica se é uma observação automatica
+                                        if(str_starts_with($obs["observacao_encomenda"],"MPP3:")){
+                                            $obs_automatica = true;
+                                        }
+                                        else{
+                                            $obs_automatica = false;
+                                        }
+                                        ?>
+                                        <dl>
+                                            <dt><?= $obs["username"] ?> : <?= $obs["data_observacao"] ?></dt>
+                                            
+                                            <?php
+                                            if($obs_automatica){?>
+                                                <dd><strong style="color: green;"><?= $obs["observacao_encomenda"] ?></strong></dd>
+                                                <?php 
+                                            }
+                                            else{?>
+                                            <dd><strong style="color: red;"><?= $obs["observacao_encomenda"] ?></strong></dd>
+                                            <?php } ?>
+                                        </dl>
+									<?php
+									}
+								?>
+								</div>
+							</div>
+						</div>
                         <!-- Manuais da encomenda -->
                         <div class="box">
                             <?php 
@@ -457,55 +522,7 @@ function cancelar_encomenda(mysqli $conn, array $request){
                             </div>
                         </div>
 
-						<!-- Observações -->
-						<div class="box">
-							<h3>Observações adicionais</h2>
 
-                            <!-- Somente quando tiver registada/pedida que pode se fazer observações -->
-                            <?php 
-                            $estado_encomenda = $encomenda["estado_encomenda"];
-                            if($estado_encomenda != 'entregue' && $estado_encomenda != 'cancelada'){?>
-                                <h4>Adicionar observação</h4>
-                                <div class="row aln-middle">
-                                    <div class="col-4">
-                                        <textarea name="obs" id="obs" data-id_encomenda="<?= $_GET["id"] ?>"></textarea>
-                                    </div>
-                                    <div class="col-4">
-                                        <button id="btnObs" >Adicionar observação</button>
-                                    </div>
-                                    <div class="col-12">
-                                        <p id="msgErro"></p>
-                                    </div>
-                                </div>
-                            <?php }
-                            ?>
-
-							
-							<div class="row" style="margin-top: 10px;">
-								<div class="col-12">
-								<?php 
-									$stmt = $conn->prepare(
-										"SELECT * FROM observacao_encomenda
-										JOIN utilizador ON observacao_encomenda.id_utilizador = utilizador.id_utilizador
-										WHERE id_encomenda = ?
-                                        ORDER BY data_observacao DESC"
-									);
-									$stmt->bind_param("i", $_GET["id"]);
-									$stmt->execute();
-									$result = $stmt->get_result();
-									$rows = $result->fetch_all(MYSQLI_ASSOC);
-
-									foreach($rows as $obs){?>
-										<dl>
-											<dt><?= $obs["username"] ?> : <?= $obs["data_observacao"] ?></dt>
-											<dd><?= $obs["observacao_encomenda"] ?></dd>
-										</dl>
-									<?php
-									}
-								?>
-								</div>
-							</div>
-						</div>
 
                         <!-- Modal confirmar encomenda -->
                         <div id="modalEntregar" class="modal-overlay" style="display: none;">
