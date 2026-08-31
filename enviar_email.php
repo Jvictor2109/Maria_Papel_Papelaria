@@ -20,7 +20,8 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 						Será contactado(a) novamente por este meio, assim que estiver tudo pronto. <br><br>
 						Os melhores cumprimentos, <br>
 						Maria Papel Papelaria";
-            enviar_email($conn, $encomenda, $corpo_email, $caminho);
+			$assunto = "Confirmacao da encomenda N$num_encomenda";
+            enviar_email($conn, $encomenda, $corpo_email, $assunto, $caminho);
 			exit();
 		
 		case "novo_aviso":
@@ -34,15 +35,16 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 			$encomenda = $result->fetch_assoc();
 
 			$num_encomenda = $encomenda["num_encomenda"];
-			$corpo_email = "Pode vir levantar a sua encomenda N$num_encomenda \n <br><br>
+			$corpo_email = "A sua encomenda N$num_encomenda encontra-se pronta para levantamento.\n <br><br>
 							Os melhores cumprimentos, <br>
 							Maria Papel Papelaria";
-			enviar_email($conn, $encomenda, $corpo_email);
+			$assunto = "Levantamento encomenda N$num_encomenda";
+			enviar_email($conn, $encomenda, $corpo_email, $assunto);
 			exit();
     }
 }
 
-function enviar_email(mysqli $conn, array $encomenda, string $corpo_email, string $caminho = null){
+function enviar_email(mysqli $conn, array $encomenda, string $corpo_email, string $assunto, string $caminho = null){
     // Pega as informações necessárias da encomenda
     $nome = $encomenda["nome_aluno_encomenda"];
     $email = $encomenda["email_encomenda"];
@@ -83,7 +85,7 @@ function enviar_email(mysqli $conn, array $encomenda, string $corpo_email, strin
 
 		// Conteúdo do email
 		$mail->isHTML(true);
-		$mail->Subject = "Manuais Escolares $nome_ano_letivo - Encomenda N$num_encomenda";
+		$mail->Subject = "Manuais Escolares $nome_ano_letivo - " . $assunto;
 		$mail->Body = $corpo_email;
 
 		$mail->send();
