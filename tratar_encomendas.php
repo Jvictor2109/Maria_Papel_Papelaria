@@ -34,10 +34,27 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 			$stmt_pdf_aviso->execute();
 			$stmt_pdf_aviso->close();
 
-			echo json_encode(["resultado"=>"sucesso", "caminho_pdf"=>$caminho]);
+			$resposta = json_encode(["resultado"=>"sucesso", "caminho_pdf"=>$caminho]);
+
+
+			header('Content-Type: application/json');
+			header('Content-Length: ' . strlen($resposta));
 			header('Connection: close');
-			ob_end_flush();
+
+
+			session_write_close();
+
+			// Limpa buffers e envia ao browser
+			while (ob_get_level() > 0){
+				ob_end_clean();
+			}
+			echo $resposta;
 			flush();
+
+
+			if (function_exists('fastcgi_finish_request')) {
+				fastcgi_finish_request();
+			}
 
 			// Manda os emails
 			require_once("enviar_email.php");
