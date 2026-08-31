@@ -1,4 +1,4 @@
-let tempo_limite = 5 * 60 * 1000 // Minutos para milissegundos
+let tempo_limite = 20 * 60 * 1000 // Minutos para milissegundos
 let timer;
 
 function iniciarContagem(){
