@@ -34,23 +34,30 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 			$stmt_pdf_aviso->execute();
 			$stmt_pdf_aviso->close();
 
-			$resposta = json_encode(["resultado"=>"sucesso", "caminho_pdf"=>$caminho]);
+			// Marca as encomendas como avisadas
+			$data_aviso = date("Y-m-d H:i:s");
 
+			$stmt = $conn->prepare(
+				"UPDATE encomenda
+				SET avisado = 1, id_avisado = ?, data_aviso = ?
+				WHERE estado_encomenda = 'concluida'"
+			);
+			$stmt->bind_param("is", $_SESSION["user_id"], $data_aviso);
+			$stmt->execute();
+			$stmt->close();
+			
+			$resposta = json_encode(["resultado"=>"sucesso", "caminho_pdf"=>$caminho]);
 
 			header('Content-Type: application/json');
 			header('Content-Length: ' . strlen($resposta));
 			header('Connection: close');
 
+			session_write_close();    
+			ignore_user_abort(true);  
 
-			session_write_close();
-
-			// Limpa buffers e envia ao browser
-			while (ob_get_level() > 0){
-				ob_end_clean();
-			}
+			while (ob_get_level() > 0) ob_end_clean();
 			echo $resposta;
 			flush();
-
 
 			if (function_exists('fastcgi_finish_request')) {
 				fastcgi_finish_request();
@@ -58,6 +65,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 
 			// Manda os emails
 			require_once("enviar_email.php");
+			set_time_limit(0);
 
 			foreach($encomendas as $encomenda){
 				if(!empty($encomenda["email_encomenda"])){
@@ -84,17 +92,6 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 
 			$stmt_obs->close();
 
-			// Marca as encomendas como avisadas
-			$data_aviso = date("Y-m-d H:i:s");
-
-			$stmt = $conn->prepare(
-				"UPDATE encomenda
-				SET avisado = 1, id_avisado = ?, data_aviso = ?
-				WHERE estado_encomenda = 'concluida'"
-			);
-			$stmt->bind_param("is", $_SESSION["user_id"], $data_aviso);
-			$stmt->execute();
-			$stmt->close();
 
 			exit();
 	}
@@ -158,7 +155,7 @@ function gerar_pdf_aviso(mysqli $conn, array $encomendas){
 
 	$pdf->SetFont('helvetica', '', 8);
 	foreach($encomendas as $encomenda){
-		if(!empty($encomenda["telefone_encomenda"])){
+		if(!empty($encomenda["telefone_encomenda"]) && empty($encomenda["email_encomenda"])){
 			$telefone_encomenda = $encomenda["telefone_encomenda"];
 			$telefone_encomenda = str_split($telefone_encomenda, 3);
 			$telefone_encomenda = implode(' ', $telefone_encomenda);

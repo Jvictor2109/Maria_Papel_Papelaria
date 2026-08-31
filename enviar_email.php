@@ -2,7 +2,7 @@
 require_once("db_connect.php");
 require_once("vendor/autoload.php");
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
-$dotenv->load();
+$dotenv->safeLoad();
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
