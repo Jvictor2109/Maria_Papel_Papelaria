@@ -199,3 +199,60 @@ if(btnNovoAviso){
         msg.innerText = "";
     }, 2000)
 }
+
+// Botão de editar email
+const btnEditarEmail = document.getElementById('btnEditarEmail');
+if(btnEditarEmail){
+    btnEditarEmail.addEventListener('click', ()=>{
+        const modal = document.getElementById('modalEditarEmail');
+        const input = document.getElementById('inputNovoEmail');
+        input.value = btnEditarEmail.dataset.email;
+        modal.style.display = "flex";
+    });
+}
+
+// Fechar modal editar email (botão Cancelar)
+const btnFecharEditarEmail = document.getElementById('fecharEditarEmail');
+if(btnFecharEditarEmail){
+    btnFecharEditarEmail.addEventListener('click', ()=>{
+        document.getElementById('modalEditarEmail').style.display = "none";
+    });
+}
+
+// Fechar modal editar email (X)
+const closeModalEditarEmail = document.getElementById('closeModalEditarEmail');
+if(closeModalEditarEmail){
+    closeModalEditarEmail.addEventListener('click', ()=>{
+        document.getElementById('modalEditarEmail').style.display = "none";
+    });
+}
+
+// Confirmar editar email
+const formEditarEmail = document.getElementById('formEditarEmail');
+if(formEditarEmail){
+    formEditarEmail.addEventListener('submit', async function(e){
+        e.preventDefault();
+
+        const novoEmail = document.getElementById('inputNovoEmail').value.trim();
+        const btnConfirmarEditarEmail = document.getElementById('confirmarEditarEmail');
+
+        const response = await fetch('detalhe_encomenda.php', {
+            method:"post",
+            headers:{ 'Content-Type': 'application/json' },
+            body:JSON.stringify({
+                acao:"editar_email",
+                id_encomenda: btnConfirmarEditarEmail.dataset.id_encomenda,
+                email: novoEmail
+            })
+        });
+
+        const data = await response.json();
+
+        if(data["resultado"] == "sucesso"){
+            alert(data["msg"]);
+            location.reload();
+        } else {
+            alert(data["msg"]);
+        }
+    });
+}

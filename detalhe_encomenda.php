@@ -35,6 +35,18 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
         case "cancelar_encomenda":
             cancelar_encomenda($conn, $request);
             exit();
+        case "editar_email":
+            $stmt = $conn->prepare(
+                "UPDATE encomenda SET email_encomenda = ? WHERE id_encomenda = ?"
+            );
+            $stmt->bind_param("si", $request["email"], $request["id_encomenda"]);
+            if($stmt->execute()){
+                echo json_encode(['resultado'=>'sucesso', 'msg'=>'Email atualizado com sucesso!']);
+            } else {
+                echo json_encode(['resultado'=>'erro', 'msg'=>'Falha ao atualizar o email.']);
+            }
+            $stmt->close();
+            exit();
     }
 }
 
@@ -293,7 +305,11 @@ function cancelar_encomenda(mysqli $conn, array $request){
                                             }
                                             ?>
                                         </li>
-                                        <li><strong>Email: </strong> <?= $encomenda["email_encomenda"] ?></li>
+                                        <li>
+                                            <strong>Email: </strong>
+                                            <span id="emailDisplay"><?= htmlspecialchars($encomenda["email_encomenda"] ?? '') ?></span>
+                                            <button class="primary small" id="btnEditarEmail" style="margin-left:8px; padding: 2px 8px;" data-id_encomenda="<?= $encomenda["id_encomenda"] ?>" data-email="<?= htmlspecialchars($encomenda["email_encomenda"] ?? '') ?>">Editar</button>
+                                        </li>
                                     </ul>
                                 </div>
                             </div>
@@ -574,6 +590,26 @@ function cancelar_encomenda(mysqli $conn, array $request){
                                     <button id="confirmarConcluir" class="primary" data-id_encomenda="<?= $encomenda["id_encomenda"] ?>">Sim</button>
                                     <button id="fecharConcluir">Não</button>
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- Modal editar email -->
+                        <div id="modalEditarEmail" class="modal-overlay" style="display: none;">
+                            <div class="box modal-content">
+                                <span id="closeModalEditarEmail" class="modal-close">&times;</span>
+                                <h3>Editar Email</h3>
+
+                                <form id="formEditarEmail">
+                                    <div style="margin-bottom: 10px;">
+                                        <strong>Novo email:</strong>
+                                        <input type="email" id="inputNovoEmail" name="email" required style="width: 100%;">
+                                    </div>
+
+                                    <div>
+                                        <button type="submit" id="confirmarEditarEmail" class="primary" data-id_encomenda="<?= $encomenda["id_encomenda"] ?>">Guardar</button>
+                                        <button type="button" id="fecharEditarEmail">Cancelar</button>
+                                    </div>
+                                </form>
                             </div>
                         </div>
 
