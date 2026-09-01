@@ -78,9 +78,8 @@ async function getEncomendas(){
 
 // Renderizar tabelas
 function renderTabela_a_tratar(encomendas){
-    // Altera o cabeçalho
     const thead = document.querySelector('thead');
-    const headers = ["Id", "Num. encomenda", "Data da encomenda", "Dias em espera", " "];
+    const headers = ["Agrupamento", "Num. encomenda", "Data da encomenda", "Dias em espera", " "];
 
     thead.innerHTML = '';
     const linha_cabecalho = document.createElement('tr');
@@ -103,9 +102,9 @@ function renderTabela_a_tratar(encomendas){
     encomendas.forEach(encomenda => {
         const linha = document.createElement('tr');
 
-        const id_encomenda = document.createElement('td');
-        id_encomenda.innerText = encomenda.id_encomenda;
-        linha.appendChild(id_encomenda);
+        const agrupamento = document.createElement('td');
+        agrupamento.innerText = encomenda.nome_agrupamento ?? '-';
+        linha.appendChild(agrupamento);
 
         const num_encomenda = document.createElement('td');
         num_encomenda.innerText = encomenda.num_encomenda;
@@ -119,7 +118,6 @@ function renderTabela_a_tratar(encomendas){
         dias_espera.innerText = encomenda.datediff;
         linha.appendChild(dias_espera);
 
-        
         const detalhes_encomenda = document.createElement('td');
         const link_encomenda = document.createElement('a');
         
@@ -135,9 +133,8 @@ function renderTabela_a_tratar(encomendas){
 
 // Renderiza a tabela de encomendas por avisar
 function renderTabela_por_avisar(encomendas){
-    // Altera o cabeçalho
     const thead = document.querySelector('thead');
-    const headers = ["Id", "Num. encomenda", "Data", "Email", "Telefone", " "];
+    const headers = ["Agrupamento", "Num. encomenda", "Data", "Email", "Telefone", " "];
 
     thead.innerHTML = '';
     const linha_cabecalho = document.createElement('tr');
@@ -150,7 +147,6 @@ function renderTabela_por_avisar(encomendas){
 
     thead.appendChild(linha_cabecalho);
 
-    // Limpa o tbody e constroi a tabela
     const tbody = document.querySelector('tbody');
     tbody.innerHTML = '';
 
@@ -160,9 +156,9 @@ function renderTabela_por_avisar(encomendas){
     encomendas.forEach(encomenda=>{
         const linha = document.createElement('tr');
 
-        const id = document.createElement('td');
-        id.innerText = encomenda.id_encomenda;
-        linha.appendChild(id);
+        const agrupamento = document.createElement('td');
+        agrupamento.innerText = encomenda.nome_agrupamento ?? '-';
+        linha.appendChild(agrupamento);
 
         const num_encomenda = document.createElement('td');
         num_encomenda.innerText = encomenda.num_encomenda;
@@ -203,9 +199,8 @@ function renderTabela_por_avisar(encomendas){
 
 }
 function renderTabela_avisadas(encomendas){
-    // Altera o cabeçalho
     const thead = document.querySelector('thead');
-    const headers = ["Id", "Num. encomenda", "Data aviso", "Utilizador", " "];
+    const headers = ["Agrupamento", "Num. encomenda", "Data aviso", "Utilizador", " "];
 
     thead.innerHTML = '';
     const linha_cabecalho = document.createElement('tr');
@@ -218,7 +213,6 @@ function renderTabela_avisadas(encomendas){
 
     thead.appendChild(linha_cabecalho);
 
-    // Limpa o tbody e constroi a tabela
     const tbody = document.querySelector('tbody');
     tbody.innerHTML = '';
 
@@ -228,9 +222,9 @@ function renderTabela_avisadas(encomendas){
     encomendas.forEach(encomenda=>{
         const linha = document.createElement('tr');
 
-        const id = document.createElement('td');
-        id.innerText = encomenda.id_encomenda;
-        linha.appendChild(id);
+        const agrupamento = document.createElement('td');
+        agrupamento.innerText = encomenda.nome_agrupamento ?? '-';
+        linha.appendChild(agrupamento);
 
         const num_encomenda = document.createElement('td');
         num_encomenda.innerText = encomenda.num_encomenda;
@@ -240,10 +234,10 @@ function renderTabela_avisadas(encomendas){
         data_aviso.innerText = encomenda.data_aviso;
         linha.appendChild(data_aviso);
 
-       const user_avisado = document.createElement('td');
-       user_avisado.innerText = encomenda.username;
-       linha.appendChild(user_avisado);
-       
+        const user_avisado = document.createElement('td');
+        user_avisado.innerText = encomenda.username;
+        linha.appendChild(user_avisado);
+        
         const detalhes_encomenda = document.createElement('td');
         const link_encomenda = document.createElement('a');
         
@@ -257,9 +251,8 @@ function renderTabela_avisadas(encomendas){
 
 }
 function renderTabela_separadas(encomendas){
-    // Altera o cabeçalho
     const thead = document.querySelector('thead');
-    const headers = ["Id", "Num. encomenda", "Data separada", " "];
+    const headers = ["Agrupamento", "Num. encomenda", "Data separada", " "];
 
     thead.innerHTML = '';
     const linha_cabecalho = document.createElement('tr');
@@ -272,7 +265,6 @@ function renderTabela_separadas(encomendas){
 
     thead.appendChild(linha_cabecalho);
 
-    // Limpa o tbody e constroi a tabela
     const tbody = document.querySelector('tbody');
     tbody.innerHTML = '';
 
@@ -282,9 +274,9 @@ function renderTabela_separadas(encomendas){
     encomendas.forEach(encomenda=>{
         const linha = document.createElement('tr');
 
-        const id = document.createElement('td');
-        id.innerText = encomenda.id_encomenda;
-        linha.appendChild(id);
+        const agrupamento = document.createElement('td');
+        agrupamento.innerText = encomenda.nome_agrupamento ?? '-';
+        linha.appendChild(agrupamento);
 
         const num_encomenda = document.createElement('td');
         num_encomenda.innerText = encomenda.num_encomenda;
@@ -304,6 +296,7 @@ function renderTabela_separadas(encomendas){
 
         tbody.appendChild(linha);
     });
+
 
 }
 
