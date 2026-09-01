@@ -41,6 +41,7 @@
                                 <ul>
                                     <li><a href="encomendar_manuais.php">Encomendar manuais escolares</a></li>
                                     <li><a href="tratar_encomendas.php">Encomendas a tratar</a></li>
+                                    <li><a href="estado_encomendas.php">Estado das encomendas</a></li>
                                     <li><a href="pesquisar_encomendas.php">Pesquisar encomendas</a></li>
                                     <li><a href="verificar_caucoes.php">Verificar cauções</a></li>
                                     <li><a href="avisos_encomendas.php">Aviso encomendas</a></li>

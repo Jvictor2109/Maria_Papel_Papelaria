@@ -156,6 +156,7 @@ btnEncomendar.addEventListener('click', async function (){
     const agrupamento = agrupamentos.selectedOptions[0].text;
     document.getElementById('confirmar_agrupamento').innerText = agrupamento;
     encomenda.agrupamento = agrupamento;
+    encomenda.id_agrupamento = agrupamentos.value;
     
     const anos = document.getElementById('filtroAnoEscolar');
     const ano = anos.selectedOptions[0].text;

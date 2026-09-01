@@ -214,10 +214,11 @@ function cancelar_encomenda(mysqli $conn, array $request){
                         <div class="box">
                             <?php 
                                 $stmt = $conn->prepare(
-                                    "SELECT * FROM encomenda
-                                    JOIN utilizador ON utilizador.id_utilizador = encomenda.id_utilizador
-                                    WHERE id_encomenda = ?"
-                                );
+                    "SELECT encomenda.*, utilizador.username, agrupamento.nome_agrupamento FROM encomenda
+                    JOIN utilizador ON utilizador.id_utilizador = encomenda.id_utilizador
+                    LEFT JOIN agrupamento ON agrupamento.id_agrupamento = encomenda.id_agrupamento
+                    WHERE id_encomenda = ?"
+                );
 
                                 $stmt->bind_param("i", $_GET["id"]);
 
@@ -297,6 +298,11 @@ function cancelar_encomenda(mysqli $conn, array $request){
                                 </div>
                             </div>
 
+                            <div class="row">
+                                <div class="col-4 col-12-small">
+                                    <p><strong>Agrupamento: </strong><?= $encomenda["nome_agrupamento"] ?></p>
+                                </div>
+                            </div>
                             <div class="row">
                                 <div class="col-4 col-12-small">
                                     <p><strong>Total encomenda: </strong><?= $encomenda["total_encomenda"] ?>€</p>

@@ -103,8 +103,9 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                         <!-- Detalhes da encomenda -->
                         <?php 
                             $stmt = $conn->prepare(
-                                "SELECT * FROM encomenda
+                                "SELECT encomenda.*, utilizador.username, agrupamento.nome_agrupamento FROM encomenda
                                 JOIN utilizador ON utilizador.id_utilizador = encomenda.id_utilizador
+                                LEFT JOIN agrupamento ON agrupamento.id_agrupamento = encomenda.id_agrupamento
                                 WHERE id_encomenda = ?"
                             );
 
@@ -184,6 +185,11 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                                 </div>
                             </div>
 
+                            <div class="row">
+                                <div class="col-4 col-12-small">
+                                    <p><strong>Agrupamento: </strong><?= $encomenda["nome_agrupamento"] ?></p>
+                                </div>
+                            </div>
                             <div class="row">
                                 <div class="col-4 col-12-small">
                                     <p><strong>Total encomenda: </strong><?= $encomenda["total_encomenda"] ?>€</p>
